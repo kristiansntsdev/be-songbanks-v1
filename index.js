@@ -1,73 +1,26 @@
-const path = require('path');
-// load dependencies
 const env = require('dotenv');
-const csrf = require('csurf');
 const express = require('express');
-const flash = require('express-flash');
-const bodyParser = require('body-parser');
-const session = require('express-session');
-const expressHbs = require('express-handlebars');
-const SequelizeStore = require("connect-session-sequelize")(session.Store); // initalize sequelize with session store
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpecs = require('./config/swagger');
 
 const app = express();
-const csrfProtection = csrf();
-const router = express.Router();
 
 //Loading Routes
-const webRoutes = require('./routes/web');
-const sequelize = require('./config/database');
-const errorController = require('./app/controllers/ErrorController');
+const apiRoutes = require('./routes/api');
+const ErrorController = require('./app/controllers/ErrorController');
 
 env.config();
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(express.static(path.join(__dirname, 'public')));
 
-// required for csurf
-app.use(session({
-    resave: true,
-    saveUninitialized: true,
-    secret: process.env.SESSION_SECRET,
-  	cookie: { path: '/', httpOnly: true, maxAge: 1209600000 }, // maxAge two weeks in milliseconds, remove secure: true for local development
-    store: new SequelizeStore({
-    	db: sequelize,
-    	table: "sessions",
-    }),
-}));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
-app.use(csrfProtection);
-app.use(flash());
+// Swagger documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
-app.use((req, res, next) => {
-	res.locals.isAuthenticated = req.session.isLoggedIn;
-	res.locals.csrfToken = req.csrfToken();
-	next();
-});
+app.use('/api', apiRoutes);
 
-app.engine(
-	'hbs',
-	expressHbs.engine({
-		layoutsDir: 'views/layouts/',
-		defaultLayout: 'web_layout',
-		partialsDir: [
-			"views/partials/",
-		],
-		extname: 'hbs'
-	})
-);
-app.set('view engine', 'hbs');
-app.set('views', 'views');
+app.use(ErrorController.notFound);
+app.use(ErrorController.handleError);
 
-app.use(webRoutes);
-app.use(errorController.pageNotFound);
-
-sequelize
-	//.sync({force : true})
-	.sync()
-	.then(() => {
-		app.listen(process.env.PORT);
-		//pending set timezone
-		console.log("App listening on port " + process.env.PORT);
-	})
-	.catch(err => {
-		console.log(err);
-	});
+app.listen(process.env.PORT);
+console.log("API listening on port " + process.env.PORT);

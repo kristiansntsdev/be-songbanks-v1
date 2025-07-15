@@ -1,14 +1,14 @@
 const { Sequelize, DataTypes } = require('sequelize');
+const { ulid } = require('ulid');
 const sequelize = require('../../config/database');
 
 const User = sequelize.define('users', {
 		id: {
-			type: DataTypes.INTEGER,
-			autoIncrement: true,
+			type: DataTypes.STRING(26),
+			primaryKey: true,
 			allowNull: false,
-			primaryKey: true
+			defaultValue: () => ulid()
 		},
-		fullName: DataTypes.STRING,
 		email: {
 			type: DataTypes.STRING,
 			allowNull: false
@@ -17,14 +17,6 @@ const User = sequelize.define('users', {
 			type: DataTypes.STRING,
 			allowNull: false
 		},
-		resetToken: {
-			type: DataTypes.STRING,
-			allowNull: true
-		},
-		resetTokenExpiry: {
-			type: DataTypes.DATE,
-			allowNull:true
-		}
   	},
 	{
 		indexes: [
