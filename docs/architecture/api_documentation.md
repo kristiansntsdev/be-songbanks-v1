@@ -104,7 +104,7 @@ Response:
 ```
 
 ### 1.2. Update User Access (Admin Only)
-PUT /api/admin/user-access/:id
+PUT /api/admin/user-access/:user_id
 
 Description: Admin can update the status for a specific user.
 
@@ -116,7 +116,7 @@ req.body:
 
 ```json
 {
-    "status": "active" // Example: Change status to active or "vol_user"
+    "status": "active" // Change status to active
 }
 ```
 
@@ -124,7 +124,7 @@ OR
 
 ```json
 {
-    "status": "suspend" // Example: Change status to suspended
+    "status": "suspend" // Change status to suspend
 }
 ```
 

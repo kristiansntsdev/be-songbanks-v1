@@ -133,6 +133,87 @@ router.get('/admin/user-access', authenticateToken, UserController.getUserAccess
 
 /**
  * @swagger
+ * /api/admin/user-access/{user_id}:
+ *   put:
+ *     summary: Update user access status
+ *     description: Admin can update the status for a specific user (active or suspend)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The user ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [active, suspend]
+ *                 description: The new status for the user
+ *             example:
+ *               status: active
+ *     responses:
+ *       200:
+ *         description: User access updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: number
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: User access updated successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       example: user123
+ *                     status:
+ *                       type: string
+ *                       example: active
+ *       400:
+ *         description: Bad request - Invalid status value
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Unauthorized - Admin access required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.put('/admin/user-access/:user_id', authenticateToken, UserController.updateUserAccess);
+
+/**
+ * @swagger
  * /api/auth/login:
  *   post:
  *     summary: User login
