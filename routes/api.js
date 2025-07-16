@@ -130,7 +130,7 @@ router.post('/users', authenticateToken, UserController.create);
 
 /**
  * @swagger
- * /api/login:
+ * /api/auth/login:
  *   post:
  *     summary: User login
  *     tags: [Auth]
@@ -154,11 +154,11 @@ router.post('/users', authenticateToken, UserController.create);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/login', AuthController.apiLogin);
+router.post('/auth/login', AuthController.apiLogin);
 
 /**
  * @swagger
- * /api/logout:
+ * /api/auth/logout:
  *   post:
  *     summary: User logout
  *     tags: [Auth]
@@ -183,6 +183,6 @@ router.post('/login', AuthController.apiLogin);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/logout', authenticateToken, AuthController.apiLogout);
+router.post('/auth/logout', authenticateToken, AuthController.apiLogout);
 
 module.exports = router;
