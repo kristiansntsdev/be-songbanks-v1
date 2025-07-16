@@ -12,8 +12,8 @@ erDiagram
         string id PK
         string email
         string password
-        enum role [admin, member, guest]
-        enum status [active, pending, request, suspend]
+        string role "admin, member, guest"
+        string status "active, pending, request, suspend"
     }
 
     SONG {
@@ -23,7 +23,6 @@ erDiagram
         string[] tags
         string base_chord
         text lyrics_and_chords
-        text notes
     }
 
     NOTES {
