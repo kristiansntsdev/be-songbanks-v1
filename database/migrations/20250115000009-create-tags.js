@@ -5,20 +5,21 @@ const { ulid } = require('ulid');
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('playlist_teams', {
+    await queryInterface.createTable('tags', {
       id: {
         allowNull: false,
         primaryKey: true,
         type: Sequelize.STRING(26),
         defaultValue: () => ulid()
       },
-      playlist_id: {
-        type: Sequelize.STRING(26),
-        allowNull: false
+      name: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        unique: true
       },
-      lead_id: {
-        type: Sequelize.STRING(26),
-        allowNull: false
+      description: {
+        type: Sequelize.TEXT,
+        allowNull: true
       },
       createdAt: {
         allowNull: false,
@@ -30,17 +31,13 @@ module.exports = {
       }
     });
 
-    // Add indexes for optimal performance
-    await queryInterface.addIndex('playlist_teams', ['playlist_id'], {
-      name: 'idx_playlist_teams_playlist_id'
-    });
-    
-    await queryInterface.addIndex('playlist_teams', ['lead_id'], {
-      name: 'idx_playlist_teams_lead_id'
+    // Add index for tag name
+    await queryInterface.addIndex('tags', ['name'], {
+      name: 'idx_tags_name'
     });
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('playlist_teams');
+    await queryInterface.dropTable('tags');
   }
 };
