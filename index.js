@@ -17,6 +17,15 @@ app.use(express.urlencoded({ extended: false }));
 // Swagger documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
+// Root route
+app.get('/', (_, res) => {
+  res.json({
+    message: 'Welcome to Songbanks API',
+    documentation: '/api-docs',
+    version: '1.0.0'
+  });
+});
+
 app.use('/api', apiRoutes);
 
 app.use(ErrorController.notFound);
