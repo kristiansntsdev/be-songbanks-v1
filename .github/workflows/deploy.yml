@@ -34,7 +34,7 @@ jobs:
           echo 'https://x-access-token:${{ github.token }}@github.com' > ~/.git-credentials &&
           git fetch origin main &&
           git reset --hard origin/main &&
-          git clean -fd
+          git clean -fd -e .htaccess -e index.html
         "
     
     - name: 🧪 Test deployment configuration
