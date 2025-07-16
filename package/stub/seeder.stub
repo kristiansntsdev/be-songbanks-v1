@@ -1,0 +1,23 @@
+'use strict';
+
+const { ulid } = require('ulid');
+
+/** @type {import('sequelize-cli').Migration} */
+module.exports = {
+  async up(queryInterface, Sequelize) {
+    // Add your seeder code here
+    // Example:
+    // await queryInterface.bulkInsert('{{name}}', [{
+    //   id: ulid(),
+    //   name: 'Sample Name',
+    //   createdAt: new Date(),
+    //   updatedAt: new Date()
+    // }], {});
+  },
+
+  async down(queryInterface, Sequelize) {
+    // Add your rollback code here
+    // Example:
+    // await queryInterface.bulkDelete('{{name}}', null, {});
+  }
+};

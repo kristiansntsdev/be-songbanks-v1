@@ -1,32 +1,26 @@
 const express = require('express');
 const router = express.Router();
-const UserController = require('../app/controllers/UserController');
 const AuthController = require('../app/controllers/AuthController');
+const NoteController = require('../app/controllers/NoteController');
+const UserController = require('../app/controllers/UserController');
 const { authenticateToken } = require('../app/middlewares/auth');
 
 /**
  * @swagger
  * components:
  *   schemas:
- *     User:
+ *     Error:
  *       type: object
- *       required:
- *         - email
- *         - password
  *       properties:
- *         id:
+ *         code:
+ *           type: integer
+ *           example: 400
+ *         message:
  *           type: string
- *           description: The auto-generated ULID of the user
- *         email:
+ *           example: Error message
+ *         error:
  *           type: string
- *           description: The user email
- *         password:
- *           type: string
- *           description: The user password
- *       example:
- *         id: 01HXXXXXXXXXXXXXXXXXXXXXXX
- *         email: user@example.com
- *         password: mypassword
+ *           example: Detailed error information
  *     LoginRequest:
  *       type: object
  *       required:
@@ -35,51 +29,186 @@ const { authenticateToken } = require('../app/middlewares/auth');
  *       properties:
  *         email:
  *           type: string
+ *           example: user@example.com
  *         password:
  *           type: string
- *       example:
- *         email: user@example.com
- *         password: mypassword
+ *           example: password123
  *     LoginResponse:
  *       type: object
  *       properties:
- *         token:
- *           type: string
- *           description: JWT token
- *         user:
- *           type: object
- *           properties:
- *             id:
- *               type: string
- *             email:
- *               type: string
- *       example:
- *         token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
- *         user:
- *           id: 01HXXXXXXXXXXXXXXXXXXXXXXX
- *           email: user@example.com
- *     Error:
- *       type: object
- *       properties:
- *         error:
- *           type: string
+ *         code:
+ *           type: integer
+ *           example: 200
  *         message:
  *           type: string
- *         statusCode:
- *           type: number
- *       example:
- *         error: Unauthorized
- *         message: Invalid email or password
- *         statusCode: 401
+ *           example: Login successful
+ *         data:
+ *           type: object
+ *           properties:
+ *             token:
+ *               type: string
+ *               example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *             user:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   example: user123
+ *                 email:
+ *                   type: string
+ *                   example: user@example.com
+ *                 role:
+ *                   type: string
+ *                   example: member
+ *                 status:
+ *                   type: string
+ *                   example: active
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
  */
+
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: User login
+ *     description: Authenticate user with email and password
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/LoginRequest'
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LoginResponse'
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post('/auth/login', AuthController.apiLogin);
+
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: User logout
+ *     description: Logout authenticated user
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               data:
+ *                 type: object
+ *                 description: Request payload
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *               example:
+ *                 message: Logout successful
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post('/auth/logout', authenticateToken, AuthController.apiLogout);
+
+/**
+ * @swagger
+ * /api/notes/{user_id}:
+ *   get:
+ *     summary: Get notes by user ID
+ *     description: Retrieve all notes for a specific user
+ *     tags: [Note]
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The user ID
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Success
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get('/notes/:user_id', NoteController.GetNoteByUserId);
 
 /**
  * @swagger
  * /api/admin/user-access:
  *   get:
- *     summary: Retrieve a list of all users who have vol_user status or request status
- *     description: This endpoint is used by admins to get user access data for status management
- *     tags: [Admin]
+ *     summary: Retrieve user access list
+ *     description: Get a list of users with their access status for admin management
+ *     tags: [User]
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -97,25 +226,39 @@ const { authenticateToken } = require('../app/middlewares/auth');
  *                   type: string
  *                   example: User access list retrieved successfully
  *                 data:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: string
- *                         example: user123
- *                       email:
- *                         type: string
- *                         example: user1@example.com
- *                       role:
- *                         type: string
- *                         example: member
- *                       is_admin:
- *                         type: boolean
- *                         example: false
- *                       status:
- *                         type: string
- *                         example: active
+ *                   type: object
+ *                   properties:
+ *                     active_users:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                             example: user123
+ *                           email:
+ *                             type: string
+ *                             example: user@example.com
+ *                           role:
+ *                             type: string
+ *                             example: member
+ *                           status:
+ *                             type: string
+ *                             example: active
+ *                     request_users:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                     suspended_users:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  *       401:
  *         description: Unauthorized - Admin access required
  *         content:
@@ -137,7 +280,7 @@ router.get('/admin/user-access', authenticateToken, UserController.getUserAccess
  *   put:
  *     summary: Update user access status
  *     description: Admin can update the status for a specific user (active or suspend)
- *     tags: [Admin]
+ *     tags: [User]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -211,62 +354,5 @@ router.get('/admin/user-access', authenticateToken, UserController.getUserAccess
  *               $ref: '#/components/schemas/Error'
  */
 router.put('/admin/user-access/:user_id', authenticateToken, UserController.updateUserAccess);
-
-/**
- * @swagger
- * /api/auth/login:
- *   post:
- *     summary: User login
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/LoginRequest'
- *     responses:
- *       200:
- *         description: Login successful
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/LoginResponse'
- *       401:
- *         description: Unauthorized
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
-router.post('/auth/login', AuthController.apiLogin);
-
-/**
- * @swagger
- * /api/auth/logout:
- *   post:
- *     summary: User logout
- *     tags: [Auth]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Logout successful
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *               example:
- *                 message: Logout successful
- *       401:
- *         description: Unauthorized
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
-router.post('/auth/logout', authenticateToken, AuthController.apiLogout);
 
 module.exports = router;

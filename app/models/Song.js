@@ -2,7 +2,7 @@ const { Sequelize, DataTypes } = require('sequelize');
 const { ulid } = require('ulid');
 const sequelize = require('../../config/database');
 
-const Song = sequelize.define('users', {
+const Song = sequelize.define('songs', {
 		id: {
 			type: DataTypes.STRING(26),
 			primaryKey: true,
@@ -11,34 +11,39 @@ const Song = sequelize.define('users', {
 		},
 		title: {
 			type: DataTypes.STRING,
-			allowNull: true
+			allowNull: false
 		},
 		artist: {
 			type: DataTypes.STRING,
+			allowNull: false
+		},
+		base_chord: {
+			type: DataTypes.STRING,
 			allowNull: true
 		},
-		tags: {
-			type: DataTypes.ARRAY,
-			allowNull: false,
-			defaultValue: 'member'
-		},
-		status: {
-			type: DataTypes.ENUM('active', 'pending', 'request', 'suspend'),
-			allowNull: false,
-			defaultValue: 'active'
+		lyrics_and_chords: {
+			type: DataTypes.TEXT,
+			allowNull: true
 		}
   	},
 	{
 		indexes: [
-			// Create a unique index on email
+			// Add indexes for optimal performance
 			{
-				unique: true,
-				fields: ['email']
+				fields: ['title']
 			},
-			// Create index on role for performance
 			{
-				fields: ['role']
-			}],
+				fields: ['artist']
+			},
+			{
+				fields: ['base_chord']
+			}
+		]
 	});
 
-module.exports = User;
+// Define associations if needed
+Song.associate = (models) => {
+	Song.belongsToMany(models.Tag, {through: 'song_tags', foreignKey: 'song_id'});
+};
+
+module.exports = Song;

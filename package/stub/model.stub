@@ -1,0 +1,28 @@
+const { DataTypes } = require('sequelize');
+const { ulid } = require('ulid');
+const sequelize = require('../../config/database');
+
+const {{name}} = sequelize.define('{{tableName}}', {
+    id: {
+        type: DataTypes.STRING(26),
+        primaryKey: true,
+        allowNull: false,
+        defaultValue: () => ulid()
+    },
+    // Add your fields here
+    // Example:
+    // name: {
+    //     type: DataTypes.STRING,
+    //     allowNull: false
+    // }
+}, {
+    indexes: [
+        // Add your indexes here
+        // Example:
+        // {
+        //     fields: ['name']
+        // }
+    ]
+});
+
+module.exports = {{name}};

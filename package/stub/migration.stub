@@ -1,0 +1,34 @@
+'use strict';
+
+/** @type {import('sequelize-cli').Migration} */
+module.exports = {
+  async up(queryInterface, Sequelize) {
+    // Add your migration code here
+    // Example:
+    // await queryInterface.createTable('{{name}}', {
+    //   id: {
+    //     allowNull: false,
+    //     primaryKey: true,
+    //     type: Sequelize.STRING(26)
+    //   },
+    //   name: {
+    //     type: Sequelize.STRING,
+    //     allowNull: false
+    //   },
+    //   createdAt: {
+    //     allowNull: false,
+    //     type: Sequelize.DATE
+    //   },
+    //   updatedAt: {
+    //     allowNull: false,
+    //     type: Sequelize.DATE
+    //   }
+    // });
+  },
+
+  async down(queryInterface, Sequelize) {
+    // Add your rollback code here
+    // Example:
+    // await queryInterface.dropTable('{{name}}');
+  }
+};

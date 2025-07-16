@@ -2,8 +2,11 @@ const env = require('dotenv');
 const express = require('express');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpecs = require('./config/swagger');
+const cors = require('cors');
 
 const app = express();
+
+app.use(cors())
 
 //Loading Routes
 const apiRoutes = require('./routes/api');
