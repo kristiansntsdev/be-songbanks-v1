@@ -13,6 +13,9 @@
     "seed": "sequelize-cli db:seed:all",
     "seed:undo": "sequelize-cli db:seed:undo:all"
   },
+  "nodemonConfig": {
+    "signal": "SIGTERM"
+  },
   "author": "Mangesh Ghadigaonkar",
   "license": "ISC",
   "devDependencies": {
