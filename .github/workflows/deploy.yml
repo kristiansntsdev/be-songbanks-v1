@@ -29,7 +29,9 @@ jobs:
         ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_SERVER }} "
           cd ${{ secrets.SSH_DESTINATION_PATH }} &&
           git config receive.denyCurrentBranch ignore &&
-          git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git &&
+          git remote set-url origin https://github.com/${GITHUB_REPOSITORY}.git &&
+          git config credential.helper store &&
+          echo 'https://x-access-token:${{ github.token }}@github.com' > ~/.git-credentials &&
           git fetch origin main &&
           git reset --hard origin/main &&
           git clean -fd
@@ -44,5 +46,10 @@ jobs:
           cd ${{ secrets.SSH_DESTINATION_PATH }} &&
           echo 'Directory accessible' &&
           git --version &&
-          echo 'Deployment configuration test passed'
+          git config receive.denyCurrentBranch ignore &&
+          git remote set-url origin https://github.com/${GITHUB_REPOSITORY}.git &&
+          git config credential.helper store &&
+          echo 'https://x-access-token:${{ github.token }}@github.com' > ~/.git-credentials &&
+          git fetch origin main &&
+          echo 'Git fetch test successful - deployment configuration verified'
         "
