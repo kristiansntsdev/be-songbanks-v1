@@ -56,6 +56,14 @@ class ErrorController {
 		});
 	}
 
+	static accountAccessDenied(res, status) {
+		res.status(403).json({
+			code: 403,
+			message: 'Account access denied',
+			error: `Your account status is ${status || 'inactive'}. Please contact administrator.`
+		});
+	}
+
 	static handleError(err, req, res, next) {
 		console.error(err);
 		

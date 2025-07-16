@@ -17,6 +17,16 @@ const User = sequelize.define('users', {
 			type: DataTypes.STRING,
 			allowNull: false
 		},
+		role: {
+			type: DataTypes.ENUM('admin', 'member', 'guest'),
+			allowNull: false,
+			defaultValue: 'member'
+		},
+		status: {
+			type: DataTypes.ENUM('active', 'pending', 'request', 'suspend'),
+			allowNull: false,
+			defaultValue: 'active'
+		}
   	},
 	{
 		indexes: [
@@ -24,6 +34,10 @@ const User = sequelize.define('users', {
 			{
 				unique: true,
 				fields: ['email']
+			},
+			// Create index on role for performance
+			{
+				fields: ['role']
 			}],
 	});
 
