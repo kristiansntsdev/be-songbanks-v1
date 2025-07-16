@@ -1,4 +1,4 @@
-name: Deploy to Server
+name: 🚀 Deploy website on push
 
 on:
   push:
@@ -6,33 +6,23 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  ssh-deploy:
+    name: 🚀 SSH Deploy
     runs-on: ubuntu-latest
-    
     steps:
-    - name: Checkout code
+    - name: 🚚 Get latest code
       uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
       with:
-        node-version: '18'
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Run tests
-      run: npm test
-      continue-on-error: true
-      
-    - name: Deploy to server
-      uses: appleboy/ssh-action@v1.0.3
+        fetch-depth: 0
+
+    - name: 🔑 Setup SSH key
+      uses: webfactory/ssh-agent@v0.7.0
       with:
-        host: ${{ secrets.SSH_SERVER }}
-        username: ${{ secrets.SSH_USERNAME }}
-        port: ${{ secrets.SSH_PORT }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script: |
-          cd ${{ secrets.SSH_DESTINATION_PATH }}
-          git pull origin main
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: 📡 Deploy via SSH
+      run: |
+        ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_SERVER }} >> ~/.ssh/known_hosts
+        git remote add server ssh://${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_SERVER }}:${{ secrets.SSH_PORT }}${{ secrets.SSH_DESTINATION_PATH }} || true
+        ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_SERVER }} "cd ${{ secrets.SSH_DESTINATION_PATH }} && git clean -fd && git reset --hard HEAD"
+        git push server HEAD:main --force
