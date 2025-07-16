@@ -1,6 +1,6 @@
 include .env
 
-.PHONY: help songbank-db migrate seed controller model migration seeder
+.PHONY: help songbank-db migrate seed controller model migration seeder generate-swagger-docs
 
 help:
 	@echo "Available commands:"
@@ -20,6 +20,7 @@ help:
 	@echo "  Server:"
 	@echo "    start                    - Start development server"
 	@echo "    docs                     - Open API documentation"
+	@echo "    generate-swagger-docs    - Generate Swagger documentation from controllers"
 
 # Database Commands
 songbank-db:
@@ -255,3 +256,27 @@ docs:
 	else \
 		echo "Please open http://localhost:3000/api-docs in your browser"; \
 	fi
+
+generate-swagger-docs:
+	@echo "Generating Swagger documentation from controllers..."
+	@echo "Scanning controllers in app/controllers/..."
+	@for controller in app/controllers/*.js; do \
+		if [ -f "$$controller" ]; then \
+			echo "Processing: $$controller"; \
+			controller_name=$$(basename "$$controller" .js); \
+			echo "  - Controller: $$controller_name"; \
+			if grep -q "@swagger" "$$controller"; then \
+				echo "    ✓ Swagger documentation found"; \
+			else \
+				echo "    ⚠ No Swagger documentation found"; \
+			fi; \
+		fi; \
+	done
+	@echo ""
+	@echo "Swagger configuration: config/swagger.js"
+	@echo "API paths configured: ./routes/*.js, ./app/controllers/*.js"
+	@echo ""
+	@echo "To view documentation:"
+	@echo "  1. Start the server: make start"
+	@echo "  2. Open docs: make docs"
+	@echo "  3. Or visit: http://localhost:3000/api-docs"

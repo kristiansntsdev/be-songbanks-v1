@@ -18,22 +18,50 @@ exports.apiLogin = async (req, res) => {
 			return ErrorController.unauthorized(res, 'Invalid email or password');
 		}
 		
+		if (!user.status || user.status === 'guest' || user.status === 'pending' || user.status === 'suspend') {
+			return ErrorController.accountAccessDenied(res, user.status);
+		}
+		
 		const token = jwt.sign(
 			{ 
 				userId: user.id, 
-				email: user.email 
+				email: user.email,
+				role: user.role
 			}, 
 			JWT_SECRET, 
 			{ expiresIn: '24h' }
 		);
 		
-		res.json({
-			token: token,
-			user: {
-				id: user.id,
-				email: user.email
-			}
-		});
+		if (user.role === 'admin') {
+			res.json({
+				code: 200,
+				message: 'Login successful',
+				data: {
+					token: token,
+					user: {
+						id: user.id,
+						email: user.email,
+						role: user.role,
+						is_admin: true,
+						status: user.status
+					}
+				}
+			});
+		} else {
+			res.json({
+				code: 200,
+				message: 'Login successful',
+				data: {
+					token: token,
+					user: {
+						id: user.id,
+						email: user.email,
+						role: user.role,
+						status: user.status
+					}
+				}
+			});
+		}
 	} catch (error) {
 		ErrorController.handleError(error, req, res);
 	}

@@ -21,6 +21,16 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false
       },
+      role: {
+        type: Sequelize.ENUM('admin', 'member', 'guest'),
+        allowNull: false,
+        defaultValue: 'guest'
+      },
+      status: {
+        type: Sequelize.ENUM('active', 'pending', 'request', 'suspend'),
+        allowNull: false,
+        defaultValue: 'pending'
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

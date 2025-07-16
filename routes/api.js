@@ -75,58 +75,61 @@ const { authenticateToken } = require('../app/middlewares/auth');
 
 /**
  * @swagger
- * /api/users:
- *   post:
- *     summary: Create a new user
- *     tags: [Users]
+ * /api/admin/user-access:
+ *   get:
+ *     summary: Retrieve a list of all users who have vol_user status or request status
+ *     description: This endpoint is used by admins to get user access data for status management
+ *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *             example:
- *               email: user@example.com
- *               password: mypassword
  *     responses:
- *       201:
- *         description: User created successfully
+ *       200:
+ *         description: User access list retrieved successfully
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 id:
+ *                 code:
+ *                   type: number
+ *                   example: 200
+ *                 message:
  *                   type: string
- *                 email:
- *                   type: string
- *               example:
- *                 id: 01HXXXXXXXXXXXXXXXXXXXXXXX
- *                 email: user@example.com
- *       400:
- *         description: Bad request
+ *                   example: User access list retrieved successfully
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         example: user123
+ *                       email:
+ *                         type: string
+ *                         example: user1@example.com
+ *                       role:
+ *                         type: string
+ *                         example: member
+ *                       is_admin:
+ *                         type: boolean
+ *                         example: false
+ *                       status:
+ *                         type: string
+ *                         example: active
+ *       401:
+ *         description: Unauthorized - Admin access required
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
- *       401:
- *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/users', authenticateToken, UserController.create);
+router.get('/admin/user-access', authenticateToken, UserController.getUserAccess);
 
 /**
  * @swagger
