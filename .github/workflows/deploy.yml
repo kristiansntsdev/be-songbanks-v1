@@ -23,6 +23,10 @@ jobs:
     - name: 📡 Deploy via SSH
       run: |
         ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_SERVER }} >> ~/.ssh/known_hosts
-        git remote add server ssh://${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_SERVER }}:${{ secrets.SSH_PORT }}${{ secrets.SSH_DESTINATION_PATH }} || true
-        ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_SERVER }} "cd ${{ secrets.SSH_DESTINATION_PATH }} && git clean -fd && git reset --hard HEAD"
-        git push server HEAD:main --force
+        ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_SERVER }} "
+          cd ${{ secrets.SSH_DESTINATION_PATH }} &&
+          git config receive.denyCurrentBranch ignore &&
+          git fetch origin main &&
+          git reset --hard origin/main &&
+          git clean -fd
+        "
