@@ -16,11 +16,6 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false
       },
-      song_ids: {
-        type: Sequelize.JSON,
-        allowNull: true,
-        defaultValue: []
-      },
       sharable_link: {
         type: Sequelize.STRING,
         allowNull: true,

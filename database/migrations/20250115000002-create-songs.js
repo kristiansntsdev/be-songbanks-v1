@@ -20,11 +20,6 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false
       },
-      tags: {
-        type: Sequelize.JSON,
-        allowNull: true,
-        defaultValue: []
-      },
       base_chord: {
         type: Sequelize.STRING,
         allowNull: true
