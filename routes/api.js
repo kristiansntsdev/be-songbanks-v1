@@ -3,6 +3,7 @@ const router = express.Router();
 const AuthController = require('../app/controllers/AuthController');
 const NoteController = require('../app/controllers/NoteController');
 const UserController = require('../app/controllers/UserController');
+const TagController = require('../app/controllers/TagController');
 const { authenticateToken } = require('../app/middlewares/auth');
 
 /**
@@ -318,7 +319,73 @@ const { authenticateToken } = require('../app/middlewares/auth');
  *                 status:
  *                   type: string
  *                   example: active
- *   securitySchemes:
+ * # Tag Schemas
+ *     Tag:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           example: tag123
+ *         name:
+ *           type: string
+ *           example: Rock
+ *         description:
+ *           type: string
+ *           example: Rock music genre
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *     
+ *     CreateTagRequest:
+ *       type: object
+ *       required:
+ *         - name
+ *       properties:
+ *         name:
+ *           type: string
+ *           example: Rock
+ *           description: The name of the tag
+ *         description:
+ *           type: string
+ *           example: Rock music genre
+ *           description: Optional description of the tag
+ *     
+ *     UpdateTagRequest:
+ *       type: object
+ *       properties:
+ *         name:
+ *           type: string
+ *           example: Rock
+ *           description: The name of the tag
+ *         description:
+ *           type: string
+ *           example: Rock music genre
+ *           description: Optional description of the tag
+ *     
+ *     TagsResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           example: Get All Tags
+ *         data:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/Tag'
+ *     
+ *     TagResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           example: Tag created successfully
+ *         data:
+ *           $ref: '#/components/schemas/Tag'
+ *     
+       securitySchemes:
  *     bearerAuth:
  *       type: http
  *       scheme: bearer
@@ -461,7 +528,7 @@ router.get('/notes/:user_id', NoteController.GetNoteByUserId);
  *   get:
  *     summary: Retrieve user access list
  *     description: Get a list of users with their access status for admin management
- *     tags: [User]
+ *     tags: [Admin / User]
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -498,7 +565,7 @@ router.get('/admin/user-access', authenticateToken, UserController.getUserAccess
  *   put:
  *     summary: Update user access status
  *     description: Admin can update the status for a specific user (active or suspend)
- *     tags: [User]
+ *     tags: [Admin / User]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -547,5 +614,205 @@ router.get('/admin/user-access', authenticateToken, UserController.getUserAccess
  *               $ref: '#/components/schemas/InternalServerError'
  */
 router.put('/admin/user-access/:user_id', authenticateToken, UserController.updateUserAccess);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * @swagger
+ * /api/tags/:
+ *   get:
+ *     summary: Get all tags
+ *     description: Retrieve all available tags
+ *     tags: [Tag]
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TagsResponse'
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BadRequestError'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/InternalServerError'
+ */
+router.get('/tags/', TagController.GetTags);
+
+/**
+ * @swagger
+ * /api/tags/{id}:
+ *   get:
+ *     summary: Get tag by ID
+ *     description: Retrieve a specific tag by its ID
+ *     tags: [Tag]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The id parameter
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TagResponse'
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BadRequestError'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/InternalServerError'
+ */
+router.get('/tags/:id', TagController.GetTagById);
+
+/**
+ * @swagger
+ * /api/tags/:
+ *   post:
+ *     summary: Create new tag
+ *     description: Create a new tag with name and description
+ *     tags: [Tag]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateTagRequest'
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TagResponse'
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BadRequestError'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/InternalServerError'
+ */
+router.post('/tags/', TagController.CreateTag);
+
+/**
+ * @swagger
+ * /api/tags/{id}:
+ *   put:
+ *     summary: Update tag
+ *     description: Update an existing tag by ID
+ *     tags: [Tag]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The id parameter
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateTagRequest'
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TagResponse'
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BadRequestError'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/InternalServerError'
+ */
+router.put('/tags/:id', TagController.UpdateTag);
+
+/**
+ * @swagger
+ * /api/tags/{id}:
+ *   delete:
+ *     summary: Delete tag
+ *     description: Delete a tag by ID
+ *     tags: [Tag]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The id parameter
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Tag deleted successfully
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BadRequestError'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/InternalServerError'
+ */
+router.delete('/tags/:id', TagController.DeleteTag);
 
 module.exports = router;
