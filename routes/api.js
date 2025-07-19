@@ -9,7 +9,143 @@ const { authenticateToken } = require('../app/middlewares/auth');
  * @swagger
  * components:
  *   schemas:
- *     Error:
+ *     # Base Response Schemas
+ *     BaseResponse:
+ *       type: object
+ *       properties:
+ *         code:
+ *           type: integer
+ *           description: HTTP status code
+ *         message:
+ *           type: string
+ *           description: Response message
+ *     
+ *     BaseResponseWithData:
+ *       allOf:
+ *         - $ref: '#/components/schemas/BaseResponse'
+ *         - type: object
+ *           properties:
+ *             data:
+ *               type: object
+ *               description: Response data payload
+ *     
+ *     # Error Schemas - Based on ErrorController methods
+ *     NotFoundError:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *           example: Route not found
+ *         message:
+ *           type: string
+ *           example: Cannot GET /api/invalid-route
+ *         statusCode:
+ *           type: integer
+ *           example: 404
+ *     
+ *     BadRequestError:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *           example: Bad request
+ *         message:
+ *           type: string
+ *           example: Bad request
+ *         statusCode:
+ *           type: integer
+ *           example: 400
+ *     
+ *     UnauthorizedError:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *           example: Unauthorized
+ *         message:
+ *           type: string
+ *           example: Unauthorized
+ *         statusCode:
+ *           type: integer
+ *           example: 401
+ *     
+ *     ForbiddenError:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *           example: Forbidden
+ *         message:
+ *           type: string
+ *           example: Forbidden
+ *         statusCode:
+ *           type: integer
+ *           example: 403
+ *     
+ *     InternalServerError:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *           example: Internal server error
+ *         message:
+ *           type: string
+ *           example: Internal server error
+ *         statusCode:
+ *           type: integer
+ *           example: 500
+ *     
+ *     ValidationError:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *           example: Validation error
+ *         message:
+ *           type: string
+ *           example: Request validation failed
+ *         errors:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               field:
+ *                 type: string
+ *                 example: email
+ *               message:
+ *                 type: string
+ *                 example: Email is required
+ *         statusCode:
+ *           type: integer
+ *           example: 422
+ *     
+ *     ConflictError:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *           example: Conflict
+ *         message:
+ *           type: string
+ *           example: Resource already exists
+ *         statusCode:
+ *           type: integer
+ *           example: 409
+ *     
+ *     AccountAccessDeniedError:
+ *       type: object
+ *       properties:
+ *         code:
+ *           type: integer
+ *           example: 403
+ *         message:
+ *           type: string
+ *           example: Account access denied
+ *         error:
+ *           type: string
+ *           example: Your account status is inactive. Please contact administrator.
+ *     
+ *     SimpleError:
  *       type: object
  *       properties:
  *         code:
@@ -17,10 +153,32 @@ const { authenticateToken } = require('../app/middlewares/auth');
  *           example: 400
  *         message:
  *           type: string
- *           example: Error message
- *         error:
+ *           example: Invalid status. Must be either "active" or "suspend"
+ *     
+ *     # User Schemas
+ *     User:
+ *       type: object
+ *       properties:
+ *         id:
  *           type: string
- *           example: Detailed error information
+ *           example: user123
+ *         email:
+ *           type: string
+ *           example: user@example.com
+ *         role:
+ *           type: string
+ *           enum: [admin, member]
+ *           example: member
+ *         status:
+ *           type: string
+ *           enum: [active, pending, suspend, request, guest]
+ *           example: active
+ *         is_admin:
+ *           type: boolean
+ *           example: false
+ *           description: Only present for admin users
+ *     
+ *     # Auth Schemas
  *     LoginRequest:
  *       type: object
  *       required:
@@ -29,37 +187,134 @@ const { authenticateToken } = require('../app/middlewares/auth');
  *       properties:
  *         email:
  *           type: string
+ *           format: email
  *           example: user@example.com
  *         password:
  *           type: string
  *           example: password123
+ *     
  *     LoginResponse:
+ *       allOf:
+ *         - $ref: '#/components/schemas/BaseResponseWithData'
+ *         - type: object
+ *           properties:
+ *             code:
+ *               example: 200
+ *             message:
+ *               example: Login successful
+ *             data:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *     
+ *     LogoutResponse:
  *       type: object
  *       properties:
- *         code:
- *           type: integer
- *           example: 200
  *         message:
  *           type: string
- *           example: Login successful
+ *           example: Logout successful
+ *     
+ *     # Note Schemas
+ *     Song:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           example: song123
+ *         title:
+ *           type: string
+ *           example: Song Title
+ *         artist:
+ *           type: string
+ *           example: Artist Name
+ *     
+ *     Note:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           example: note123
+ *         notes:
+ *           type: string
+ *           example: This is a note
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *         Song:
+ *           $ref: '#/components/schemas/Song'
+ *     
+ *     NotesResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           example: Get All Notes
+ *         id:
+ *           type: string
+ *           example: user123
  *         data:
- *           type: object
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/Note'
+ *     
+ *     # User Access Schemas
+ *     UserAccessResponse:
+ *       allOf:
+ *         - $ref: '#/components/schemas/BaseResponseWithData'
+ *         - type: object
  *           properties:
- *             token:
- *               type: string
- *               example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
- *             user:
+ *             code:
+ *               example: 200
+ *             message:
+ *               example: User access list retrieved successfully
+ *             data:
+ *               type: object
+ *               properties:
+ *                 active_users:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *                 request_users:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *                 suspended_users:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *     
+ *     UpdateUserAccessRequest:
+ *       type: object
+ *       required:
+ *         - status
+ *       properties:
+ *         status:
+ *           type: string
+ *           enum: [active, suspend]
+ *           example: active
+ *     
+ *     UpdateUserAccessResponse:
+ *       allOf:
+ *         - $ref: '#/components/schemas/BaseResponseWithData'
+ *         - type: object
+ *           properties:
+ *             code:
+ *               example: 200
+ *             message:
+ *               example: User access updated successfully
+ *             data:
  *               type: object
  *               properties:
  *                 id:
  *                   type: string
  *                   example: user123
- *                 email:
- *                   type: string
- *                   example: user@example.com
- *                 role:
- *                   type: string
- *                   example: member
  *                 status:
  *                   type: string
  *                   example: active
@@ -95,13 +350,25 @@ const { authenticateToken } = require('../app/middlewares/auth');
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               $ref: '#/components/schemas/BadRequestError'
+ *       401:
+ *         description: Unauthorized - Invalid credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedError'
+ *       403:
+ *         description: Account access denied
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AccountAccessDeniedError'
  *       500:
  *         description: Internal server error
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               $ref: '#/components/schemas/InternalServerError'
  */
 router.post('/auth/login', AuthController.apiLogin);
 
@@ -130,30 +397,25 @@ router.post('/auth/login', AuthController.apiLogin);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *               example:
- *                 message: Logout successful
+ *               $ref: '#/components/schemas/LogoutResponse'
  *       400:
  *         description: Bad request
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               $ref: '#/components/schemas/BadRequestError'
  *       401:
  *         description: Unauthorized
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               $ref: '#/components/schemas/UnauthorizedError'
  *       500:
  *         description: Internal server error
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               $ref: '#/components/schemas/InternalServerError'
  */
 router.post('/auth/logout', authenticateToken, AuthController.apiLogout);
 
@@ -177,28 +439,19 @@ router.post('/auth/logout', authenticateToken, AuthController.apiLogout);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: integer
- *                   example: 200
- *                 message:
- *                   type: string
- *                   example: Success
- *                 data:
- *                   type: object
+ *               $ref: '#/components/schemas/NotesResponse'
  *       400:
  *         description: Bad request
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               $ref: '#/components/schemas/BadRequestError'
  *       500:
  *         description: Internal server error
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               $ref: '#/components/schemas/InternalServerError'
  */
 router.get('/notes/:user_id', NoteController.GetNoteByUserId);
 
@@ -217,60 +470,25 @@ router.get('/notes/:user_id', NoteController.GetNoteByUserId);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: number
- *                   example: 200
- *                 message:
- *                   type: string
- *                   example: User access list retrieved successfully
- *                 data:
- *                   type: object
- *                   properties:
- *                     active_users:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           id:
- *                             type: string
- *                             example: user123
- *                           email:
- *                             type: string
- *                             example: user@example.com
- *                           role:
- *                             type: string
- *                             example: member
- *                           status:
- *                             type: string
- *                             example: active
- *                     request_users:
- *                       type: array
- *                       items:
- *                         type: object
- *                     suspended_users:
- *                       type: array
- *                       items:
- *                         type: object
+ *               $ref: '#/components/schemas/UserAccessResponse'
  *       400:
  *         description: Bad request
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               $ref: '#/components/schemas/BadRequestError'
  *       401:
  *         description: Unauthorized - Admin access required
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               $ref: '#/components/schemas/UnauthorizedError'
  *       500:
  *         description: Internal server error
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               $ref: '#/components/schemas/InternalServerError'
  */
 router.get('/admin/user-access', authenticateToken, UserController.getUserAccess);
 
@@ -295,63 +513,38 @@ router.get('/admin/user-access', authenticateToken, UserController.getUserAccess
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - status
- *             properties:
- *               status:
- *                 type: string
- *                 enum: [active, suspend]
- *                 description: The new status for the user
- *             example:
- *               status: active
+ *             $ref: '#/components/schemas/UpdateUserAccessRequest'
  *     responses:
  *       200:
  *         description: User access updated successfully
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: number
- *                   example: 200
- *                 message:
- *                   type: string
- *                   example: User access updated successfully
- *                 data:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                       example: user123
- *                     status:
- *                       type: string
- *                       example: active
+ *               $ref: '#/components/schemas/UpdateUserAccessResponse'
  *       400:
  *         description: Bad request - Invalid status value
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               $ref: '#/components/schemas/SimpleError'
  *       401:
  *         description: Unauthorized - Admin access required
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               $ref: '#/components/schemas/UnauthorizedError'
  *       404:
  *         description: User not found
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               $ref: '#/components/schemas/SimpleError'
  *       500:
  *         description: Internal server error
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               $ref: '#/components/schemas/InternalServerError'
  */
 router.put('/admin/user-access/:user_id', authenticateToken, UserController.updateUserAccess);
 

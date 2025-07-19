@@ -1,5 +1,5 @@
 {
-  "name": "node-express-mysql-boilerplate",
+  "name": "swagpress",
   "version": "1.0.0",
   "description": "A boilerplate for Node.js web applications with express and MySQL",
   "main": "index.js",

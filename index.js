@@ -34,5 +34,19 @@ app.use('/api', apiRoutes);
 app.use(ErrorController.notFound);
 app.use(ErrorController.handleError);
 
-app.listen(process.env.PORT);
-console.log("API listening on port " + process.env.PORT);
+app.listen(process.env.PORT, '0.0.0.0', () => {
+  const os = require('os');
+  const networkInterfaces = os.networkInterfaces();
+  
+  console.log(`Server running on port ${process.env.PORT}`);
+  console.log('Accessible URLs:');
+  console.log(`  Local: http://localhost:${process.env.PORT}`);
+  
+  Object.keys(networkInterfaces).forEach((interfaceName) => {
+    networkInterfaces[interfaceName].forEach((network) => {
+      if (network.family === 'IPv4' && !network.internal) {
+        console.log(`  Network: http://${network.address}:${process.env.PORT}`);
+      }
+    });
+  });
+});

@@ -24,16 +24,16 @@ help:
 
 # Database Commands
 songbank-db:
-	@echo "Creating MySQL database container..."
+	@echo "Creating MySQL database container accessible from other devices..."
 	podman run -d \
 		--name songbanks-mysql \
-		-p $(DB_PORT):3306 \
+		-p 0.0.0.0:$(DB_PORT):3306 \
 		-e MYSQL_ROOT_PASSWORD=$(DB_PASSWORD) \
 		-e MYSQL_DATABASE=$(DB_DATABASE) \
 		-e MYSQL_USER=$(DB_USERNAME) \
 		-e MYSQL_PASSWORD=$(DB_PASSWORD) \
-		mysql:8.0
-	@echo "MySQL container created and running on port $(DB_PORT)"
+		mysql:8.0 --bind-address=0.0.0.0
+	@echo "MySQL container created and running on port $(DB_PORT), accessible from other devices"
 
 migrate:
 	@echo "Running database migrations..."
