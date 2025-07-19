@@ -95,4 +95,4 @@ docs:
 
 swagger-generate:
 	@echo "Generating Swagger documentation from models and controllers..."
-	@node package swagger:generate
+	npm run swagger:generate

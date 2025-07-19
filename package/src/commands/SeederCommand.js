@@ -1,28 +1,29 @@
 const fs = require('fs');
 const path = require('path');
 
-class ControllerCommand {
+class SeederCommand {
     constructor() {
-        this.stubPath = path.join(__dirname, '../stub');
+        this.stubPath = path.join(__dirname, '../stubs');
     }
 
     execute(name) {
         if (!name) {
-            console.error('Error: name parameter is required for controller:create');
-            console.error('Usage: node package/commands.js controller:create <name>');
+            console.error('Error: name parameter is required for seeder:create');
+            console.error('Usage: node package seeder:create <name>');
             process.exit(1);
         }
 
-        const filename = `${name}.js`;
-        const targetPath = path.join(process.cwd(), 'app/controllers', filename);
+        const timestamp = new Date().toISOString().replace(/[-T:.Z]/g, '').slice(0, 14);
+        const filename = `${timestamp}-${name}.js`;
+        const targetPath = path.join(process.cwd(), 'database/seeders', filename);
         
         this.ensureDirectoryExists(path.dirname(targetPath));
         
-        const template = this.loadTemplate('controller.stub');
+        const template = this.loadTemplate('seeder.stub');
         const content = template.replace(/{{name}}/g, name);
         
         fs.writeFileSync(targetPath, content);
-        console.log(`Controller created: ${targetPath}`);
+        console.log(`Seeder created: ${targetPath}`);
     }
 
     loadTemplate(templateName) {
@@ -40,4 +41,4 @@ class ControllerCommand {
     }
 }
 
-module.exports = ControllerCommand;
+module.exports = SeederCommand;

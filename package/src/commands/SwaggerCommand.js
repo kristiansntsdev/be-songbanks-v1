@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 
-const SwaggerCommand = require('./SwaggerCommand');
 const fs = require('fs');
 const path = require('path');
 
-class SwaggerByControllerCommand extends SwaggerCommand {
+class SwaggerCommand {
     constructor() {
-        super();
+        this.modelsPath = path.join(process.cwd(), 'app/models');
+        this.controllersPath = path.join(process.cwd(), 'app/controllers');
+        this.routesPath = path.join(process.cwd(), 'routes/api.js');
+        this.outputPath = path.join(process.cwd(), 'docs/swagger');
         this.args = process.argv.slice(2);
     }
 
@@ -524,12 +526,159 @@ Available controllers:`);
         
         console.log('✅ Main routes file updated successfully');
     }
+
+    // Methods moved from SwaggerCommand
+    scanControllers() {
+        const controllers = {};
+        
+        if (!fs.existsSync(this.controllersPath)) {
+            console.warn('⚠️  Controllers directory not found');
+            return controllers;
+        }
+        
+        const files = fs.readdirSync(this.controllersPath)
+            .filter(file => file.endsWith('.js') && !file.includes('Error'));
+        
+        for (const file of files) {
+            const controllerName = path.basename(file, '.js');
+            const controllerPath = path.join(this.controllersPath, file);
+            
+            try {
+                const content = fs.readFileSync(controllerPath, 'utf8');
+                controllers[controllerName] = this.parseController(content, controllerName);
+            } catch (error) {
+                console.warn(`⚠️  Error parsing controller ${controllerName}: ${error.message}`);
+            }
+        }
+        
+        return controllers;
+    }
+
+    parseController(content, controllerName) {
+        const controller = {
+            name: controllerName,
+            methods: this.extractControllerMethods(content)
+        };
+        
+        return controller;
+    }
+
+    extractControllerMethods(content) {
+        const methods = {};
+        
+        // Match static async methods that are NOT commented out
+        const lines = content.split('\n');
+        let inCommentBlock = false;
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            
+            // Check for comment blocks
+            if (line.includes('/*') && !line.includes('*/')) {
+                inCommentBlock = true;
+                continue;
+            }
+            if (line.includes('*/')) {
+                inCommentBlock = false;
+                continue;
+            }
+            
+            // Skip if in comment block
+            if (inCommentBlock) {
+                continue;
+            }
+            
+            // Match static async methods
+            const methodMatch = line.match(/static\s+async\s+(\w+)\s*\([^)]*\)/);
+            if (methodMatch) {
+                const methodName = methodMatch[1];
+                
+                methods[methodName] = {
+                    name: methodName,
+                    isAsync: true,
+                    httpMethod: this.inferHttpMethod(methodName),
+                    lineNumber: i + 1
+                };
+            }
+        }
+        
+        return methods;
+    }
+
+    inferHttpMethod(methodName) {
+        const methodMap = {
+            'index': 'get',
+            'show': 'get',
+            'create': 'post',
+            'update': 'put',
+            'destroy': 'delete',
+            'delete': 'delete'
+        };
+        
+        const lowerMethod = methodName.toLowerCase();
+        
+        for (const [pattern, httpMethod] of Object.entries(methodMap)) {
+            if (lowerMethod.includes(pattern)) {
+                return httpMethod;
+            }
+        }
+        
+        if (lowerMethod.includes('get')) return 'get';
+        if (lowerMethod.includes('post')) return 'post';
+        if (lowerMethod.includes('put') || lowerMethod.includes('update')) return 'put';
+        if (lowerMethod.includes('delete')) return 'delete';
+        
+        return 'get';
+    }
+
+    scanRoutes() {
+        // Simplified route scanning
+        return [];
+    }
+
+    getActiveControllerMethods(controllers) {
+        const activeControllerMethods = [];
+        
+        for (const [controllerName, controller] of Object.entries(controllers)) {
+            for (const [methodName, method] of Object.entries(controller.methods)) {
+                activeControllerMethods.push({
+                    controller: controllerName,
+                    method: methodName,
+                    httpMethod: method.httpMethod,
+                    fullMethodName: `${controllerName}.${methodName}`
+                });
+            }
+        }
+        
+        return activeControllerMethods;
+    }
+
+    generateRoutePath(route) {
+        const controller = route.controller.replace('Controller', '').toLowerCase();
+        const method = route.method.toLowerCase();
+        
+        // Generate RESTful paths based on method patterns
+        if (method.includes('getall') || method.includes('index')) {
+            return `/api/${controller}s`;
+        } else if (method.includes('getbyid') || method.includes('show')) {
+            return `/api/${controller}s/:id`;
+        } else if (method.includes('create') || method.includes('store')) {
+            return `/api/${controller}s`;
+        } else if (method.includes('update')) {
+            return `/api/${controller}s/:id`;
+        } else if (method.includes('delete') || method.includes('destroy')) {
+            return `/api/${controller}s/:id`;
+        }
+        
+        // Default fallback
+        return `/api/${controller}s`;
+    }
 }
 
 // Run the command if this file is executed directly
 if (require.main === module) {
-    const generator = new SwaggerByControllerCommand();
+    const generator = new SwaggerCommand();
     generator.execute();
 }
 
-module.exports = SwaggerByControllerCommand;
+module.exports = SwaggerCommand;

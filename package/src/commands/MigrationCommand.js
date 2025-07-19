@@ -3,17 +3,17 @@ const path = require('path');
 
 class MigrationCommand {
     constructor() {
-        this.stubPath = path.join(__dirname, '../stub');
+        this.stubPath = path.join(__dirname, '../stubs');
     }
 
     execute(name) {
         if (!name) {
             console.error('Error: name parameter is required for migration:create');
-            console.error('Usage: node package/commands.js migration:create <name>');
+            console.error('Usage: node package migration:create <name>');
             process.exit(1);
         }
 
-        const timestamp = new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14);
+        const timestamp = new Date().toISOString().replace(/[-T:.Z]/g, '').slice(0, 14);
         const filename = `${timestamp}-${name}.js`;
         const targetPath = path.join(process.cwd(), 'database/migrations', filename);
         
