@@ -1,0 +1,40 @@
+'use strict';
+
+const { Migration } = require('../package/src/engine');
+
+class {{name}} extends Migration {
+    /**
+     * Run the migrations.
+     */
+    async up() {
+        await this.Schema.create('{{tableName}}', (table) => {
+            table.id();
+            // Add your columns here
+            // Example:
+            // table.string('name').notNullable();
+            // table.text('description').nullable();
+            // table.enum('status', ['active', 'inactive']).default('active');
+            table.timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    async down() {
+        await this.Schema.drop('{{tableName}}');
+    }
+}
+
+/** @type {import('sequelize-cli').Migration} */
+module.exports = {
+    async up(queryInterface, Sequelize) {
+        const migration = new {{name}}(queryInterface, Sequelize);
+        await migration.up();
+    },
+
+    async down(queryInterface, Sequelize) {
+        const migration = new {{name}}(queryInterface, Sequelize);
+        await migration.down();
+    }
+};

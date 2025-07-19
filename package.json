@@ -7,14 +7,13 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "postinstall": "cp .env-example .env",
     "migrate": "sequelize-cli db:migrate",
     "migrate:undo": "sequelize-cli db:migrate:undo",
     "migrate:fresh": "sequelize-cli db:migrate:undo:all && sequelize-cli db:migrate",
     "seed": "sequelize-cli db:seed:all",
     "seed:undo": "sequelize-cli db:seed:undo:all",
-    "swagger:generate": "node package/command/SwaggerCommand.js",
-    "swagger:controller": "node package/command/SwaggerByControllerCommand.js"
+    "swaggerpress:generate-api": "node package/src/commands/SwaggerCommand.js",
+    "swaggerpress:resource": "node package/src/commands/ResourceCommand.js --"
   },
   "nodemonConfig": {
     "signal": "SIGTERM"

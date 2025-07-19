@@ -1,0 +1,41 @@
+<svg width="400" height="120" viewBox="0 0 340 120" xmlns="http://www.w3.org/2000/svg">
+ <!-- Main logo symbol -->
+ <g transform="translate(20, 35)">
+   <!-- Swagger document stack -->
+   <rect x="20" y="10" width="30" height="35" fill="#85ea2d" rx="4" opacity="0.9"/>
+   <rect x="22" y="5" width="30" height="35" fill="#85ea2d" rx="4" opacity="0.7"/>
+   <rect x="24" y="0" width="30" height="35" fill="#85ea2d" rx="4"/>
+   
+   <!-- Document lines (API endpoints) -->
+   <rect x="28" y="5" width="18" height="2" fill="white" rx="1"/>
+   <rect x="28" y="10" width="22" height="2" fill="white" rx="1"/>
+   <rect x="28" y="15" width="15" height="2" fill="white" rx="1"/>
+   <rect x="28" y="20" width="20" height="2" fill="white" rx="1"/>
+   <rect x="28" y="25" width="12" height="2" fill="white" rx="1"/>
+   
+   <!-- Express speed indicator -->
+   <g transform="translate(0, 15)">
+     <path d="M5,0 L18,0" stroke="#85ea2d" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+     <path d="M8,5 L21,5" stroke="#85ea2d" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+     <path d="M5,10 L18,10" stroke="#85ea2d" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
+   </g>
+ </g>
+ 
+ <!-- SwagPress Text -->
+ <g transform="translate(100, 35)">
+   <!-- "Swag" part -->
+   <text x="0" y="25" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#333">
+     Swag
+   </text>
+   
+   <!-- "Press" part -->
+   <text x="85" y="25" font-family="Arial, sans-serif" font-size="28" font-weight="300" fill="#85ea2d">
+     Press
+   </text>
+   
+   <!-- Tagline -->
+   <text x="0" y="45" font-family="Arial, sans-serif" font-size="11" fill="#666" letter-spacing="1px">
+     SWAGGER + EXPRESS FRAMEWORK
+   </text>
+ </g>
+</svg>

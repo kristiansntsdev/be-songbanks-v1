@@ -9,19 +9,19 @@ const {{name}} = sequelize.define('{{tableName}}', {
         allowNull: false,
         defaultValue: () => ulid()
     },
-    // Add your fields here
-    // Example:
-    // name: {
-    //     type: DataTypes.STRING,
-    //     allowNull: false
-    // }
+    name: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    description: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    }
 }, {
     indexes: [
-        // Add your indexes here
-        // Example:
-        // {
-        //     fields: ['name']
-        // }
+        {
+            fields: ['name']
+        }
     ]
 });
 

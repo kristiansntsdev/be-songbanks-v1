@@ -1,0 +1,76 @@
+const ErrorController = require('./ErrorController');
+const {{modelName}} = require('../models/{{modelName}}');
+
+class {{name}} {
+
+    // GET /api/{{pluralResource}}/
+    static async Get{{capitalizedPlural}}(req, res) {
+        try {
+            const {{pluralResource}} = await {{modelName}}.findAll({
+                attributes: ['id', 'name', 'description', 'createdAt', 'updatedAt']
+            });
+            res.json({ message: 'Get All {{capitalizedPlural}}', data: {{pluralResource}} });
+        } catch (error) {
+            ErrorController.handleError(error, req, res);
+        }
+    }
+
+    // GET /api/{{pluralResource}}/:id
+    static async Get{{capitalizedResource}}ById(req, res) {
+        try {
+            const {{resource}} = await {{modelName}}.findByPk(req.params.id, {
+                attributes: ['id', 'name', 'description', 'createdAt', 'updatedAt']
+            });
+            if (!{{resource}}) {
+                return res.status(404).json({ message: '{{capitalizedResource}} not found' });
+            }
+            res.json({ message: 'Get {{capitalizedResource}} by ID', data: {{resource}} });
+        } catch (error) {
+            ErrorController.handleError(error, req, res);
+        }
+    }
+
+    // POST /api/{{pluralResource}}/
+    static async Create{{capitalizedResource}}(req, res) {
+        try {
+            const { name, description } = req.body;
+            const new{{capitalizedResource}} = await {{modelName}}.create({ name, description });
+            res.status(201).json({ message: '{{capitalizedResource}} created successfully', data: new{{capitalizedResource}} });
+        } catch (error) {
+            ErrorController.handleError(error, req, res);
+        }
+    }
+
+    // PUT /api/{{pluralResource}}/:id
+    static async Update{{capitalizedResource}}(req, res) {
+        try {
+            const { name, description } = req.body;
+            const {{resource}} = await {{modelName}}.findByPk(req.params.id);
+            if (!{{resource}}) {
+                return res.status(404).json({ message: '{{capitalizedResource}} not found' });
+            }
+            {{resource}}.name = name || {{resource}}.name;
+            {{resource}}.description = description || {{resource}}.description;
+            await {{resource}}.save();
+            res.json({ message: '{{capitalizedResource}} updated successfully', data: {{resource}} });
+        } catch (error) {
+            ErrorController.handleError(error, req, res);
+        }
+    }
+
+    // DELETE /api/{{pluralResource}}/:id
+    static async Delete{{capitalizedResource}}(req, res) {
+        try {
+            const {{resource}} = await {{modelName}}.findByPk(req.params.id);
+            if (!{{resource}}) {
+                return res.status(404).json({ message: '{{capitalizedResource}} not found' });
+            }
+            await {{resource}}.destroy();
+            res.json({ message: '{{capitalizedResource}} deleted successfully' });
+        } catch (error) {
+            ErrorController.handleError(error, req, res);
+        }
+    }
+}
+
+module.exports = {{name}};

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-const MigrationCommand = require('./command/MigrationCommand');
-const SeederCommand = require('./command/SeederCommand');
-const ControllerCommand = require('./command/ControllerCommand');
-const ModelCommand = require('./command/ModelCommand');
-const SwaggerCommand = require('./command/SwaggerCommand');
+const MigrationCommand = require('./src/commands/MigrationCommand');
+const SeederCommand = require('./src/commands/SeederCommand');
+const ControllerCommand = require('./src/commands/ControllerCommand');
+const ModelCommand = require('./src/commands/ModelCommand');
+const SwaggerCommand = require('./src/commands/SwaggerCommand');
 
 class CommandRunner {
     constructor() {
