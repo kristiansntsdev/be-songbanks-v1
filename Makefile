@@ -1,6 +1,6 @@
 include .env
 
-.PHONY: help songbank-db migrate seed controller model migration seeder generate-swagger-docs
+.PHONY: help songbank-db migrate seed controller model migration seeder swagger-generate
 
 help:
 	@echo "Available commands:"
@@ -20,20 +20,20 @@ help:
 	@echo "  Server:"
 	@echo "    start                    - Start development server"
 	@echo "    docs                     - Open API documentation"
-	@echo "    generate-swagger-docs    - Generate Swagger documentation from controllers"
+	@echo "    swagger-generate         - Generate Swagger documentation from models and controllers"
 
 # Database Commands
 songbank-db:
-	@echo "Creating MySQL database container..."
+	@echo "Creating MySQL database container accessible from other devices..."
 	podman run -d \
 		--name songbanks-mysql \
-		-p $(DB_PORT):3306 \
+		-p 0.0.0.0:$(DB_PORT):3306 \
 		-e MYSQL_ROOT_PASSWORD=$(DB_PASSWORD) \
 		-e MYSQL_DATABASE=$(DB_DATABASE) \
 		-e MYSQL_USER=$(DB_USERNAME) \
 		-e MYSQL_PASSWORD=$(DB_PASSWORD) \
-		mysql:8.0
-	@echo "MySQL container created and running on port $(DB_PORT)"
+		mysql:8.0 --bind-address=0.0.0.0
+	@echo "MySQL container created and running on port $(DB_PORT), accessible from other devices"
 
 migrate:
 	@echo "Running database migrations..."
@@ -57,192 +57,28 @@ migration\:create:
 		echo "Usage: make migration:create name=your_migration_name"; \
 		exit 1; \
 	fi
-	@echo "Creating migration: $(name)"
-	@timestamp=$$(date +%Y%m%d%H%M%S); \
-	filename="database/migrations/$${timestamp}-$(name).js"; \
-	mkdir -p database/migrations; \
-	cat > "$$filename" << 'EOF'
-'use strict';
-
-/** @type {import('sequelize-cli').Migration} */
-module.exports = {
-  async up(queryInterface, Sequelize) {
-    // Add your migration code here
-    // Example:
-    // await queryInterface.createTable('table_name', {
-    //   id: {
-    //     allowNull: false,
-    //     primaryKey: true,
-    //     type: Sequelize.STRING(26)
-    //   },
-    //   name: {
-    //     type: Sequelize.STRING,
-    //     allowNull: false
-    //   },
-    //   createdAt: {
-    //     allowNull: false,
-    //     type: Sequelize.DATE
-    //   },
-    //   updatedAt: {
-    //     allowNull: false,
-    //     type: Sequelize.DATE
-    //   }
-    // });
-  },
-
-  async down(queryInterface, Sequelize) {
-    // Add your rollback code here
-    // Example:
-    // await queryInterface.dropTable('table_name');
-  }
-};
-EOF
-	@echo "Migration created: $$filename"
+	@node package migration:create $(name)
 
 seeder\:create:
 	@if [ -z "$(name)" ]; then \
 		echo "Usage: make seeder:create name=your_seeder_name"; \
 		exit 1; \
 	fi
-	@echo "Creating seeder: $(name)"
-	@timestamp=$$(date +%Y%m%d%H%M%S); \
-	filename="database/seeders/$${timestamp}-$(name).js"; \
-	mkdir -p database/seeders; \
-	cat > "$$filename" << 'EOF'
-'use strict';
-
-const { ulid } = require('ulid');
-
-/** @type {import('sequelize-cli').Migration} */
-module.exports = {
-  async up(queryInterface, Sequelize) {
-    // Add your seeder code here
-    // Example:
-    // await queryInterface.bulkInsert('table_name', [{
-    //   id: ulid(),
-    //   name: 'Sample Name',
-    //   createdAt: new Date(),
-    //   updatedAt: new Date()
-    // }], {});
-  },
-
-  async down(queryInterface, Sequelize) {
-    // Add your rollback code here
-    // Example:
-    // await queryInterface.bulkDelete('table_name', null, {});
-  }
-};
-EOF
-	@echo "Seeder created: $$filename"
+	@node package seeder:create $(name)
 
 controller\:create:
 	@if [ -z "$(name)" ]; then \
 		echo "Usage: make controller:create name=YourController"; \
 		exit 1; \
 	fi
-	@echo "Creating controller: $(name)"
-	@mkdir -p app/controllers
-	@filename="app/controllers/$(name).js"; \
-	cat > "$$filename" << 'EOF'
-const ErrorController = require('./ErrorController');
-
-class $(name) {
-    // GET /api/resource
-    static async index(req, res) {
-        try {
-            // Add your logic here
-            res.json({ message: 'Index method' });
-        } catch (error) {
-            ErrorController.handleError(error, req, res);
-        }
-    }
-
-    // GET /api/resource/:id
-    static async show(req, res) {
-        try {
-            // Add your logic here
-            res.json({ message: 'Show method', id: req.params.id });
-        } catch (error) {
-            ErrorController.handleError(error, req, res);
-        }
-    }
-
-    // POST /api/resource
-    static async create(req, res) {
-        try {
-            // Add your logic here
-            res.status(201).json({ message: 'Create method' });
-        } catch (error) {
-            ErrorController.handleError(error, req, res);
-        }
-    }
-
-    // PUT /api/resource/:id
-    static async update(req, res) {
-        try {
-            // Add your logic here
-            res.json({ message: 'Update method', id: req.params.id });
-        } catch (error) {
-            ErrorController.handleError(error, req, res);
-        }
-    }
-
-    // DELETE /api/resource/:id
-    static async destroy(req, res) {
-        try {
-            // Add your logic here
-            res.json({ message: 'Delete method', id: req.params.id });
-        } catch (error) {
-            ErrorController.handleError(error, req, res);
-        }
-    }
-}
-
-module.exports = $(name);
-EOF
-	@echo "Controller created: $$filename"
+	@node package controller:create $(name)
 
 model\:create:
 	@if [ -z "$(name)" ]; then \
 		echo "Usage: make model:create name=YourModel"; \
 		exit 1; \
 	fi
-	@echo "Creating model: $(name)"
-	@mkdir -p app/models
-	@filename="app/models/$(name).js"; \
-	tablename=$$(echo "$(name)" | sed 's/\([A-Z]\)/_\1/g' | sed 's/^_//' | tr '[:upper:]' '[:lower:]')s; \
-	cat > "$$filename" << EOF
-const { DataTypes } = require('sequelize');
-const { ulid } = require('ulid');
-const sequelize = require('../../config/database');
-
-const $(name) = sequelize.define('$$tablename', {
-    id: {
-        type: DataTypes.STRING(26),
-        primaryKey: true,
-        allowNull: false,
-        defaultValue: () => ulid()
-    },
-    // Add your fields here
-    // Example:
-    // name: {
-    //     type: DataTypes.STRING,
-    //     allowNull: false
-    // }
-}, {
-    indexes: [
-        // Add your indexes here
-        // Example:
-        // {
-        //     fields: ['name']
-        // }
-    ]
-});
-
-module.exports = $(name);
-EOF
-	@echo "Model created: $$filename"
-	@echo "Table name: $$tablename"
+	@node package model:create $(name)
 
 # Server Commands
 start:
@@ -257,26 +93,6 @@ docs:
 		echo "Please open http://localhost:3000/api-docs in your browser"; \
 	fi
 
-generate-swagger-docs:
-	@echo "Generating Swagger documentation from controllers..."
-	@echo "Scanning controllers in app/controllers/..."
-	@for controller in app/controllers/*.js; do \
-		if [ -f "$$controller" ]; then \
-			echo "Processing: $$controller"; \
-			controller_name=$$(basename "$$controller" .js); \
-			echo "  - Controller: $$controller_name"; \
-			if grep -q "@swagger" "$$controller"; then \
-				echo "    ✓ Swagger documentation found"; \
-			else \
-				echo "    ⚠ No Swagger documentation found"; \
-			fi; \
-		fi; \
-	done
-	@echo ""
-	@echo "Swagger configuration: config/swagger.js"
-	@echo "API paths configured: ./routes/*.js, ./app/controllers/*.js"
-	@echo ""
-	@echo "To view documentation:"
-	@echo "  1. Start the server: make start"
-	@echo "  2. Open docs: make docs"
-	@echo "  3. Or visit: http://localhost:3000/api-docs"
+swagger-generate:
+	@echo "Generating Swagger documentation from models and controllers..."
+	@node package swagger:generate

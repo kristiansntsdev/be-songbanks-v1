@@ -1,32 +1,184 @@
 const express = require('express');
 const router = express.Router();
-const UserController = require('../app/controllers/UserController');
 const AuthController = require('../app/controllers/AuthController');
+const NoteController = require('../app/controllers/NoteController');
+const UserController = require('../app/controllers/UserController');
 const { authenticateToken } = require('../app/middlewares/auth');
 
 /**
  * @swagger
  * components:
  *   schemas:
+ *     # Base Response Schemas
+ *     BaseResponse:
+ *       type: object
+ *       properties:
+ *         code:
+ *           type: integer
+ *           description: HTTP status code
+ *         message:
+ *           type: string
+ *           description: Response message
+ *     
+ *     BaseResponseWithData:
+ *       allOf:
+ *         - $ref: '#/components/schemas/BaseResponse'
+ *         - type: object
+ *           properties:
+ *             data:
+ *               type: object
+ *               description: Response data payload
+ *     
+ *     # Error Schemas - Based on ErrorController methods
+ *     NotFoundError:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *           example: Route not found
+ *         message:
+ *           type: string
+ *           example: Cannot GET /api/invalid-route
+ *         statusCode:
+ *           type: integer
+ *           example: 404
+ *     
+ *     BadRequestError:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *           example: Bad request
+ *         message:
+ *           type: string
+ *           example: Bad request
+ *         statusCode:
+ *           type: integer
+ *           example: 400
+ *     
+ *     UnauthorizedError:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *           example: Unauthorized
+ *         message:
+ *           type: string
+ *           example: Unauthorized
+ *         statusCode:
+ *           type: integer
+ *           example: 401
+ *     
+ *     ForbiddenError:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *           example: Forbidden
+ *         message:
+ *           type: string
+ *           example: Forbidden
+ *         statusCode:
+ *           type: integer
+ *           example: 403
+ *     
+ *     InternalServerError:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *           example: Internal server error
+ *         message:
+ *           type: string
+ *           example: Internal server error
+ *         statusCode:
+ *           type: integer
+ *           example: 500
+ *     
+ *     ValidationError:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *           example: Validation error
+ *         message:
+ *           type: string
+ *           example: Request validation failed
+ *         errors:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               field:
+ *                 type: string
+ *                 example: email
+ *               message:
+ *                 type: string
+ *                 example: Email is required
+ *         statusCode:
+ *           type: integer
+ *           example: 422
+ *     
+ *     ConflictError:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *           example: Conflict
+ *         message:
+ *           type: string
+ *           example: Resource already exists
+ *         statusCode:
+ *           type: integer
+ *           example: 409
+ *     
+ *     AccountAccessDeniedError:
+ *       type: object
+ *       properties:
+ *         code:
+ *           type: integer
+ *           example: 403
+ *         message:
+ *           type: string
+ *           example: Account access denied
+ *         error:
+ *           type: string
+ *           example: Your account status is inactive. Please contact administrator.
+ *     
+ *     SimpleError:
+ *       type: object
+ *       properties:
+ *         code:
+ *           type: integer
+ *           example: 400
+ *         message:
+ *           type: string
+ *           example: Invalid status. Must be either "active" or "suspend"
+ *     
+ *     # User Schemas
  *     User:
  *       type: object
- *       required:
- *         - email
- *         - password
  *       properties:
  *         id:
  *           type: string
- *           description: The auto-generated ULID of the user
+ *           example: user123
  *         email:
  *           type: string
- *           description: The user email
- *         password:
+ *           example: user@example.com
+ *         role:
  *           type: string
- *           description: The user password
- *       example:
- *         id: 01HXXXXXXXXXXXXXXXXXXXXXXX
- *         email: user@example.com
- *         password: mypassword
+ *           enum: [admin, member]
+ *           example: member
+ *         status:
+ *           type: string
+ *           enum: [active, pending, suspend, request, guest]
+ *           example: active
+ *         is_admin:
+ *           type: boolean
+ *           example: false
+ *           description: Only present for admin users
+ *     
+ *     # Auth Schemas
  *     LoginRequest:
  *       type: object
  *       required:
@@ -35,188 +187,150 @@ const { authenticateToken } = require('../app/middlewares/auth');
  *       properties:
  *         email:
  *           type: string
+ *           format: email
+ *           example: user@example.com
  *         password:
  *           type: string
- *       example:
- *         email: user@example.com
- *         password: mypassword
+ *           example: password123
+ *     
  *     LoginResponse:
- *       type: object
- *       properties:
- *         token:
- *           type: string
- *           description: JWT token
- *         user:
- *           type: object
+ *       allOf:
+ *         - $ref: '#/components/schemas/BaseResponseWithData'
+ *         - type: object
  *           properties:
- *             id:
- *               type: string
- *             email:
- *               type: string
- *       example:
- *         token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
- *         user:
- *           id: 01HXXXXXXXXXXXXXXXXXXXXXXX
- *           email: user@example.com
- *     Error:
+ *             code:
+ *               example: 200
+ *             message:
+ *               example: Login successful
+ *             data:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *     
+ *     LogoutResponse:
  *       type: object
  *       properties:
- *         error:
- *           type: string
  *         message:
  *           type: string
- *         statusCode:
- *           type: number
- *       example:
- *         error: Unauthorized
- *         message: Invalid email or password
- *         statusCode: 401
- */
-
-/**
- * @swagger
- * /api/admin/user-access:
- *   get:
- *     summary: Retrieve a list of all users who have vol_user status or request status
- *     description: This endpoint is used by admins to get user access data for status management
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: User access list retrieved successfully
- *         content:
- *           application/json:
- *             schema:
+ *           example: Logout successful
+ *     
+ *     # Note Schemas
+ *     Song:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           example: song123
+ *         title:
+ *           type: string
+ *           example: Song Title
+ *         artist:
+ *           type: string
+ *           example: Artist Name
+ *     
+ *     Note:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           example: note123
+ *         notes:
+ *           type: string
+ *           example: This is a note
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *         Song:
+ *           $ref: '#/components/schemas/Song'
+ *     
+ *     NotesResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           example: Get All Notes
+ *         id:
+ *           type: string
+ *           example: user123
+ *         data:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/Note'
+ *     
+ *     # User Access Schemas
+ *     UserAccessResponse:
+ *       allOf:
+ *         - $ref: '#/components/schemas/BaseResponseWithData'
+ *         - type: object
+ *           properties:
+ *             code:
+ *               example: 200
+ *             message:
+ *               example: User access list retrieved successfully
+ *             data:
  *               type: object
  *               properties:
- *                 code:
- *                   type: number
- *                   example: 200
- *                 message:
- *                   type: string
- *                   example: User access list retrieved successfully
- *                 data:
+ *                 active_users:
  *                   type: array
  *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: string
- *                         example: user123
- *                       email:
- *                         type: string
- *                         example: user1@example.com
- *                       role:
- *                         type: string
- *                         example: member
- *                       is_admin:
- *                         type: boolean
- *                         example: false
- *                       status:
- *                         type: string
- *                         example: active
- *       401:
- *         description: Unauthorized - Admin access required
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
-router.get('/admin/user-access', authenticateToken, UserController.getUserAccess);
-
-/**
- * @swagger
- * /api/admin/user-access/{user_id}:
- *   put:
- *     summary: Update user access status
- *     description: Admin can update the status for a specific user (active or suspend)
- *     tags: [Admin]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: user_id
- *         required: true
- *         schema:
+ *                     $ref: '#/components/schemas/User'
+ *                 request_users:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *                 suspended_users:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *     
+ *     UpdateUserAccessRequest:
+ *       type: object
+ *       required:
+ *         - status
+ *       properties:
+ *         status:
  *           type: string
- *         description: The user ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - status
- *             properties:
- *               status:
- *                 type: string
- *                 enum: [active, suspend]
- *                 description: The new status for the user
- *             example:
- *               status: active
- *     responses:
- *       200:
- *         description: User access updated successfully
- *         content:
- *           application/json:
- *             schema:
+ *           enum: [active, suspend]
+ *           example: active
+ *     
+ *     UpdateUserAccessResponse:
+ *       allOf:
+ *         - $ref: '#/components/schemas/BaseResponseWithData'
+ *         - type: object
+ *           properties:
+ *             code:
+ *               example: 200
+ *             message:
+ *               example: User access updated successfully
+ *             data:
  *               type: object
  *               properties:
- *                 code:
- *                   type: number
- *                   example: 200
- *                 message:
+ *                 id:
  *                   type: string
- *                   example: User access updated successfully
- *                 data:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                       example: user123
- *                     status:
- *                       type: string
- *                       example: active
- *       400:
- *         description: Bad request - Invalid status value
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       401:
- *         description: Unauthorized - Admin access required
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       404:
- *         description: User not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *                   example: user123
+ *                 status:
+ *                   type: string
+ *                   example: active
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
  */
-router.put('/admin/user-access/:user_id', authenticateToken, UserController.updateUserAccess);
 
 /**
  * @swagger
  * /api/auth/login:
  *   post:
  *     summary: User login
+ *     description: Authenticate user with email and password
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -231,12 +345,30 @@ router.put('/admin/user-access/:user_id', authenticateToken, UserController.upda
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/LoginResponse'
- *       401:
- *         description: Unauthorized
+ *       400:
+ *         description: Bad request
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               $ref: '#/components/schemas/BadRequestError'
+ *       401:
+ *         description: Unauthorized - Invalid credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedError'
+ *       403:
+ *         description: Account access denied
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AccountAccessDeniedError'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/InternalServerError'
  */
 router.post('/auth/login', AuthController.apiLogin);
 
@@ -245,28 +377,175 @@ router.post('/auth/login', AuthController.apiLogin);
  * /api/auth/logout:
  *   post:
  *     summary: User logout
+ *     description: Logout authenticated user
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               data:
+ *                 type: object
+ *                 description: Request payload
  *     responses:
  *       200:
  *         description: Logout successful
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *               example:
- *                 message: Logout successful
+ *               $ref: '#/components/schemas/LogoutResponse'
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BadRequestError'
  *       401:
  *         description: Unauthorized
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               $ref: '#/components/schemas/UnauthorizedError'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/InternalServerError'
  */
 router.post('/auth/logout', authenticateToken, AuthController.apiLogout);
+
+/**
+ * @swagger
+ * /api/notes/{user_id}:
+ *   get:
+ *     summary: Get notes by user ID
+ *     description: Retrieve all notes for a specific user
+ *     tags: [Note]
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The user ID
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/NotesResponse'
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BadRequestError'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/InternalServerError'
+ */
+router.get('/notes/:user_id', NoteController.GetNoteByUserId);
+
+/**
+ * @swagger
+ * /api/admin/user-access:
+ *   get:
+ *     summary: Retrieve user access list
+ *     description: Get a list of users with their access status for admin management
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User access list retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserAccessResponse'
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BadRequestError'
+ *       401:
+ *         description: Unauthorized - Admin access required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedError'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/InternalServerError'
+ */
+router.get('/admin/user-access', authenticateToken, UserController.getUserAccess);
+
+/**
+ * @swagger
+ * /api/admin/user-access/{user_id}:
+ *   put:
+ *     summary: Update user access status
+ *     description: Admin can update the status for a specific user (active or suspend)
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The user ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateUserAccessRequest'
+ *     responses:
+ *       200:
+ *         description: User access updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UpdateUserAccessResponse'
+ *       400:
+ *         description: Bad request - Invalid status value
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SimpleError'
+ *       401:
+ *         description: Unauthorized - Admin access required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UnauthorizedError'
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SimpleError'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/InternalServerError'
+ */
+router.put('/admin/user-access/:user_id', authenticateToken, UserController.updateUserAccess);
 
 module.exports = router;

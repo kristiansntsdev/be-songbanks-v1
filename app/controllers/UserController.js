@@ -2,6 +2,7 @@ const User = require('../models/User');
 const ErrorController = require('./ErrorController');
 
 class UserController {
+    // GET /api/admin/user-access
     static async getUserAccess(req, res) {
         try {
             const activeUsers = await User.findAll({
@@ -54,6 +55,7 @@ class UserController {
         }
     }
 
+    // PUT /api/admin/user-access/:user_id
     static async updateUserAccess(req, res) {
         try {
             const { user_id } = req.params;

@@ -1,13 +1,13 @@
 # API Documentation
 
-This documentation describes the API endpoints for managing USER, SONG, NOTES, PLAYLIST, and PLAYLIST_TEAM based on the provided ER schema.
+This documentation describes the API endpoints for managing USER, SONG, TAG, NOTES, PLAYLIST, and PLAYLIST_TEAM based on the provided ER schema with normalized pivot tables.
 
 Each endpoint will follow the general format: [HTTP_METHOD] /api/[role]/[resource]/[:optional-id].
 [role] will be adjusted based on the authenticated user's role:
 
-admin: Has limited access to users (viewing, managing status), and full access to managing songs. Admins do not directly interact with playlists or playlist teams.
+admin: Has limited access to users (viewing, managing status), and full access to managing songs and tags. Admins do not directly interact with playlists or playlist teams.
 
-vol_user: Has access to view songs and manage their own notes. Has full access to manage playlists and playlist teams. A vol_user can request vol_user access if they don't already have it and can update their own profile data.
+vol_user: Has access to view songs and tags, and manage their own notes. Has full access to manage playlists and playlist teams. A vol_user can request vol_user access if they don't already have it and can update their own profile data.
 
 ## 0. Authentication
 
@@ -191,7 +191,18 @@ Response:
             "id": "song001",
             "title": "Song Title 1",
             "artist": "Artist A",
-            "tags": ["pop", "rock"],
+            "tags": [
+                {
+                    "id": "tag001",
+                    "name": "pop",
+                    "description": "Pop music genre"
+                },
+                {
+                    "id": "tag002", 
+                    "name": "rock",
+                    "description": "Rock music genre"
+                }
+            ],
             "base_chord": "C",
             "lyrics_and_chords": "Lyrics and chords..."
         }
@@ -216,7 +227,18 @@ Response:
         "id": "song001",
         "title": "Song Title 1",
         "artist": "Artist A",
-        "tags": ["pop", "rock"],
+        "tags": [
+            {
+                "id": "tag001",
+                "name": "pop",
+                "description": "Pop music genre"
+            },
+            {
+                "id": "tag002",
+                "name": "rock", 
+                "description": "Rock music genre"
+            }
+        ],
         "base_chord": "C",
         "lyrics_and_chords": "Lyrics and chords..."
     }
@@ -235,8 +257,8 @@ req.body:
 ```json
 {
     "title": "New Song Title",
-    "artist": "Artist B",
-    "tags": ["jazz"],
+    "artist": "Artist B", 
+    "tag_ids": ["tag003"],
     "base_chord": "Am",
     "lyrics_and_chords": "New song lyrics..."
 }
@@ -267,7 +289,7 @@ req.body:
 ```json
 {
     "title": "Updated Song Title",
-    "tags": ["jazz", "blues"]
+    "tag_ids": ["tag003", "tag004"]
 }
 ```
 
@@ -303,9 +325,185 @@ Response:
 }
 ```
 
-## 3. Notes Endpoints
+## 3. Tag Endpoints
 
-### 3.1. Add Note to Song (Vol_User Only)
+### 3.1. Retrieve All Tags (Public Access)
+GET /api/tags
+
+Description: Retrieves a list of all available tags for song categorization.
+
+Request:
+
+Bearer token (Admin or Vol_User)
+
+Response:
+
+```json
+{
+    "code": 200,
+    "message": "List of tags retrieved successfully",
+    "data": [
+        {
+            "id": "tag001",
+            "name": "rock",
+            "description": "Rock music genre"
+        },
+        {
+            "id": "tag002",
+            "name": "worship",
+            "description": "Worship and praise songs"
+        }
+    ]
+}
+```
+
+### 3.2. Retrieve Tag By ID (Public Access)
+GET /api/tags/:id
+
+Request:
+
+Bearer token (Admin or Vol_User)
+
+Response:
+
+```json
+{
+    "code": 200,
+    "message": "Tag details retrieved successfully",
+    "data": {
+        "id": "tag001",
+        "name": "rock",
+        "description": "Rock music genre"
+    }
+}
+```
+
+### 3.3. Create New Tag (Admin Only)
+POST /api/admin/tags
+
+Request:
+
+Bearer token (Admin)
+
+req.body:
+
+```json
+{
+    "name": "blues",
+    "description": "Blues music genre"
+}
+```
+
+Response:
+
+```json
+{
+    "code": 201,
+    "message": "Tag created successfully",
+    "data": {
+        "id": "tag003",
+        "name": "blues"
+    }
+}
+```
+
+### 3.4. Update Tag (Admin Only)
+PUT /api/admin/tags/:id
+
+Request:
+
+Bearer token (Admin)
+
+req.body:
+
+```json
+{
+    "name": "blues-rock",
+    "description": "Blues rock fusion genre"
+}
+```
+
+Response:
+
+```json
+{
+    "code": 200,
+    "message": "Tag updated successfully",
+    "data": {
+        "id": "tag003",
+        "name": "blues-rock"
+    }
+}
+```
+
+### 3.5. Delete Tag (Admin Only)
+DELETE /api/admin/tags/:id
+
+Description: Deletes a tag and removes all song-tag relationships.
+
+Request:
+
+Bearer token (Admin)
+
+Response:
+
+```json
+{
+    "code": 200,
+    "message": "Tag deleted successfully",
+    "data": {
+        "id": "tag003"
+    }
+}
+```
+
+### 3.6. Add Tag to Song (Admin Only)
+POST /api/admin/songs/:song_id/tags/:tag_id
+
+Description: Associates a tag with a song using the pivot table.
+
+Request:
+
+Bearer token (Admin)
+
+Response:
+
+```json
+{
+    "code": 201,
+    "message": "Tag added to song successfully",
+    "data": {
+        "song_id": "song001",
+        "tag_id": "tag001"
+    }
+}
+```
+
+### 3.7. Remove Tag from Song (Admin Only)
+DELETE /api/admin/songs/:song_id/tags/:tag_id
+
+Description: Removes a tag association from a song.
+
+Request:
+
+Bearer token (Admin)
+
+Response:
+
+```json
+{
+    "code": 200,
+    "message": "Tag removed from song successfully",
+    "data": {
+        "song_id": "song001",
+        "tag_id": "tag001"
+    }
+}
+```
+
+## 4. Notes Endpoints
+
+### 4.1. Add Note to Song (Vol_User Only)
 POST /api/notes/:user_id/:song_id
 
 Description: A vol_user can add a new note to a song. The user_id in the path must match the user ID from the authentication token.
@@ -337,7 +535,7 @@ Response:
 }
 ```
 
-### 3.2. Retrieve All My Notes (Vol_User Only)
+### 4.2. Retrieve All My Notes (Vol_User Only)
 GET /api/notes/:user_id
 
 Description: Retrieves all notes created by the logged-in vol_user. The user_id in the path must match the user ID from the authentication token.
@@ -369,7 +567,7 @@ Response:
 }
 ```
 
-### 3.3. Retrieve Note By ID (Vol_User Only)
+### 4.3. Retrieve Note By ID (Vol_User Only)
 GET /api/notes/:user_id/:id
 
 Description: Retrieves details of a specific note created by the logged-in vol_user. The user_id in the path must match the user ID from the authentication token.
@@ -393,7 +591,7 @@ Response:
 }
 ```
 
-### 3.4. Update Note on Song (Vol_User Only)
+### 4.4. Update Note on Song (Vol_User Only)
 PUT /api/notes/:user_id/:id
 
 Description: A vol_user can update their existing note on a song. The user_id in the path must match the user ID from the authentication token.
@@ -423,7 +621,7 @@ Response:
 }
 ```
 
-### 3.5. Delete Note (Vol_User Only)
+### 4.5. Delete Note (Vol_User Only)
 DELETE /api/notes/:user_id/:id
 
 Description: Deletes a note created by the logged-in vol_user. The user_id in the path must match the user ID from the authentication token.
@@ -444,9 +642,9 @@ Response:
 }
 ```
 
-## 4. Playlist Endpoints
+## 5. Playlist Endpoints
 
-### 4.1. Retrieve All Playlists (Vol_User Only)
+### 5.1. Retrieve All Playlists (Vol_User Only)
 GET /api/playlists
 
 Request:
@@ -465,7 +663,20 @@ Response:
         {
             "id": "playlist_abc",
             "playlist_name": "Favorite Playlist",
-            "song_ids": ["song001", "song003"],
+            "songs": [
+                {
+                    "id": "song001",
+                    "title": "Song Title 1",
+                    "artist": "Artist A",
+                    "order_index": 0
+                },
+                {
+                    "id": "song003",
+                    "title": "Song Title 3", 
+                    "artist": "Artist C",
+                    "order_index": 1
+                }
+            ],
             "sharable_link": "http://example.com/share/playlist_abc",
             "playlist_team_id": "team_xyz"
         }
@@ -473,7 +684,7 @@ Response:
 }
 ```
 
-### 4.2. Retrieve Playlist By ID (Vol_User Only)
+### 5.2. Retrieve Playlist By ID (Vol_User Only)
 GET /api/playlists/:id
 
 Request:
@@ -491,14 +702,27 @@ Response:
     "data": {
         "id": "playlist_abc",
         "playlist_name": "Favorite Playlist",
-        "song_ids": ["song001", "song003"],
+        "songs": [
+            {
+                "id": "song001",
+                "title": "Song Title 1",
+                "artist": "Artist A",
+                "order_index": 0
+            },
+            {
+                "id": "song003",
+                "title": "Song Title 3",
+                "artist": "Artist C", 
+                "order_index": 1
+            }
+        ],
         "sharable_link": "http://example.com/share/playlist_abc",
         "playlist_team_id": "team_xyz"
     }
 }
 ```
 
-### 4.3. Create New Playlist (Vol_User Only)
+### 5.3. Create New Playlist (Vol_User Only)
 POST /api/playlists
 
 Request:
@@ -510,7 +734,12 @@ req.body:
 ```json
 {
     "playlist_name": "My New Playlist",
-    "song_ids": ["song002"],
+    "songs": [
+        {
+            "song_id": "song002",
+            "order_index": 0
+        }
+    ],
     "sharable_link": null,
     "playlist_team_id": null
 }
@@ -529,7 +758,7 @@ Response:
 }
 ```
 
-### 4.4. Update Playlist (Vol_User Only)
+### 5.4. Update Playlist (Vol_User Only)
 PUT /api/playlists/:id
 
 Request:
@@ -543,7 +772,20 @@ req.body:
 ```json
 {
     "playlist_name": "Updated Playlist",
-    "song_ids": ["song001", "song002", "song003"],
+    "songs": [
+        {
+            "song_id": "song001",
+            "order_index": 0
+        },
+        {
+            "song_id": "song002", 
+            "order_index": 1
+        },
+        {
+            "song_id": "song003",
+            "order_index": 2
+        }
+    ],
     "sharable_link": "http://example.com/share/updatedplaylist",
     "playlist_team_id": "team_xyz"
 }
@@ -562,7 +804,7 @@ Response:
 }
 ```
 
-### 4.5. Delete Playlist (Vol_User Only)
+### 5.5. Delete Playlist (Vol_User Only)
 DELETE /api/playlists/:id
 
 Request:
@@ -583,9 +825,9 @@ Response:
 }
 ```
 
-## 5. Playlist Team Endpoints
+## 6. Playlist Team Endpoints
 
-### 5.1. Retrieve All Playlist Teams (Vol_User Only)
+### 6.1. Retrieve All Playlist Teams (Vol_User Only)
 GET /api/playlist-teams
 
 Request:
@@ -604,14 +846,25 @@ Response:
         {
             "id": "team_xyz",
             "playlist_id": "playlist_abc",
-            "team_member_ids": ["user123", "user456"],
+            "members": [
+                {
+                    "user_id": "user123",
+                    "email": "user1@example.com",
+                    "role": "admin"
+                },
+                {
+                    "user_id": "user456",
+                    "email": "user2@example.com", 
+                    "role": "member"
+                }
+            ],
             "lead_id": "user123"
         }
     ]
 }
 ```
 
-### 5.2. Retrieve Playlist Team By ID (Vol_User Only)
+### 6.2. Retrieve Playlist Team By ID (Vol_User Only)
 GET /api/playlist-teams/:id
 
 Request:
@@ -629,13 +882,24 @@ Response:
     "data": {
         "id": "team_xyz",
         "playlist_id": "playlist_abc",
-        "team_member_ids": ["user123", "user456"],
+        "members": [
+            {
+                "user_id": "user123",
+                "email": "user1@example.com",
+                "role": "admin"
+            },
+            {
+                "user_id": "user456",
+                "email": "user2@example.com",
+                "role": "member"
+            }
+        ],
         "lead_id": "user123"
     }
 }
 ```
 
-### 5.3. Create New Playlist Team (Vol_User Only)
+### 6.3. Create New Playlist Team (Vol_User Only)
 POST /api/playlist-teams
 
 Request:
@@ -647,7 +911,12 @@ req.body:
 ```json
 {
     "playlist_id": "playlist_def",
-    "team_member_ids": ["user789"],
+    "members": [
+        {
+            "user_id": "user789",
+            "role": "member"
+        }
+    ],
     "lead_id": "user789"
 }
 ```
@@ -665,7 +934,7 @@ Response:
 }
 ```
 
-### 5.4. Delete Playlist Team (Vol_User Lead Only)
+### 6.4. Delete Playlist Team (Vol_User Lead Only)
 DELETE /api/playlist-teams/:id
 
 Request:
@@ -684,7 +953,7 @@ Response:
 }
 ```
 
-### 5.5. Remove Member from Playlist Team (Vol_User Lead Only)
+### 6.5. Remove Member from Playlist Team (Vol_User Lead Only)
 DELETE /api/playlist-teams/:team_id/members/:user_id
 
 Request:
@@ -704,7 +973,7 @@ Response:
 }
 ```
 
-### 5.6. Leave Playlist Team (Vol_User Member Only)
+### 6.6. Leave Playlist Team (Vol_User Member Only)
 POST /api/playlist-teams/:team_id/leave
 
 Request:
