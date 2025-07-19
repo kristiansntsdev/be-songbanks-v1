@@ -1,0 +1,26 @@
+const { Factory, FactoryTypes } = require('../package/src/engine');
+
+/**
+ * {{modelName}} Factory
+ */
+const {{modelName}}Factory = Factory.define('{{modelName}}', {
+    // Define your model attributes here
+    // Example:
+    // name: FactoryTypes.name(),
+    // email: FactoryTypes.uniqueEmail(),
+    // age: FactoryTypes.integer(18, 80),
+    // is_active: FactoryTypes.boolean(),
+    // created_at: FactoryTypes.recentDate(),
+    // updated_at: FactoryTypes.recentDate()
+});
+
+// Define states
+// {{modelName}}Factory.state('active', {
+//     is_active: true
+// });
+
+// {{modelName}}Factory.state('inactive', {
+//     is_active: false
+// });
+
+module.exports = {{modelName}}Factory;

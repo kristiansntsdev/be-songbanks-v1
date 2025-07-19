@@ -12,8 +12,9 @@
     "migrate:fresh": "sequelize-cli db:migrate:undo:all && sequelize-cli db:migrate",
     "seed": "sequelize-cli db:seed:all",
     "seed:undo": "sequelize-cli db:seed:undo:all",
-    "swaggerpress:generate-api": "node package/src/commands/SwaggerCommand.js",
-    "swaggerpress:resource": "node package/src/commands/ResourceCommand.js --"
+    "swagpress:seed": "sequelize-cli db:seed:all",
+    "swagpress:generate-api": "node package/src/commands/SwaggerCommand.js",
+    "swagpress:resource": "node package/src/commands/ResourceCommand.js --"
   },
   "nodemonConfig": {
     "signal": "SIGTERM"
@@ -24,6 +25,7 @@
     "nodemon": "^3.1.7"
   },
   "dependencies": {
+    "@faker-js/faker": "^9.9.0",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "connect-session-sequelize": "^7.1.7",

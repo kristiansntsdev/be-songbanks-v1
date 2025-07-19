@@ -1,23 +1,45 @@
 'use strict';
 
-const { ulid } = require('ulid');
+const { Seeder, FactoryBuilder } = require('../../package/src/engine');
+
+class {{className}} extends Seeder {
+    /**
+     * Run the database seeders.
+     */
+    async run() {
+        // Example: Create users with factories
+        // await this.create('User')
+        //     .count(50)
+        //     .state('active')
+        //     .create();
+
+        // Example: Create related data
+        // await this.create('User')
+        //     .count(10)
+        //     .has('Post', 3)
+        //     .create();
+
+        // Example: Direct database insertion
+        // await this.insert('{{tableName}}', [
+        //     {
+        //         name: 'Sample Name',
+        //         description: 'Sample Description'
+        //     }
+        // ]);
+        
+        console.log('🌱 {{className}} completed');
+    }
+}
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up(queryInterface, Sequelize) {
-    // Add your seeder code here
-    // Example:
-    // await queryInterface.bulkInsert('{{name}}', [{
-    //   id: ulid(),
-    //   name: 'Sample Name',
-    //   createdAt: new Date(),
-    //   updatedAt: new Date()
-    // }], {});
-  },
+    async up(queryInterface, Sequelize) {
+        const seeder = new {{className}}(queryInterface, Sequelize);
+        await seeder.execute();
+    },
 
-  async down(queryInterface, Sequelize) {
-    // Add your rollback code here
-    // Example:
-    // await queryInterface.bulkDelete('{{name}}', null, {});
-  }
+    async down(queryInterface, Sequelize) {
+        // Add your rollback logic here if needed
+        // await queryInterface.bulkDelete('{{tableName}}', null, {});
+    }
 };
