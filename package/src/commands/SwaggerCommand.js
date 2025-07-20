@@ -8,7 +8,7 @@ class SwaggerCommand {
         this.modelsPath = path.join(process.cwd(), 'app/models');
         this.controllersPath = path.join(process.cwd(), 'app/controllers');
         this.routesPath = path.join(process.cwd(), 'routes/api.js');
-        this.outputPath = path.join(process.cwd(), 'docs/swagger');
+        this.outputPath = path.join(process.cwd(), 'swagger/swagger.json');
         this.args = process.argv.slice(2);
     }
 
@@ -81,7 +81,7 @@ Available controllers:`);
             return;
         }
 
-        console.log(`🔍 Generating Swagger docs for ${controllerName} in routes/api.js...`);
+        console.log(`🔍 Generating Swagger docs for ${controllerName}...`);
         
         const controllers = this.scanControllers();
         
@@ -120,11 +120,73 @@ Available controllers:`);
 
         console.log(`📝 Found ${controllerRoutes.length} methods in ${controllerName}`);
         
-        // Update routes/api.js with controller documentation
-        this.addControllerToRoutes(controllerName, controllerRoutes);
+        // Update swagger.json with controller documentation
+        this.addControllerToSwagger(controllerName, controllerRoutes);
+        
+        // Update routes/api.js with simple route definitions
+        this.updateRoutesFile(controllerName, controllerRoutes);
     }
 
-    addControllerToRoutes(controllerName, controllerRoutes) {
+    addControllerToSwagger(controllerName, controllerRoutes) {
+        // Read current swagger.json
+        let swaggerSpec;
+        try {
+            const swaggerContent = fs.readFileSync(this.outputPath, 'utf8');
+            swaggerSpec = JSON.parse(swaggerContent);
+        } catch (error) {
+            // If file doesn't exist, create base structure
+            swaggerSpec = {
+                "openapi": "3.0.0",
+                "info": {
+                    "title": "SongBanks API",
+                    "description": "API documentation for SongBanks application",
+                    "version": "1.0.0"
+                },
+                "servers": [
+                    {
+                        "url": "http://localhost:3000/api",
+                        "description": "Development server"
+                    },
+                    {
+                        "url": "https://be-songbanks.tahumeat.com/api",
+                        "description": "Production server"
+                    }
+                ],
+                "components": {
+                    "schemas": {},
+                    "securitySchemes": {
+                        "bearerAuth": {
+                            "type": "http",
+                            "scheme": "bearer",
+                            "bearerFormat": "JWT"
+                        }
+                    }
+                },
+                "paths": {}
+            };
+        }
+        
+        // Add controller-specific schemas
+        this.addControllerSchemas(swaggerSpec, controllerName);
+        
+        // Add or update paths for this controller
+        controllerRoutes.forEach(route => {
+            const swaggerPath = this.routerPathToSwaggerPath(route.routerPath);
+            
+            if (!swaggerSpec.paths[swaggerPath]) {
+                swaggerSpec.paths[swaggerPath] = {};
+            }
+            
+            swaggerSpec.paths[swaggerPath][route.httpMethod] = this.generateSwaggerOperation(route, controllerName);
+        });
+        
+        // Write updated swagger.json
+        fs.writeFileSync(this.outputPath, JSON.stringify(swaggerSpec, null, 2));
+        
+        console.log(`✅ Added ${controllerRoutes.length} ${controllerName} endpoints to swagger.json`);
+    }
+    
+    updateRoutesFile(controllerName, controllerRoutes) {
         // Read current routes file
         const routesContent = fs.readFileSync(this.routesPath, 'utf8');
         
@@ -134,7 +196,7 @@ Available controllers:`);
         
         if (!controllerImportPattern.test(routesContent)) {
             // Add import after the last controller import
-            const lastImportMatch = routesContent.match(/const \w+Controller = require\('\.\.\/app\/controllers\/\w+Controller'\);/g);
+            const lastImportMatch = routesContent.match(/const \w+Controller = require\('\.\./app/controllers/\w+Controller'\);/g);
             if (lastImportMatch) {
                 const lastImport = lastImportMatch[lastImportMatch.length - 1];
                 const lastImportIndex = routesContent.indexOf(lastImport) + lastImport.length;
@@ -144,317 +206,743 @@ Available controllers:`);
             }
         }
         
-        // Check for existing controller documentation and remove duplicates
+        // Remove existing routes for this controller
         const existingPattern = new RegExp(`router\\.[a-z]+\\('[^']*',\\s*${controllerName}\\.[a-zA-Z]+\\);`, 'g');
         const existingMatches = updatedContent.match(existingPattern) || [];
         
         if (existingMatches.length > 0) {
             console.log(`⚠️  Found ${existingMatches.length} existing ${controllerName} routes. Removing duplicates...`);
             
-            // Remove existing swagger blocks and routes for this controller
             existingMatches.forEach(routeMatch => {
-                const routeIndex = updatedContent.indexOf(routeMatch);
-                if (routeIndex !== -1) {
-                    // Find the swagger block before this route
-                    const beforeRoute = updatedContent.slice(0, routeIndex);
-                    const lastSwaggerBlockStart = beforeRoute.lastIndexOf('/**');
-                    if (lastSwaggerBlockStart !== -1) {
-                        const swaggerBlockEnd = updatedContent.indexOf('*/', lastSwaggerBlockStart) + 2;
-                        const routeEnd = routeIndex + routeMatch.length;
-                        
-                        // Remove swagger block and route line
-                        updatedContent = updatedContent.slice(0, lastSwaggerBlockStart) + 
-                            updatedContent.slice(routeEnd + 1); // +1 for newline
-                    }
-                }
+                updatedContent = updatedContent.replace(routeMatch, '');
             });
         }
         
-        // Add schema if needed (for TagController)
-        if (controllerName === 'TagController') {
-            // Always regenerate tag schemas to ensure all are present
-            if (updatedContent.includes('# Tag Schemas')) {
-                // Remove existing tag schemas
-                const tagSchemaStart = updatedContent.indexOf('# Tag Schemas');
-                const securitySchemesIndex = updatedContent.indexOf('  securitySchemes:');
-                if (tagSchemaStart !== -1 && securitySchemesIndex !== -1) {
-                    updatedContent = updatedContent.slice(0, tagSchemaStart) + 
-                        updatedContent.slice(securitySchemesIndex);
-                }
-            }
-            
-            const tagSchemas = this.generateTagSchemas();
-            // Add after existing schemas, before securitySchemes
-            const securitySchemesIndex = updatedContent.indexOf('  securitySchemes:');
-            if (securitySchemesIndex !== -1) {
-                updatedContent = updatedContent.slice(0, securitySchemesIndex) + 
-                    tagSchemas + '\n     ' +
-                    updatedContent.slice(securitySchemesIndex);
-            }
-        }
-        
-        // Generate swagger documentation for each route
-        let routeDocumentation = '';
+        // Add simple route definitions (no swagger docs)
+        let routeDefinitions = '';
         controllerRoutes.forEach(route => {
-            routeDocumentation += this.generateFormattedSwaggerBlock(route);
-            routeDocumentation += `router.${route.httpMethod}('${route.routerPath}', ${controllerName}.${route.method});\n\n`;
+            routeDefinitions += `router.${route.httpMethod}('${route.routerPath}', ${controllerName}.${route.method});\n`;
         });
         
-        // Add the documentation before module.exports
+        // Add the route definitions before module.exports
         const moduleExportsIndex = updatedContent.indexOf('module.exports = router;');
         if (moduleExportsIndex !== -1) {
             updatedContent = updatedContent.slice(0, moduleExportsIndex) + 
-                routeDocumentation +
+                routeDefinitions + '\n' +
                 updatedContent.slice(moduleExportsIndex);
         }
         
         // Write updated content
         fs.writeFileSync(this.routesPath, updatedContent);
         
-        console.log(`✅ Added ${controllerRoutes.length} ${controllerName} endpoints to routes/api.js`);
+        console.log(`✅ Added ${controllerRoutes.length} ${controllerName} routes to api.js`);
     }
 
-    generateControllerSchemas(controllerName) {
+    routerPathToSwaggerPath(routerPath) {
+        // Convert :param to {param} format for swagger
+        return routerPath.replace(/:(\w+)/g, '{$1}');
+    }
+
+    generateSwaggerOperation(route, controllerName) {
         const tag = controllerName.replace('Controller', '');
-        let schemas = '';
-        
-        // Add controller-specific schemas based on controller type
-        if (controllerName === 'TagController') {
-            schemas += `/**\n * @swagger\n * components:\n *   schemas:\n`;
-            schemas += ` *     Tag:\n`;
-            schemas += ` *       type: object\n`;
-            schemas += ` *       properties:\n`;
-            schemas += ` *         id:\n`;
-            schemas += ` *           type: string\n`;
-            schemas += ` *           example: tag123\n`;
-            schemas += ` *         name:\n`;
-            schemas += ` *           type: string\n`;
-            schemas += ` *           example: Rock\n`;
-            schemas += ` *         description:\n`;
-            schemas += ` *           type: string\n`;
-            schemas += ` *           example: Rock music genre\n`;
-            schemas += ` *         createdAt:\n`;
-            schemas += ` *           type: string\n`;
-            schemas += ` *           format: date-time\n`;
-            schemas += ` *         updatedAt:\n`;
-            schemas += ` *           type: string\n`;
-            schemas += ` *           format: date-time\n`;
-            schemas += ` */\n\n`;
-        } else if (controllerName === 'NoteController') {
-            schemas += `/**\n * @swagger\n * components:\n *   schemas:\n`;
-            schemas += ` *     Note:\n`;
-            schemas += ` *       type: object\n`;
-            schemas += ` *       properties:\n`;
-            schemas += ` *         id:\n`;
-            schemas += ` *           type: string\n`;
-            schemas += ` *           example: note123\n`;
-            schemas += ` *         notes:\n`;
-            schemas += ` *           type: string\n`;
-            schemas += ` *           example: Great song for parties\n`;
-            schemas += ` *         user_id:\n`;
-            schemas += ` *           type: string\n`;
-            schemas += ` *           example: user123\n`;
-            schemas += ` *         song_id:\n`;
-            schemas += ` *           type: string\n`;
-            schemas += ` *           example: song123\n`;
-            schemas += ` *         Song:\n`;
-            schemas += ` *           $ref: '#/components/schemas/Song'\n`;
-            schemas += ` *         createdAt:\n`;
-            schemas += ` *           type: string\n`;
-            schemas += ` *           format: date-time\n`;
-            schemas += ` *         updatedAt:\n`;
-            schemas += ` *           type: string\n`;
-            schemas += ` *           format: date-time\n`;
-            schemas += ` *     Song:\n`;
-            schemas += ` *       type: object\n`;
-            schemas += ` *       properties:\n`;
-            schemas += ` *         id:\n`;
-            schemas += ` *           type: string\n`;
-            schemas += ` *         title:\n`;
-            schemas += ` *           type: string\n`;
-            schemas += ` *         artist:\n`;
-            schemas += ` *           type: string\n`;
-            schemas += ` */\n\n`;
-        }
-        
-        return schemas;
-    }
-
-    generateTagSchemas() {
-        return `# Tag Schemas
- *     Tag:
- *       type: object
- *       properties:
- *         id:
- *           type: string
- *           example: tag123
- *         name:
- *           type: string
- *           example: Rock
- *         description:
- *           type: string
- *           example: Rock music genre
- *         createdAt:
- *           type: string
- *           format: date-time
- *         updatedAt:
- *           type: string
- *           format: date-time
- *     
- *     CreateTagRequest:
- *       type: object
- *       required:
- *         - name
- *       properties:
- *         name:
- *           type: string
- *           example: Rock
- *           description: The name of the tag
- *         description:
- *           type: string
- *           example: Rock music genre
- *           description: Optional description of the tag
- *     
- *     UpdateTagRequest:
- *       type: object
- *       properties:
- *         name:
- *           type: string
- *           example: Rock
- *           description: The name of the tag
- *         description:
- *           type: string
- *           example: Rock music genre
- *           description: Optional description of the tag
- *     
- *     TagsResponse:
- *       type: object
- *       properties:
- *         message:
- *           type: string
- *           example: Get All Tags
- *         data:
- *           type: array
- *           items:
- *             $ref: '#/components/schemas/Tag'
- *     
- *     TagResponse:
- *       type: object
- *       properties:
- *         message:
- *           type: string
- *           example: Tag created successfully
- *         data:
- *           $ref: '#/components/schemas/Tag'
- *     `;
-    }
-
-    generateFormattedSwaggerBlock(route) {
-        const tag = route.controller.replace('Controller', '');
         const hasPathParam = route.routerPath.includes(':');
         const pathParam = hasPathParam ? route.routerPath.match(/:(\w+)/)[1] : null;
         
-        // Convert :param to {param} format for swagger
-        const swaggerPath = route.path.replace(/:(\w+)/g, '{$1}');
-        
-        let block = `/**\n * @swagger\n * ${swaggerPath}:\n *   ${route.httpMethod}:\n`;
-        
         // Generate method-specific summaries and descriptions
         const { summary, description } = this.generateMethodSummaryAndDescription(route);
-        block += ` *     summary: ${summary}\n`;
-        block += ` *     description: ${description}\n`;
         
-        block += ` *     tags: [${tag}]\n`;
+        const operation = {
+            summary: summary,
+            description: description,
+            tags: [tag]
+        };
         
         // Add parameters if needed
         if (hasPathParam) {
-            block += ` *     parameters:\n`;
-            block += ` *       - in: path\n`;
-            block += ` *         name: ${pathParam}\n`;
-            block += ` *         required: true\n`;
-            block += ` *         schema:\n`;
-            block += ` *           type: string\n`;
-            block += ` *         description: The ${pathParam === 'user_id' ? 'user ID' : pathParam + ' parameter'}\n`;
+            operation.parameters = [
+                {
+                    in: "path",
+                    name: pathParam,
+                    required: true,
+                    schema: {
+                        type: "string"
+                    },
+                    description: pathParam === 'user_id' ? 'The user ID' : `The ${pathParam} parameter`
+                }
+            ];
         }
         
         // Add request body for POST/PUT methods
         if (route.httpMethod === 'post' || route.httpMethod === 'put') {
-            block += ` *     requestBody:\n`;
-            block += ` *       required: true\n`;
-            block += ` *       content:\n`;
-            block += ` *         application/json:\n`;
-            block += ` *           schema:\n`;
-            
-            // Use specific schemas for tag operations
-            if (route.controller === 'TagController') {
-                if (route.httpMethod === 'post') {
-                    block += ` *             $ref: '#/components/schemas/CreateTagRequest'\n`;
-                } else if (route.httpMethod === 'put') {
-                    block += ` *             $ref: '#/components/schemas/UpdateTagRequest'\n`;
+            operation.requestBody = {
+                required: true,
+                content: {
+                    "application/json": {
+                        schema: this.getRequestBodySchema(route, controllerName)
+                    }
                 }
-            } else {
-                // Generic request body for other controllers
-                block += ` *             type: object\n`;
-                block += ` *             properties:\n`;
-                block += ` *               data:\n`;
-                block += ` *                 type: object\n`;
-                block += ` *                 description: Request payload\n`;
-            }
+            };
+        }
+        
+        // Add security for routes that need authentication
+        if (this.requiresAuthentication(route)) {
+            operation.security = [
+                {
+                    "bearerAuth": []
+                }
+            ];
         }
         
         // Add responses
-        block += ` *     responses:\n`;
-        block += ` *       200:\n`;
+        operation.responses = this.generateResponses(route, controllerName);
         
-        if (route.controller === 'TagController') {
-            block += ` *         description: Successful response\n`;
-            block += ` *         content:\n`;
-            block += ` *           application/json:\n`;
-            block += ` *             schema:\n`;
-            
-            // Use appropriate response schema based on method
-            if (route.method === 'GetTags') {
-                block += ` *               $ref: '#/components/schemas/TagsResponse'\n`;
-            } else if (route.method === 'GetTagById' || route.method === 'CreateTag' || route.method === 'UpdateTag') {
-                block += ` *               $ref: '#/components/schemas/TagResponse'\n`;
-            } else if (route.method === 'DeleteTag') {
-                block += ` *               type: object\n`;
-                block += ` *               properties:\n`;
-                block += ` *                 message:\n`;
-                block += ` *                   type: string\n`;
-                block += ` *                   example: Tag deleted successfully\n`;
-            } else {
-                block += ` *               $ref: '#/components/schemas/TagsResponse'\n`;
+        return operation;
+    }
+
+    requiresAuthentication(route) {
+        // Check if route typically requires authentication
+        const authRoutes = ['admin', 'logout'];
+        return authRoutes.some(authRoute => route.routerPath.includes(authRoute));
+    }
+
+    getRequestBodySchema(route, controllerName) {
+        // Use specific schemas for tag operations
+        if (controllerName === 'TagController') {
+            if (route.httpMethod === 'post') {
+                return { "$ref": "#/components/schemas/CreateTagRequest" };
+            } else if (route.httpMethod === 'put') {
+                return { "$ref": "#/components/schemas/UpdateTagRequest" };
             }
-        } else {
-            block += ` *         description: Successful response\n`;
-            block += ` *         content:\n`;
-            block += ` *           application/json:\n`;
-            block += ` *             schema:\n`;
-            block += ` *               $ref: '#/components/schemas/BaseResponseWithData'\n`;
+        } else if (controllerName === 'UserController' && route.method === 'updateUserAccess') {
+            return { "$ref": "#/components/schemas/UpdateUserAccessRequest" };
+        } else if (controllerName === 'AuthController') {
+            if (route.method === 'apiLogin') {
+                return { "$ref": "#/components/schemas/LoginRequest" };
+            }
         }
         
-        // Add error responses
-        block += ` *       400:\n`;
-        block += ` *         description: Bad request\n`;
-        block += ` *         content:\n`;
-        block += ` *           application/json:\n`;
-        block += ` *             schema:\n`;
-        block += ` *               $ref: '#/components/schemas/BadRequestError'\n`;
-        block += ` *       500:\n`;
-        block += ` *         description: Internal server error\n`;
-        block += ` *         content:\n`;
-        block += ` *           application/json:\n`;
-        block += ` *             schema:\n`;
-        block += ` *               $ref: '#/components/schemas/InternalServerError'\n`;
-        block += ` */\n`;
+        // Generic request body for other controllers
+        return {
+            type: "object",
+            properties: {
+                data: {
+                    type: "object",
+                    description: "Request payload"
+                }
+            }
+        };
+    }
+
+    generateResponses(route, controllerName) {
+        const responses = {
+            "200": {
+                description: "Successful response",
+                content: {
+                    "application/json": {
+                        schema: this.getResponseSchema(route, controllerName)
+                    }
+                }
+            },
+            "400": {
+                description: "Bad request",
+                content: {
+                    "application/json": {
+                        schema: {
+                            "$ref": "#/components/schemas/BadRequestError"
+                        }
+                    }
+                }
+            },
+            "500": {
+                description: "Internal server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            "$ref": "#/components/schemas/InternalServerError"
+                        }
+                    }
+                }
+            }
+        };
+
+        // Add specific error responses based on the route
+        if (controllerName === 'AuthController') {
+            if (route.method === 'apiLogin') {
+                responses["401"] = {
+                    description: "Unauthorized - Invalid credentials",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                "$ref": "#/components/schemas/UnauthorizedError"
+                            }
+                        }
+                    }
+                };
+                responses["403"] = {
+                    description: "Account access denied",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                "$ref": "#/components/schemas/AccountAccessDeniedError"
+                            }
+                        }
+                    }
+                };
+            } else if (route.method === 'apiLogout') {
+                responses["401"] = {
+                    description: "Unauthorized",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                "$ref": "#/components/schemas/UnauthorizedError"
+                            }
+                        }
+                    }
+                };
+            }
+        } else if (controllerName === 'UserController') {
+            responses["401"] = {
+                description: "Unauthorized - Admin access required",
+                content: {
+                    "application/json": {
+                        schema: {
+                            "$ref": "#/components/schemas/UnauthorizedError"
+                        }
+                    }
+                }
+            };
+            if (route.method === 'updateUserAccess') {
+                responses["404"] = {
+                    description: "User not found",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                "$ref": "#/components/schemas/SimpleError"
+                            }
+                        }
+                    }
+                };
+            }
+        }
+
+        return responses;
+    }
+
+    getResponseSchema(route, controllerName) {
+        if (controllerName === 'TagController') {
+            if (route.method === 'GetTags') {
+                return { "$ref": "#/components/schemas/TagsResponse" };
+            } else if (route.method === 'GetTagById' || route.method === 'CreateTag' || route.method === 'UpdateTag') {
+                return { "$ref": "#/components/schemas/TagResponse" };
+            } else if (route.method === 'DeleteTag') {
+                return {
+                    type: "object",
+                    properties: {
+                        message: {
+                            type: "string",
+                            example: "Tag deleted successfully"
+                        }
+                    }
+                };
+            }
+        } else if (controllerName === 'AuthController') {
+            if (route.method === 'apiLogin') {
+                return { "$ref": "#/components/schemas/LoginResponse" };
+            } else if (route.method === 'apiLogout') {
+                return { "$ref": "#/components/schemas/LogoutResponse" };
+            }
+        } else if (controllerName === 'NoteController') {
+            return { "$ref": "#/components/schemas/NotesResponse" };
+        } else if (controllerName === 'UserController') {
+            if (route.method === 'getUserAccess') {
+                return { "$ref": "#/components/schemas/UserAccessResponse" };
+            } else if (route.method === 'updateUserAccess') {
+                return { "$ref": "#/components/schemas/UpdateUserAccessResponse" };
+            }
+        }
         
-        return block;
+        // Default response
+        return { "$ref": "#/components/schemas/BaseResponseWithData" };
+    }
+
+    addControllerSchemas(swaggerSpec, controllerName) {
+        // Ensure base schemas exist
+        if (!swaggerSpec.components.schemas.BaseResponse) {
+            swaggerSpec.components.schemas = {
+                ...swaggerSpec.components.schemas,
+                ...this.getBaseSchemas()
+            };
+        }
+
+        // Add controller-specific schemas
+        if (controllerName === 'TagController') {
+            swaggerSpec.components.schemas = {
+                ...swaggerSpec.components.schemas,
+                ...this.getTagSchemas()
+            };
+        } else if (controllerName === 'AuthController') {
+            swaggerSpec.components.schemas = {
+                ...swaggerSpec.components.schemas,
+                ...this.getAuthSchemas()
+            };
+        } else if (controllerName === 'UserController') {
+            swaggerSpec.components.schemas = {
+                ...swaggerSpec.components.schemas,
+                ...this.getUserSchemas()
+            };
+        } else if (controllerName === 'NoteController') {
+            swaggerSpec.components.schemas = {
+                ...swaggerSpec.components.schemas,
+                ...this.getNoteSchemas()
+            };
+        }
+    }
+
+    getBaseSchemas() {
+        return {
+            "BaseResponse": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "integer",
+                        "description": "HTTP status code"
+                    },
+                    "message": {
+                        "type": "string",
+                        "description": "Response message"
+                    }
+                }
+            },
+            "BaseResponseWithData": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/BaseResponse"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "data": {
+                                "type": "object",
+                                "description": "Response data payload"
+                            }
+                        }
+                    }
+                ]
+            },
+            "BadRequestError": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string",
+                        "example": "Bad request"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Bad request"
+                    },
+                    "statusCode": {
+                        "type": "integer",
+                        "example": 400
+                    }
+                }
+            },
+            "UnauthorizedError": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string",
+                        "example": "Unauthorized"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Unauthorized"
+                    },
+                    "statusCode": {
+                        "type": "integer",
+                        "example": 401
+                    }
+                }
+            },
+            "InternalServerError": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string",
+                        "example": "Internal server error"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Internal server error"
+                    },
+                    "statusCode": {
+                        "type": "integer",
+                        "example": 500
+                    }
+                }
+            },
+            "SimpleError": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "integer",
+                        "example": 400
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Invalid status. Must be either \"active\" or \"suspend\""
+                    }
+                }
+            },
+            "AccountAccessDeniedError": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "integer",
+                        "example": 403
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Account access denied"
+                    },
+                    "error": {
+                        "type": "string",
+                        "example": "Your account status is inactive. Please contact administrator."
+                    }
+                }
+            }
+        };
+    }
+
+    getTagSchemas() {
+        return {
+            "Tag": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "tag123"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Rock"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Rock music genre"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "CreateTagRequest": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "Rock",
+                        "description": "The name of the tag"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Rock music genre",
+                        "description": "Optional description of the tag"
+                    }
+                }
+            },
+            "UpdateTagRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "Rock",
+                        "description": "The name of the tag"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Rock music genre",
+                        "description": "Optional description of the tag"
+                    }
+                }
+            },
+            "TagsResponse": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Get All Tags"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Tag"
+                        }
+                    }
+                }
+            },
+            "TagResponse": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Tag created successfully"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/Tag"
+                    }
+                }
+            }
+        };
+    }
+
+    getAuthSchemas() {
+        return {
+            "User": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "user123"
+                    },
+                    "email": {
+                        "type": "string",
+                        "example": "user@example.com"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": ["admin", "member"],
+                        "example": "member"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": ["active", "pending", "suspend", "request", "guest"],
+                        "example": "active"
+                    },
+                    "is_admin": {
+                        "type": "boolean",
+                        "example": false,
+                        "description": "Only present for admin users"
+                    }
+                }
+            },
+            "LoginRequest": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "user@example.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "example": "password123"
+                    }
+                }
+            },
+            "LoginResponse": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/BaseResponseWithData"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "code": {
+                                "example": 200
+                            },
+                            "message": {
+                                "example": "Login successful"
+                            },
+                            "data": {
+                                "type": "object",
+                                "properties": {
+                                    "token": {
+                                        "type": "string",
+                                        "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                                    },
+                                    "user": {
+                                        "$ref": "#/components/schemas/User"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "LogoutResponse": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Logout successful"
+                    }
+                }
+            }
+        };
+    }
+
+    getUserSchemas() {
+        return {
+            "UserAccessResponse": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/BaseResponseWithData"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "code": {
+                                "example": 200
+                            },
+                            "message": {
+                                "example": "User access list retrieved successfully"
+                            },
+                            "data": {
+                                "type": "object",
+                                "properties": {
+                                    "active_users": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    },
+                                    "request_users": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    },
+                                    "suspended_users": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "UpdateUserAccessRequest": {
+                "type": "object",
+                "required": ["status"],
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": ["active", "suspend"],
+                        "example": "active"
+                    }
+                }
+            },
+            "UpdateUserAccessResponse": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/BaseResponseWithData"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "code": {
+                                "example": 200
+                            },
+                            "message": {
+                                "example": "User access updated successfully"
+                            },
+                            "data": {
+                                "type": "object",
+                                "properties": {
+                                    "id": {
+                                        "type": "string",
+                                        "example": "user123"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "active"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        };
+    }
+
+    getNoteSchemas() {
+        return {
+            "Song": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "song123"
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Song Title"
+                    },
+                    "artist": {
+                        "type": "string",
+                        "example": "Artist Name"
+                    }
+                }
+            },
+            "Note": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "note123"
+                    },
+                    "notes": {
+                        "type": "string",
+                        "example": "This is a note"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "Song": {
+                        "$ref": "#/components/schemas/Song"
+                    }
+                }
+            },
+            "NotesResponse": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Get All Notes"
+                    },
+                    "id": {
+                        "type": "string",
+                        "example": "user123"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Note"
+                        }
+                    }
+                }
+            }
+        };
     }
 
     generateMethodSummaryAndDescription(route) {
         const methodName = route.method;
-        const httpMethod = route.httpMethod.toUpperCase();
         
         // Method-specific summaries based on common patterns
         const summaryMap = {
@@ -464,8 +952,8 @@ Available controllers:`);
             'UpdateTag': { summary: 'Update tag', description: 'Update an existing tag by ID' },
             'DeleteTag': { summary: 'Delete tag', description: 'Delete a tag by ID' },
             'GetNoteByUserId': { summary: 'Get notes by user ID', description: 'Retrieve all notes for a specific user' },
-            'getUserAccess': { summary: 'Get user access list', description: 'Retrieve user access list for admin management' },
-            'updateUserAccess': { summary: 'Update user access', description: 'Update user access status (active/suspend)' },
+            'getUserAccess': { summary: 'Retrieve user access list', description: 'Get a list of users with their access status for admin management' },
+            'updateUserAccess': { summary: 'Update user access status', description: 'Admin can update the status for a specific user (active or suspend)' },
             'apiLogin': { summary: 'User login', description: 'Authenticate user with email and password' },
             'apiLogout': { summary: 'User logout', description: 'Logout authenticated user' }
         };
@@ -474,60 +962,15 @@ Available controllers:`);
             return summaryMap[methodName];
         }
         
-        // Fallback to generic summaries based on HTTP method
-        const fallbackMap = {
-            'GET': { summary: `${httpMethod} ${route.routerPath}`, description: `Retrieve data from ${route.routerPath}` },
-            'POST': { summary: `${httpMethod} ${route.routerPath}`, description: `Create new resource at ${route.routerPath}` },
-            'PUT': { summary: `${httpMethod} ${route.routerPath}`, description: `Update resource at ${route.routerPath}` },
-            'DELETE': { summary: `${httpMethod} ${route.routerPath}`, description: `Delete resource at ${route.routerPath}` }
+        // Fallback to generic summaries
+        const httpMethod = route.httpMethod.toUpperCase();
+        return { 
+            summary: `${httpMethod} ${route.routerPath}`, 
+            description: `Auto-generated endpoint for ${route.fullMethodName}` 
         };
-        
-        return fallbackMap[httpMethod] || { summary: `${httpMethod} ${route.routerPath}`, description: `Auto-generated endpoint for ${route.fullMethodName}` };
     }
 
-    updateMainRoutes(controllerRoutes) {
-        console.log('🔄 Updating main routes file with controller routes...');
-        
-        const routes = this.scanRoutes();
-        const existingRoutes = this.scanControllers();
-        
-        // Generate all routes including the new controller routes
-        const allRoutes = [];
-        
-        // Add existing routes from other controllers
-        Object.keys(existingRoutes).forEach(controllerName => {
-            if (controllerName !== controllerRoutes[0].controller) {
-                Object.keys(existingRoutes[controllerName].methods).forEach(methodName => {
-                    const method = existingRoutes[controllerName].methods[methodName];
-                    const routePath = method.endpointPath || this.generateRoutePath({
-                        controller: controllerName,
-                        method: methodName,
-                        httpMethod: method.httpMethod
-                    });
-                    
-                    allRoutes.push({
-                        controller: controllerName,
-                        method: methodName,
-                        httpMethod: method.httpMethod,
-                        path: routePath,
-                        routerPath: routePath.replace('/api', ''),
-                        fullMethodName: `${controllerName}.${methodName}`
-                    });
-                });
-            }
-        });
-        
-        // Add the new controller routes
-        allRoutes.push(...controllerRoutes);
-        
-        // Generate and write the complete routes file
-        const newRoutesContent = this.generateCompleteRoutesFile(allRoutes);
-        fs.writeFileSync(this.routesPath, newRoutesContent);
-        
-        console.log('✅ Main routes file updated successfully');
-    }
-
-    // Methods moved from SwaggerCommand
+    // Methods from original file
     scanControllers() {
         const controllers = {};
         
@@ -631,28 +1074,6 @@ Available controllers:`);
         return 'get';
     }
 
-    scanRoutes() {
-        // Simplified route scanning
-        return [];
-    }
-
-    getActiveControllerMethods(controllers) {
-        const activeControllerMethods = [];
-        
-        for (const [controllerName, controller] of Object.entries(controllers)) {
-            for (const [methodName, method] of Object.entries(controller.methods)) {
-                activeControllerMethods.push({
-                    controller: controllerName,
-                    method: methodName,
-                    httpMethod: method.httpMethod,
-                    fullMethodName: `${controllerName}.${methodName}`
-                });
-            }
-        }
-        
-        return activeControllerMethods;
-    }
-
     generateRoutePath(route) {
         const controller = route.controller.replace('Controller', '').toLowerCase();
         const method = route.method.toLowerCase();
@@ -668,6 +1089,20 @@ Available controllers:`);
             return `/api/${controller}s/:id`;
         } else if (method.includes('delete') || method.includes('destroy')) {
             return `/api/${controller}s/:id`;
+        }
+        
+        // Special cases
+        if (method.includes('getuseraccess') || method.includes('updateuseraccess')) {
+            return method.includes('update') ? `/api/admin/user-access/:user_id` : `/api/admin/user-access`;
+        }
+        if (method.includes('getnotebyuserid')) {
+            return `/api/notes/:user_id`;
+        }
+        if (method.includes('apilogin')) {
+            return `/api/auth/login`;
+        }
+        if (method.includes('apilogout')) {
+            return `/api/auth/logout`;
         }
         
         // Default fallback
