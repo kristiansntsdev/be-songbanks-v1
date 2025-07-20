@@ -1,6 +1,6 @@
 include .env
 
-.PHONY: help songbank-db migrate seed controller model migration seeder swagger-generate
+.PHONY: help songbank-db migrate seed controller model migration seeder swagger-generate deploy
 
 help:
 	@echo "Available commands:"
@@ -21,6 +21,9 @@ help:
 	@echo "    start                    - Start development server"
 	@echo "    docs                     - Open API documentation"
 	@echo "    swagger-generate         - Generate Swagger documentation from models and controllers"
+	@echo ""
+	@echo "  Deployment:"
+	@echo "    deploy                   - Deploy to hosting site via SSH"
 
 # Database Commands
 songbank-db:
@@ -96,3 +99,20 @@ docs:
 swagger-generate:
 	@echo "Generating Swagger documentation from models and controllers..."
 	npm run swagger:generate
+
+# Deployment Commands
+deploy:
+	@echo "Deploying to hosting site..."
+	@if [ -z "$(SSH_SERVER)" ] || [ -z "$(SSH_USERNAME)" ] || [ -z "$(SSH_DESTINATION_PATH)" ]; then \
+		echo "Error: Please set SSH_SERVER, SSH_USERNAME, and SSH_DESTINATION_PATH in your .env file"; \
+		exit 1; \
+	fi
+	@echo "Creating deployment archive..."
+	tar --exclude='node_modules' --exclude='.git' --exclude='database/development.sqlite' -czf deploy.tar.gz .
+	@echo "Uploading files to $(SSH_USERNAME)@$(SSH_SERVER)..."
+	scp -P $(SSH_PORT) -i ~/.ssh/tahumeat deploy.tar.gz $(SSH_USERNAME)@$(SSH_SERVER):$(SSH_DESTINATION_PATH)/
+	@echo "Extracting files on server..."
+	ssh -p $(SSH_PORT) -i ~/.ssh/tahumeat $(SSH_USERNAME)@$(SSH_SERVER) "cd $(SSH_DESTINATION_PATH) && tar -xzf deploy.tar.gz && rm deploy.tar.gz"
+	@echo "Cleaning up local archive..."
+	rm deploy.tar.gz
+	@echo "Deployment completed successfully!"
