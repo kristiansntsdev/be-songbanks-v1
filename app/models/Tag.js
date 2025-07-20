@@ -1,22 +1,34 @@
-const { DataTypes } = require('sequelize');
-const { ulid } = require('ulid');
+const { BaseModel, ModelFactory } = require('../../package/src/engine');
 const sequelize = require('../../config/database');
 
-const Tag = sequelize.define('tags', {
-    id: {
-        type: DataTypes.STRING(26),
-        primaryKey: true,
-        allowNull: false,
-        defaultValue: () => ulid()
-    },
-    name: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    description: {
-        type: DataTypes.TEXT,
-        allowNull: true
+class Tag extends BaseModel {
+    // Laravel-style mass assignment protection
+    static get fillable() {
+        return ['name', 'description'];
     }
-});
 
-module.exports = Tag;
+    // Hide sensitive data from JSON
+    static get hidden() {
+        return [];
+    }
+
+    // Type casting
+    static get casts() {
+        return {};
+    }
+
+    // Query scopes
+    // Model relationships
+    static associate(models) {
+        this.belongsToMany(models.Song, {
+            through: 'song_tags',
+            foreignKey: 'tag_id',
+            otherKey: 'song_id',
+            as: 'songs'
+        });
+    }
+}
+
+module.exports = ModelFactory.register(Tag, sequelize, {
+    tableName: 'tags'
+});

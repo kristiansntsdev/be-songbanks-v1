@@ -4,6 +4,8 @@ const Schema = require('./core/Schema');
 const Blueprint = require('./core/Blueprint');
 const Factory = require('./core/Factory');
 const Seeder = require('./core/Seeder');
+const BaseModel = require('./core/BaseModel');
+const ModelFactory = require('./core/ModelFactory');
 
 // Builders
 const ColumnBuilder = require('./builders/ColumnBuilder');
@@ -39,6 +41,8 @@ module.exports = {
     Blueprint,
     Factory,
     Seeder,
+    BaseModel,
+    ModelFactory,
     
     // Builder exports
     ColumnBuilder,
