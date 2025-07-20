@@ -2,7 +2,6 @@ const { BaseModel, ModelFactory } = require('../../package/src/engine');
 const sequelize = require('../../config/database');
 
 class Tag extends BaseModel {
-    // Laravel-style mass assignment protection
     static get fillable() {
         return ['name', 'description'];
     }
