@@ -10,7 +10,10 @@ class AuthController {
 		try {
 			const { email, password } = req.body;
 			
-			const user = await User.findOne({ where: { email } });
+			const user = await User.findOne({ 
+				where: { email },
+				attributes: { include: ['password'] } // Include password field for authentication
+			});
 			
 			if (!user) {
 				return ErrorController.unauthorized(res, 'Invalid email or password');
