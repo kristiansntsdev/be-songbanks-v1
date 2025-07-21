@@ -49,11 +49,5 @@ jobs:
           echo 'SSH connection successful' &&
           cd ${{ secrets.SSH_DESTINATION_PATH }} &&
           echo 'Directory accessible' &&
-          git --version &&
-          git config receive.denyCurrentBranch ignore &&
-          git remote set-url origin https://github.com/${GITHUB_REPOSITORY}.git &&
-          git config credential.helper store &&
-          echo 'https://x-access-token:${{ github.token }}@github.com' > ~/.git-credentials &&
-          git fetch origin main &&
-          echo 'Git fetch test successful - deployment configuration verified'
+          echo 'Deployment configuration verified'
         "

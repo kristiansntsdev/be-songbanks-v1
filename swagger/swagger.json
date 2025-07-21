@@ -231,11 +231,6 @@
             "type": "string",
             "enum": ["active", "pending", "suspend", "request", "guest"],
             "example": "active"
-          },
-          "is_admin": {
-            "type": "boolean",
-            "example": false,
-            "description": "Only present for admin users"
           }
         }
       },
