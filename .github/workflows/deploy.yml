@@ -32,7 +32,7 @@ jobs:
       run: |
         ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_SERVER }} >> ~/.ssh/known_hosts
         echo "Creating deployment archive..."
-        tar --exclude='node_modules' --exclude='.git' --exclude='database/development.sqlite' -czf deploy.tar.gz .
+        tar --exclude='node_modules' --exclude='.git' --exclude='database/development.sqlite' --exclude='*.log' --exclude='.github' --warning=no-file-changed -czf deploy.tar.gz .
         echo "Uploading files to server..."
         scp -P ${{ secrets.SSH_PORT }} deploy.tar.gz ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_SERVER }}:${{ secrets.SSH_DESTINATION_PATH }}/
         echo "Extracting files on server..."
