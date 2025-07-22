@@ -30,9 +30,24 @@ const TableNameResolver = require('./utils/TableNameResolver');
 const TypeMapper = require('./utils/TypeMapper');
 
 // Exceptions
-const MigrationException = require('./exceptions/MigrationException');
-const SchemaException = require('./exceptions/SchemaException');
-const SeederException = require('./exceptions/SeederException');
+const {
+    BaseException,
+    ValidationException,
+    BadRequestException,
+    UnauthorizedException,
+    ForbiddenException,
+    NotFoundException,
+    ConflictException,
+    TooManyRequestsException,
+    InternalServerException,
+    AuthenticationException,
+    AccountAccessDeniedException,
+    ModelNotFoundException,
+    DuplicateResourceException,
+    MigrationException,
+    SchemaException,
+    SeederException
+} = require('./exceptions');
 
 module.exports = {
     // Core exports
@@ -67,6 +82,19 @@ module.exports = {
     TypeMapper,
     
     // Exception exports
+    BaseException,
+    ValidationException,
+    BadRequestException,
+    UnauthorizedException,
+    ForbiddenException,
+    NotFoundException,
+    ConflictException,
+    TooManyRequestsException,
+    InternalServerException,
+    AuthenticationException,
+    AccountAccessDeniedException,
+    ModelNotFoundException,
+    DuplicateResourceException,
     MigrationException,
     SchemaException,
     SeederException,

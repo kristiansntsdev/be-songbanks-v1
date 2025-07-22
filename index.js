@@ -10,7 +10,7 @@ app.use(cors())
 
 //Loading Routes
 const apiRoutes = require('./routes/api');
-const ErrorController = require('./app/controllers/ErrorController');
+const ErrorHandler = require('./app/middleware/ErrorHandler');
 
 env.config();
 
@@ -31,8 +31,8 @@ app.get('/', (_, res) => {
 
 app.use('/api', apiRoutes);
 
-app.use(ErrorController.notFound);
-app.use(ErrorController.handleError);
+app.use(ErrorHandler.notFound);
+app.use(ErrorHandler.handle);
 
 // For shared hosting compatibility
 const PORT = process.env.PORT || 3000;
