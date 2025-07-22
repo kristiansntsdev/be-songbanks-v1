@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "SongBanks API",
-    "description": "API documentation for SongBanks application",
+    "description": "Auto-generated API documentation using Swagpress framework",
     "version": "1.0.0"
   },
   "servers": [
@@ -46,23 +46,6 @@
           }
         ]
       },
-      "NotFoundError": {
-        "type": "object",
-        "properties": {
-          "error": {
-            "type": "string",
-            "example": "Route not found"
-          },
-          "message": {
-            "type": "string",
-            "example": "Cannot GET /api/invalid-route"
-          },
-          "statusCode": {
-            "type": "integer",
-            "example": 404
-          }
-        }
-      },
       "BadRequestError": {
         "type": "object",
         "properties": {
@@ -97,23 +80,6 @@
           }
         }
       },
-      "ForbiddenError": {
-        "type": "object",
-        "properties": {
-          "error": {
-            "type": "string",
-            "example": "Forbidden"
-          },
-          "message": {
-            "type": "string",
-            "example": "Forbidden"
-          },
-          "statusCode": {
-            "type": "integer",
-            "example": 403
-          }
-        }
-      },
       "InternalServerError": {
         "type": "object",
         "properties": {
@@ -128,56 +94,6 @@
           "statusCode": {
             "type": "integer",
             "example": 500
-          }
-        }
-      },
-      "ValidationError": {
-        "type": "object",
-        "properties": {
-          "error": {
-            "type": "string",
-            "example": "Validation error"
-          },
-          "message": {
-            "type": "string",
-            "example": "Request validation failed"
-          },
-          "errors": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "field": {
-                  "type": "string",
-                  "example": "email"
-                },
-                "message": {
-                  "type": "string",
-                  "example": "Email is required"
-                }
-              }
-            }
-          },
-          "statusCode": {
-            "type": "integer",
-            "example": 422
-          }
-        }
-      },
-      "ConflictError": {
-        "type": "object",
-        "properties": {
-          "error": {
-            "type": "string",
-            "example": "Conflict"
-          },
-          "message": {
-            "type": "string",
-            "example": "Resource already exists"
-          },
-          "statusCode": {
-            "type": "integer",
-            "example": 409
           }
         }
       },
@@ -198,19 +114,6 @@
           }
         }
       },
-      "SimpleError": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "integer",
-            "example": 400
-          },
-          "message": {
-            "type": "string",
-            "example": "Invalid status. Must be either \"active\" or \"suspend\""
-          }
-        }
-      },
       "User": {
         "type": "object",
         "properties": {
@@ -224,19 +127,31 @@
           },
           "role": {
             "type": "string",
-            "enum": ["admin", "member"],
+            "enum": [
+              "admin",
+              "member"
+            ],
             "example": "member"
           },
           "status": {
             "type": "string",
-            "enum": ["active", "pending", "suspend", "request", "guest"],
+            "enum": [
+              "active",
+              "pending",
+              "suspend",
+              "request",
+              "guest"
+            ],
             "example": "active"
           }
         }
       },
       "LoginRequest": {
         "type": "object",
-        "required": ["email", "password"],
+        "required": [
+          "email",
+          "password"
+        ],
         "properties": {
           "email": {
             "type": "string",
@@ -288,149 +203,6 @@
           }
         }
       },
-      "Song": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "song123"
-          },
-          "title": {
-            "type": "string",
-            "example": "Song Title"
-          },
-          "artist": {
-            "type": "string",
-            "example": "Artist Name"
-          }
-        }
-      },
-      "Note": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "note123"
-          },
-          "notes": {
-            "type": "string",
-            "example": "This is a note"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "Song": {
-            "$ref": "#/components/schemas/Song"
-          }
-        }
-      },
-      "NotesResponse": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "example": "Get All Notes"
-          },
-          "id": {
-            "type": "string",
-            "example": "user123"
-          },
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Note"
-            }
-          }
-        }
-      },
-      "UserAccessResponse": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/BaseResponseWithData"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "code": {
-                "example": 200
-              },
-              "message": {
-                "example": "User access list retrieved successfully"
-              },
-              "data": {
-                "type": "object",
-                "properties": {
-                  "active_users": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/User"
-                    }
-                  },
-                  "request_users": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/User"
-                    }
-                  },
-                  "suspended_users": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/User"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        ]
-      },
-      "UpdateUserAccessRequest": {
-        "type": "object",
-        "required": ["status"],
-        "properties": {
-          "status": {
-            "type": "string",
-            "enum": ["active", "suspend"],
-            "example": "active"
-          }
-        }
-      },
-      "UpdateUserAccessResponse": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/BaseResponseWithData"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "code": {
-                "example": 200
-              },
-              "message": {
-                "example": "User access updated successfully"
-              },
-              "data": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "example": "user123"
-                  },
-                  "status": {
-                    "type": "string",
-                    "example": "active"
-                  }
-                }
-              }
-            }
-          }
-        ]
-      },
       "Tag": {
         "type": "object",
         "properties": {
@@ -458,7 +230,9 @@
       },
       "CreateTagRequest": {
         "type": "object",
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "properties": {
           "name": {
             "type": "string",
@@ -486,33 +260,6 @@
             "description": "Optional description of the tag"
           }
         }
-      },
-      "TagsResponse": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "example": "Get All Tags"
-          },
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Tag"
-            }
-          }
-        }
-      },
-      "TagResponse": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "example": "Tag created successfully"
-          },
-          "data": {
-            "$ref": "#/components/schemas/Tag"
-          }
-        }
       }
     },
     "securitySchemes": {
@@ -525,27 +272,19 @@
   },
   "paths": {
     "/auth/login": {
-      "post": {
+      "get": {
         "summary": "User login",
         "description": "Authenticate user with email and password",
-        "tags": ["Auth"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LoginRequest"
-              }
-            }
-          }
-        },
+        "tags": [
+          "Auth"
+        ],
         "responses": {
           "200": {
-            "description": "Login successful",
+            "description": "Successful response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LoginResponse"
+                  "$ref": "#/components/schemas/BaseResponseWithData"
                 }
               }
             }
@@ -556,26 +295,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BadRequestError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - Invalid credentials",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Account access denied",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AccountAccessDeniedError"
                 }
               }
             }
@@ -594,90 +313,11 @@
       }
     },
     "/auth/logout": {
-      "post": {
+      "get": {
         "summary": "User logout",
         "description": "Logout authenticated user",
-        "tags": ["Auth"],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "type": "object",
-                    "description": "Request payload"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Logout successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LogoutResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/notes/{user_id}": {
-      "get": {
-        "summary": "Get notes by user ID",
-        "description": "Retrieve all notes for a specific user",
-        "tags": ["Note"],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "user_id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The user ID"
-          }
+        "tags": [
+          "Auth"
         ],
         "responses": {
           "200": {
@@ -685,7 +325,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotesResponse"
+                  "$ref": "#/components/schemas/BaseResponseWithData"
                 }
               }
             }
@@ -713,23 +353,20 @@
         }
       }
     },
-    "/admin/user-access": {
+    "/notes/": {
       "get": {
-        "summary": "Retrieve user access list",
-        "description": "Get a list of users with their access status for admin management",
-        "tags": ["Admin / User"],
-        "security": [
-          {
-            "bearerAuth": []
-          }
+        "summary": "Get all notes",
+        "description": "Auto-generated endpoint for GetNoteByUserId",
+        "tags": [
+          "Note"
         ],
         "responses": {
           "200": {
-            "description": "User access list retrieved successfully",
+            "description": "Successful response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserAccessResponse"
+                  "$ref": "#/components/schemas/BaseResponseWithData"
                 }
               }
             }
@@ -740,101 +377,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BadRequestError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - Admin access required",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/admin/user-access/{user_id}": {
-      "put": {
-        "summary": "Update user access status",
-        "description": "Admin can update the status for a specific user (active or suspend)",
-        "tags": ["Admin / User"],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "user_id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The user ID"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateUserAccessRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "User access updated successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UpdateUserAccessResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request - Invalid status value",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SimpleError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - Admin access required",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "User not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SimpleError"
                 }
               }
             }
@@ -855,15 +397,17 @@
     "/tags/": {
       "get": {
         "summary": "Get all tags",
-        "description": "Retrieve all available tags",
-        "tags": ["Tag"],
+        "description": "Retrieve a specific tag by its ID",
+        "tags": [
+          "Tag"
+        ],
         "responses": {
           "200": {
             "description": "Successful response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TagsResponse"
+                  "$ref": "#/components/schemas/BaseResponseWithData"
                 }
               }
             }
@@ -892,14 +436,22 @@
       },
       "post": {
         "summary": "Create new tag",
-        "description": "Create a new tag with name and description",
-        "tags": ["Tag"],
+        "description": "Create a new tag with provided data",
+        "tags": [
+          "Tag"
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateTagRequest"
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "description": "Request payload"
+                  }
+                }
               }
             }
           }
@@ -910,7 +462,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TagResponse"
+                  "$ref": "#/components/schemas/BaseResponseWithData"
                 }
               }
             }
@@ -939,58 +491,12 @@
       }
     },
     "/tags/{id}": {
-      "get": {
-        "summary": "Get tag by ID",
-        "description": "Retrieve a specific tag by its ID",
-        "tags": ["Tag"],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The id parameter"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TagResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerError"
-                }
-              }
-            }
-          }
-        }
-      },
       "put": {
         "summary": "Update tag",
         "description": "Update an existing tag by ID",
-        "tags": ["Tag"],
+        "tags": [
+          "Tag"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -999,7 +505,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "The id parameter"
+            "description": "The tag ID"
           }
         ],
         "requestBody": {
@@ -1007,7 +513,13 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateTagRequest"
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "description": "Request payload"
+                  }
+                }
               }
             }
           }
@@ -1018,7 +530,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TagResponse"
+                  "$ref": "#/components/schemas/BaseResponseWithData"
                 }
               }
             }
@@ -1048,7 +560,9 @@
       "delete": {
         "summary": "Delete tag",
         "description": "Delete a tag by ID",
-        "tags": ["Tag"],
+        "tags": [
+          "Tag"
+        ],
         "parameters": [
           {
             "in": "path",
@@ -1057,7 +571,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "The id parameter"
+            "description": "The tag ID"
           }
         ],
         "responses": {
@@ -1066,13 +580,390 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Tag deleted successfully"
-                    }
+                  "$ref": "#/components/schemas/BaseResponseWithData"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tests/": {
+      "get": {
+        "summary": "Get all tests",
+        "description": "Retrieve paginated list of tests",
+        "tags": [
+          "Test"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseWithData"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create new test",
+        "description": "Create a new test with provided data",
+        "tags": [
+          "Test"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "description": "Request payload"
                   }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseWithData"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tests/{id}": {
+      "get": {
+        "summary": "Get test by ID",
+        "description": "Retrieve a specific test by its ID",
+        "tags": [
+          "Test"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The test ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseWithData"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update test",
+        "description": "Update an existing test by ID",
+        "tags": [
+          "Test"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The test ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "description": "Request payload"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseWithData"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete test",
+        "description": "Delete a test by ID",
+        "tags": [
+          "Test"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The test ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseWithData"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/user-access": {
+      "get": {
+        "summary": "Get all users",
+        "description": "Auto-generated endpoint for getUserAccess",
+        "tags": [
+          "User"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseWithData"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/user-access/{user_id}": {
+      "put": {
+        "summary": "Update user",
+        "description": "Update an existing user by ID",
+        "tags": [
+          "User"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The user ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "data": {
+                    "type": "object",
+                    "description": "Request payload"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponseWithData"
                 }
               }
             }
