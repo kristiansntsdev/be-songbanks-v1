@@ -16,8 +16,18 @@ app.use(express.urlencoded({ extended: false }));
 const apiRoutes = require('../routes/api');
 const ErrorHandler = require('../app/middlewares/ErrorHandler');
 
+// Serve swagger.json directly
+app.get('/swagger.json', (_, res) => {
+  res.json(swaggerSpecs);
+});
+
 // Swagger documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
+app.use('/api-docs', swaggerUi.serve);
+app.get('/api-docs', swaggerUi.setup(swaggerSpecs, {
+  swaggerOptions: {
+    url: '/swagger.json'
+  }
+}));
 
 // Root route
 app.get('/', (_, res) => {
@@ -27,6 +37,25 @@ app.get('/', (_, res) => {
     version: '1.0.0',
     environment: process.env.NODE_ENV || 'development'
   });
+});
+
+// Debug route to check swagger spec
+app.get('/swagger-debug', (_, res) => {
+  try {
+    const swaggerSpecs = require('../config/swagger');
+    res.json({
+      message: 'Swagger spec loaded successfully',
+      hasSpecs: !!swaggerSpecs,
+      pathCount: Object.keys(swaggerSpecs.paths || {}).length,
+      serverCount: (swaggerSpecs.servers || []).length,
+      title: swaggerSpecs.info?.title || 'Unknown'
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error loading swagger spec',
+      error: error.message
+    });
+  }
 });
 
 // API routes
