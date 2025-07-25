@@ -7,6 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
     "dev": "nodemon index.js",
+    "build": "npm run swagpress:generate-api generate all",
+    "vercel-build": "npm run build",
     "migrate": "sequelize-cli db:migrate",
     "migrate:undo": "sequelize-cli db:migrate:undo",
     "migrate:fresh": "sequelize-cli db:migrate:undo:all && sequelize-cli db:migrate",
@@ -17,6 +19,10 @@
     "swagpress:resource": "node package/src/commands/ResourceCommand.js --",
     "swagpress:make": "node package/src/commands/MakeCommand.js",
     "swagpress:docs": "node package/src/commands/DocsCommand.js"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   },
   "nodemonConfig": {
     "signal": "SIGTERM"
