@@ -22,8 +22,12 @@ app.get('/swagger.json', (_, res) => {
 });
 
 // Swagger documentation
-app.use('/api-docs', swaggerUi.serve);
-app.get('/api-docs', swaggerUi.setup(swaggerSpecs, {
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, {
+  customCssUrl: 'https://unpkg.com/swagger-ui-dist@3.52.5/swagger-ui.css',
+  customJs: [
+    'https://unpkg.com/swagger-ui-dist@3.52.5/swagger-ui-bundle.js',
+    'https://unpkg.com/swagger-ui-dist@3.52.5/swagger-ui-standalone-preset.js'
+  ],
   swaggerOptions: {
     url: '/swagger.json'
   }

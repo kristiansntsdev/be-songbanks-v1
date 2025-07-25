@@ -11,7 +11,7 @@
       "description": "Development server"
     },
     {
-      "url": "https://api.tahumeat.com/api",
+      "url": "https://songbanks-v1-1.vercel.app/api",
       "description": "Production server"
     }
   ],
