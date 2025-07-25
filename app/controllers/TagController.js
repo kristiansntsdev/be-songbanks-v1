@@ -1,5 +1,5 @@
-const Tags = require('../models/Tag');
-const ErrorHandler = require('../middleware/ErrorHandler');
+const TagService = require('../services/TagService');
+const ErrorHandler = require('../middlewares/ErrorHandler');
 const { NotFoundException } = require('../../package/swagpress');
 
 class TagController {
@@ -7,38 +7,32 @@ class TagController {
     /**
      * GET /api/tags/
      * @summary Get all tags
+     * @resource Tag
      * @returns {tags: array}
      */
     static GetTags = ErrorHandler.asyncHandler(async (req, res) => {
-        const tags = await Tags.findAll({
-            attributes: ['id', 'name', 'description', 'createdAt', 'updatedAt']
-        });
+        const result = await TagService.getAllTags(req.query);
         
         res.json({
             code: 200,
-            message: 'Get All Tags',
-            data: tags
+            message: 'Tags retrieved successfully',
+            data: result
         });
     });
 
     /**
      * GET /api/tags/:id
      * @summary Get tag by ID
+     * @resource Tag
      * @param {string} id - Tag ID parameter
      * @returns {tag: object}
      */
     static GetTagById = ErrorHandler.asyncHandler(async (req, res) => {
-        const tag = await Tags.findByPk(req.params.id, {
-            attributes: ['id', 'name', 'description', 'createdAt', 'updatedAt']
-        });
-        
-        if (!tag) {
-            throw new NotFoundException('Tag not found');
-        }
+        const tag = await TagService.getTagById(req.params.id, req.query);
         
         res.json({
             code: 200,
-            message: 'Get Tag by ID',
+            message: 'Tag retrieved successfully',
             data: tag
         });
     });
@@ -46,41 +40,32 @@ class TagController {
     /**
      * POST /api/tags/
      * @summary Create new tag
+     * @resource Tag
      * @body {name: string, description?: string}
      * @returns {tag: object}
      */
     static CreateTag = ErrorHandler.asyncHandler(async (req, res) => {
-        const { name, description } = req.body;
-        
         ErrorHandler.validateRequired(['name'], req.body);
         
-        const newTag = await Tags.create({ name, description });
+        const tag = await TagService.createTag(req.body);
         
         res.status(201).json({
             code: 201,
             message: 'Tag created successfully',
-            data: newTag
+            data: tag
         });
     });
 
     /**
      * PUT /api/tags/:id
      * @summary Update tag by ID
+     * @resource Tag
      * @param {string} id - Tag ID parameter
      * @body {name?: string, description?: string}
      * @returns {tag: object}
      */
     static UpdateTag = ErrorHandler.asyncHandler(async (req, res) => {
-        const { name, description } = req.body;
-        const tag = await Tags.findByPk(req.params.id);
-        
-        if (!tag) {
-            throw new NotFoundException('Tag not found');
-        }
-        
-        tag.name = name || tag.name;
-        tag.description = description || tag.description;
-        await tag.save();
+        const tag = await TagService.updateTag(req.params.id, req.body);
         
         res.json({
             code: 200,
@@ -92,21 +77,16 @@ class TagController {
     /**
      * DELETE /api/tags/:id
      * @summary Delete tag by ID
+     * @resource Tag
      * @param {string} id - Tag ID parameter
      * @returns {message: string}
      */
     static DeleteTag = ErrorHandler.asyncHandler(async (req, res) => {
-        const tag = await Tags.findByPk(req.params.id);
-        
-        if (!tag) {
-            throw new NotFoundException('Tag not found');
-        }
-        
-        await tag.destroy();
+        const result = await TagService.deleteTag(req.params.id);
         
         res.json({
             code: 200,
-            message: 'Tag deleted successfully'
+            message: result.message
         });
     });
 }

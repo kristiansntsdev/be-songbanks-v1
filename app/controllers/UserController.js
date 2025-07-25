@@ -1,64 +1,28 @@
-const User = require('../models/User');
-const ErrorHandler = require('../middleware/ErrorHandler');
+const UserService = require('../services/UserService');
+const ErrorHandler = require('../middlewares/ErrorHandler');
 const { NotFoundException, BadRequestException } = require('../../package/swagpress');
 
 class UserController {
     /**
      * GET /api/admin/user-access
      * @summary Get user access management data
+     * @group User
      * @returns {active_users: array, request_users: array, suspended_users: array}
      */
     static getUserAccess = ErrorHandler.asyncHandler(async (req, res) => {
-        const activeUsers = await User.findAll({
-            where: {
-                status: ['active']
-            },
-            attributes: ['id', 'email', 'role', 'status']
-        });
-
-        const requestUsers = await User.findAll({
-            where: {
-                status: ['request']
-            },
-            attributes: ['id', 'email', 'role', 'status']
-        });
-
-        const suspendedUsers = await User.findAll({
-            where: {
-                status: ['suspend']
-            },
-            attributes: ['id', 'email', 'role', 'status']
-        });
-
+        const result = await UserService.getUserAccess();
+        
         res.json({
             code: 200,
             message: 'User access list retrieved successfully',
-            data: {
-                "active_users": activeUsers.filter(user => user.role !== 'admin').map(user => ({
-                    id: user.id,
-                    email: user.email,
-                    role: user.role,
-                    status: user.status
-                })),
-                "request_users": requestUsers.map(user => ({
-                    id: user.id,
-                    email: user.email,
-                    role: user.role,
-                    status: user.status
-                })),
-                "suspended_users": suspendedUsers.map(user => ({
-                    id: user.id,
-                    email: user.email,
-                    role: user.role,
-                    status: user.status
-                }))
-            }
+            data: result
         });
     });
 
     /**
      * PUT /api/admin/user-access/:user_id
      * @summary Update user access status
+     * @group User
      * @param {string} user_id - User ID parameter
      * @body {status: string}
      * @returns {user: object}
@@ -73,22 +37,18 @@ class UserController {
             throw new BadRequestException('Invalid status. Must be either "active" or "suspend"');
         }
 
-        const user = await User.findByPk(user_id);
-        if (!user) {
-            throw new NotFoundException('User not found');
-        }
-
-        await user.update({ status });
+        const result = await UserService.changeUserStatus(user_id, status, req.user.id);
 
         res.json({
             code: 200,
-            message: 'User access updated successfully',
+            message: result.message,
             data: {
-                id: user.id,
-                status: user.status
+                id: result.user.id,
+                status: result.user.status
             }
         });
     });
+
 }
 
 module.exports = UserController;

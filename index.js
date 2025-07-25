@@ -10,7 +10,7 @@ app.use(cors())
 
 //Loading Routes
 const apiRoutes = require('./routes/api');
-const ErrorHandler = require('./app/middleware/ErrorHandler');
+const ErrorHandler = require('./app/middlewares/ErrorHandler');
 
 env.config();
 
