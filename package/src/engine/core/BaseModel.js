@@ -609,6 +609,462 @@ class BaseModel extends Model {
     async refresh() {
         return this.reload();
     }
+
+    /**
+     * Apply scope to query
+     */
+    static scope(scopeName) {
+        // Handle Sequelize's built-in scope method calls (like unscoped)
+        if (scopeName === undefined || scopeName === null) {
+            return super.scope ? super.scope.apply(this, arguments) : this;
+        }
+        
+        const scopes = this.scopes || {};
+        const scopeConfig = scopes[scopeName];
+        
+        if (!scopeConfig) {
+            throw new Error(`Invalid scope '${scopeName}' called on ${this.name} model`);
+        }
+        
+        // For scopes that need to bypass default scope (like withPassword), use unscoped
+        const needsUnscoped = scopeConfig.attributes && 
+                            scopeConfig.attributes.exclude && 
+                            scopeConfig.attributes.exclude.length === 0;
+        
+        const targetModel = needsUnscoped ? this.unscoped() : this;
+        const builder = new QueryBuilder(targetModel);
+        
+        // Apply scope configuration
+        if (scopeConfig.attributes && !needsUnscoped) {
+            builder.options.attributes = scopeConfig.attributes;
+        }
+        if (scopeConfig.where) {
+            builder.where(scopeConfig.where);
+        }
+        if (scopeConfig.include) {
+            builder.with(scopeConfig.include);
+        }
+        if (scopeConfig.order) {
+            builder.orderBy(scopeConfig.order);
+        }
+        
+        return builder;
+    }
+
+    /**
+     * Create a new query builder instance
+     */
+    static query() {
+        return new QueryBuilder(this);
+    }
+
+    /**
+     * Enhanced findAndCountAll with query builder support
+     */
+    static findAndCountAll(options = {}) {
+        const builder = new QueryBuilder(this);
+        if (Object.keys(options).length > 0) {
+            return builder.applyOptions(options).execute();
+        }
+        return builder;
+    }
+
+    /**
+     * Enhanced findAll with query builder support
+     */
+    static findAll(options = {}) {
+        const builder = new QueryBuilder(this, 'findAll');
+        if (Object.keys(options).length > 0) {
+            return builder.applyOptions(options).execute();
+        }
+        return builder;
+    }
+
+    /**
+     * Enhanced findOne with query builder support
+     */
+    static findOne(options = {}) {
+        const builder = new QueryBuilder(this, 'findOne');
+        if (Object.keys(options).length > 0) {
+            return builder.applyOptions(options).execute();
+        }
+        return builder;
+    }
+}
+
+/**
+ * Query Builder class for fluent query syntax
+ */
+class QueryBuilder {
+    constructor(model, method = 'findAndCountAll') {
+        this.model = model;
+        this.method = method;
+        this.options = {};
+        this.whereConditions = {};
+        this.includeRelations = [];
+        this.orderByFields = [];
+        this.limitValue = null;
+        this.offsetValue = null;
+        this.scopeConditions = [];
+    }
+
+    /**
+     * Add where conditions
+     */
+    where(field, operator = null, value = null) {
+        if (typeof field === 'object') {
+            Object.assign(this.whereConditions, field);
+        } else if (operator && value !== null) {
+            if (typeof operator === 'object') {
+                this.whereConditions[field] = operator;
+            } else {
+                const { Op } = require('sequelize');
+                switch (operator.toLowerCase()) {
+                    case 'like':
+                        this.whereConditions[field] = { [Op.like]: value };
+                        break;
+                    case 'ilike':
+                        this.whereConditions[field] = { [Op.iLike]: value };
+                        break;
+                    case 'in':
+                        this.whereConditions[field] = { [Op.in]: value };
+                        break;
+                    case 'not in':
+                        this.whereConditions[field] = { [Op.notIn]: value };
+                        break;
+                    case '>':
+                        this.whereConditions[field] = { [Op.gt]: value };
+                        break;
+                    case '>=':
+                        this.whereConditions[field] = { [Op.gte]: value };
+                        break;
+                    case '<':
+                        this.whereConditions[field] = { [Op.lt]: value };
+                        break;
+                    case '<=':
+                        this.whereConditions[field] = { [Op.lte]: value };
+                        break;
+                    case '!=':
+                    case '<>':
+                        this.whereConditions[field] = { [Op.ne]: value };
+                        break;
+                    default:
+                        this.whereConditions[field] = value;
+                }
+            }
+        } else if (operator !== null) {
+            this.whereConditions[field] = operator;
+        }
+        return this;
+    }
+
+    /**
+     * Add OR where conditions
+     */
+    orWhere(field, operator = null, value = null) {
+        const { Op } = require('sequelize');
+        const condition = {};
+        
+        if (typeof field === 'object') {
+            Object.assign(condition, field);
+        } else if (operator && value !== null) {
+            if (typeof operator === 'object') {
+                condition[field] = operator;
+            } else {
+                switch (operator.toLowerCase()) {
+                    case 'like':
+                        condition[field] = { [Op.like]: value };
+                        break;
+                    case 'ilike':
+                        condition[field] = { [Op.iLike]: value };
+                        break;
+                    default:
+                        condition[field] = value;
+                }
+            }
+        } else if (operator !== null) {
+            condition[field] = operator;
+        }
+
+        if (this.whereConditions[Op.or]) {
+            this.whereConditions[Op.or].push(condition);
+        } else {
+            this.whereConditions[Op.or] = [this.whereConditions, condition];
+            delete this.whereConditions[Object.keys(this.whereConditions).find(key => key !== Op.or)];
+        }
+        
+        return this;
+    }
+
+    /**
+     * Add search conditions across multiple fields
+     */
+    search(query, fields = []) {
+        if (!fields.length) {
+            return this;
+        }
+
+        const { Op } = require('sequelize');
+        const sequelize = this.model.sequelize;
+        const likeOp = sequelize.getDialect() === 'postgres' ? Op.iLike : Op.like;
+        
+        const searchConditions = fields.map(field => ({
+            [field]: { [likeOp]: `%${query}%` }
+        }));
+
+        this.whereConditions[Op.or] = searchConditions;
+        return this;
+    }
+
+    /**
+     * Add include/join relations
+     */
+    with(associations) {
+        if (Array.isArray(associations)) {
+            associations.forEach(assoc => this.parseAssociation(assoc));
+        } else {
+            this.parseAssociation(associations);
+        }
+        return this;
+    }
+
+    /**
+     * Parse association string or object
+     */
+    parseAssociation(association) {
+        if (typeof association === 'string') {
+            // Handle shorthand syntax like 'user:id,email,role'
+            if (association.includes(':')) {
+                const [model, attributes] = association.split(':');
+                this.includeRelations.push({
+                    association: model,
+                    attributes: attributes.split(',')
+                });
+            } else {
+                this.includeRelations.push({ association });
+            }
+        } else if (typeof association === 'object') {
+            this.includeRelations.push(association);
+        }
+    }
+
+    /**
+     * Add include/join relations (alias for with)
+     */
+    include(associations) {
+        return this.with(associations);
+    }
+
+    /**
+     * Set limit
+     */
+    limit(limit) {
+        this.limitValue = parseInt(limit);
+        return this;
+    }
+
+    /**
+     * Set offset
+     */
+    offset(offset) {
+        this.offsetValue = parseInt(offset);
+        return this;
+    }
+
+    /**
+     * Set pagination
+     */
+    paginate(page = 1, limit = 10) {
+        this.limitValue = parseInt(limit);
+        this.offsetValue = (parseInt(page) - 1) * parseInt(limit);
+        return this;
+    }
+
+    /**
+     * Add order by
+     */
+    orderBy(field, direction = 'ASC') {
+        if (Array.isArray(field)) {
+            this.orderByFields = [...this.orderByFields, ...field];
+        } else {
+            this.orderByFields.push([field, direction.toUpperCase()]);
+        }
+        return this;
+    }
+
+    /**
+     * Add order by descending
+     */
+    orderByDesc(field) {
+        return this.orderBy(field, 'DESC');
+    }
+
+    /**
+     * Add order by ascending
+     */
+    orderByAsc(field) {
+        return this.orderBy(field, 'ASC');
+    }
+
+    /**
+     * Get the latest records
+     */
+    latest(field = 'created_at') {
+        return this.orderByDesc(field);
+    }
+
+    /**
+     * Get the oldest records
+     */
+    oldest(field = 'created_at') {
+        return this.orderByAsc(field);
+    }
+
+    /**
+     * Apply existing options object
+     */
+    applyOptions(options) {
+        Object.assign(this.options, options);
+        return this;
+    }
+
+    /**
+     * Build the final query options
+     */
+    buildOptions() {
+        const options = { ...this.options };
+
+        if (Object.keys(this.whereConditions).length > 0) {
+            options.where = { ...options.where, ...this.whereConditions };
+        }
+
+        if (this.includeRelations.length > 0) {
+            options.include = [...(options.include || []), ...this.includeRelations];
+        }
+
+        if (this.orderByFields.length > 0) {
+            options.order = [...(options.order || []), ...this.orderByFields];
+        }
+
+        if (this.limitValue !== null) {
+            options.limit = this.limitValue;
+        }
+
+        if (this.offsetValue !== null) {
+            options.offset = this.offsetValue;
+        }
+
+        return options;
+    }
+
+    /**
+     * Execute the query
+     */
+    async execute() {
+        const options = this.buildOptions();
+        
+        // Use Sequelize Model methods directly
+        const { Model } = require('sequelize');
+        
+        switch (this.method) {
+            case 'findAll':
+                return await Model.findAll.call(this.model, options);
+            case 'findOne':
+                return await Model.findOne.call(this.model, options);
+            case 'findAndCountAll':
+            default:
+                return await Model.findAndCountAll.call(this.model, options);
+        }
+    }
+
+    /**
+     * Get first result
+     */
+    async first() {
+        this.method = 'findOne';
+        return await this.execute();
+    }
+
+    /**
+     * Get all results
+     */
+    async get() {
+        if (this.method === 'findAndCountAll') {
+            const result = await this.execute();
+            return result.rows;
+        }
+        this.method = 'findAll';
+        return await this.execute();
+    }
+
+    /**
+     * Get count
+     */
+    async count() {
+        const options = this.buildOptions();
+        return await this.model.count(options);
+    }
+
+    /**
+     * Check if any records exist
+     */
+    async exists() {
+        const count = await this.count();
+        return count > 0;
+    }
+
+    /**
+     * Conditional query execution
+     */
+    when(condition, callback) {
+        if (condition) {
+            callback(this);
+        }
+        return this;
+    }
+
+    /**
+     * Count distinct values
+     */
+    async countDistinct(field) {
+        const options = this.buildOptions();
+        const { fn, col } = require('sequelize');
+        return await this.model.count({
+            ...options,
+            distinct: true,
+            col: field
+        });
+    }
+
+    /**
+     * Delete records
+     */
+    async delete() {
+        const options = this.buildOptions();
+        return await this.model.destroy(options);
+    }
+
+    /**
+     * Find by primary key with query builder
+     */
+    async findByPk(id) {
+        const options = this.buildOptions();
+        return await this.model.findByPk(id, options);
+    }
+
+    /**
+     * Make the builder thenable (Promise-like)
+     */
+    then(onFulfilled, onRejected) {
+        return this.execute().then(onFulfilled, onRejected);
+    }
+
+    /**
+     * Make the builder catchable
+     */
+    catch(onRejected) {
+        return this.execute().catch(onRejected);
+    }
 }
 
 module.exports = BaseModel;

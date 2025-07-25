@@ -8,91 +8,38 @@ const {
 } = require('../../package/swagpress');
 
 class AuthService {
-    /**
-     * Login user with email and password
-     * @param {string} email - User email
-     * @param {string} password - User password
-     * @returns {Promise<Object>} User object and token
-     */
     static async login(email, password) {
-        // Validate required fields
-        if (!email) {
-            throw ValidationException.required('email');
-        }
-        if (!password) {
-            throw ValidationException.required('password');
-        }
-
-        // Find user by email (include password for verification)
-        const user = await User.scope('withPassword').findOne({
-            where: { email }
-        });
-
-        if (!user) {
-            throw new AuthenticationException('Invalid credentials');
-        }
-
-        // Check if user is active
-        if (user.status !== 'active') {
-            throw new AccountAccessDeniedException(user.status);
-        }
-
-        // Verify password (plain text comparison)
-        if (user.password !== password) {
-            throw new AuthenticationException('Invalid credentials');
-        }
-
-        // Generate token
+        this.validateLoginInput(email, password);
+        
+        const user = await User.scope('withPassword')
+            .where('email', email)
+            .first();
+            
+        if (!user) throw new AuthenticationException('Invalid credentials');
+        
+        this.validateUserStatus(user);
+        this.validatePassword(user.password, password);
+        
         const token = this.generateToken(user);
-
-        // Return user without password
-        const userResponse = user.toJSON();
-        delete userResponse.password;
-
-        return {
-            user: userResponse,
-            token,
-            message: 'Login successful'
-        };
+        const userResponse = this.sanitizeUser(user);
+        
+        return { user: userResponse, token, message: 'Login successful' };
     }
 
-    /**
-     * Verify and decode JWT token
-     * @param {string} token - JWT token
-     * @returns {Promise<Object>} Decoded user data
-     */
     static async verifyToken(token) {
         try {
             const decoded = jwt.verify(token, process.env.SESSION_SECRET);
-            
-            // Get fresh user data
             const user = await User.findByPk(decoded.userId);
-            if (!user) {
-                throw new ModelNotFoundException('User', decoded.userId);
-            }
-
-            if (user.status !== 'active') {
-                throw new AccountAccessDeniedException(user.status);
-            }
-
+            
+            if (!user) throw new ModelNotFoundException('User', decoded.userId);
+            this.validateUserStatus(user);
+            
             return user;
         } catch (error) {
-            if (error.name === 'TokenExpiredError') {
-                throw new AuthenticationException('Token expired');
-            }
-            if (error.name === 'JsonWebTokenError') {
-                throw new AuthenticationException('Invalid token');
-            }
-            // Re-throw custom exceptions
-            throw error;
+            this.handleTokenError(error);
         }
     }
 
-    /**
-     * Generate JWT token for user
-     * @param {Object} user - User object
-     * @returns {string} JWT token
-     */
     static generateToken(user) {
         const payload = {
             userId: user.id,
@@ -105,84 +52,79 @@ class AuthService {
         });
     }
 
-    /**
-     * Change user password
-     * @param {string} userId - User ID
-     * @param {string} currentPassword - Current password
-     * @param {string} newPassword - New password
-     * @returns {Promise<Object>} Success message
-     */
     static async changePassword(userId, currentPassword, newPassword) {
-        // Validate required fields
-        if (!currentPassword) {
-            throw ValidationException.required('currentPassword');
-        }
-        if (!newPassword) {
-            throw ValidationException.required('newPassword');
-        }
-
+        this.validatePasswordChangeInput(currentPassword, newPassword);
+        
         const user = await User.scope('withPassword').findByPk(userId);
-        if (!user) {
-            throw new ModelNotFoundException('User', userId);
-        }
-
-        // Verify current password (plain text comparison)
-        if (user.password !== currentPassword) {
-            throw new AuthenticationException('Current password is incorrect');
-        }
-
-        // Update password (plain text)
+        if (!user) throw new ModelNotFoundException('User', userId);
+        
+        this.validatePassword(user.password, currentPassword);
         await user.update({ password: newPassword });
-
-        return {
-            message: 'Password changed successfully'
-        };
+        
+        return { message: 'Password changed successfully' };
     }
 
-    /**
-     * Refresh user token
-     * @param {string} userId - User ID
-     * @returns {Promise<Object>} New token
-     */
     static async refreshToken(userId) {
         const user = await User.findByPk(userId);
-        if (!user) {
-            throw new ModelNotFoundException('User', userId);
-        }
+        if (!user) throw new ModelNotFoundException('User', userId);
+        
+        this.validateUserStatus(user);
+        const token = this.generateToken(user);
+        
+        return { token, message: 'Token refreshed successfully' };
+    }
 
+    static async updateProfile(userId, profileData) {
+        const user = await User.findByPk(userId);
+        if (!user) throw new ModelNotFoundException('User', userId);
+        
+        const allowedUpdates = this.sanitizeProfileData(profileData);
+        await user.update(allowedUpdates);
+        
+        return { user: user.toJSON(), message: 'Profile updated successfully' };
+    }
+
+    static validateLoginInput(email, password) {
+        if (!email) throw ValidationException.required('email');
+        if (!password) throw ValidationException.required('password');
+    }
+
+    static validatePasswordChangeInput(currentPassword, newPassword) {
+        if (!currentPassword) throw ValidationException.required('currentPassword');
+        if (!newPassword) throw ValidationException.required('newPassword');
+    }
+
+    static validateUserStatus(user) {
         if (user.status !== 'active') {
             throw new AccountAccessDeniedException(user.status);
         }
-
-        const token = this.generateToken(user);
-
-        return {
-            token,
-            message: 'Token refreshed successfully'
-        };
     }
 
-    /**
-     * Update user profile
-     * @param {string} userId - User ID
-     * @param {Object} profileData - Profile update data
-     * @returns {Promise<Object>} Updated user
-     */
-    static async updateProfile(userId, profileData) {
-        const user = await User.findByPk(userId);
-        if (!user) {
-            throw new ModelNotFoundException('User', userId);
+    static validatePassword(userPassword, inputPassword) {
+        if (userPassword !== inputPassword) {
+            throw new AuthenticationException('Invalid credentials');
         }
+    }
 
-        // Remove sensitive fields that shouldn't be updated via this method
+    static sanitizeUser(user) {
+        const userResponse = user.toJSON();
+        delete userResponse.password;
+        return userResponse;
+    }
+
+    static sanitizeProfileData(profileData) {
         const { password, role, status, ...allowedUpdates } = profileData;
+        return allowedUpdates;
+    }
 
-        await user.update(allowedUpdates);
-
-        return {
-            user: user.toJSON(),
-            message: 'Profile updated successfully'
-        };
+    static handleTokenError(error) {
+        if (error.name === 'TokenExpiredError') {
+            throw new AuthenticationException('Token expired');
+        }
+        if (error.name === 'JsonWebTokenError') {
+            throw new AuthenticationException('Invalid token');
+        }
+        throw error;
     }
 }
 

@@ -23,7 +23,11 @@ class SwaggerCommand {
 
         switch (command) {
             case 'generate':
-                this.generateByController(controllerName);
+                if (controllerName === 'all') {
+                    this.generateAll();
+                } else {
+                    this.generateByController(controllerName);
+                }
                 break;
             case 'list':
                 this.listControllers();
@@ -72,6 +76,19 @@ Available controllers:`);
                 console.log(`    - ${method.httpMethod.toUpperCase()} ${methodName}()`);
             });
         });
+    }
+
+    generateAll() {
+        console.log('🚀 Generating routes and swagger for all controllers...');
+        
+        // Scan all controllers
+        const allControllers = this.scanControllers();
+        
+        // Generate swagger and routes for the first controller to trigger full generation
+        const firstController = Object.keys(allControllers)[0];
+        if (firstController) {
+            this.generateByController(firstController);
+        }
     }
 
     generateByController(controllerName) {
@@ -128,114 +145,346 @@ Available controllers:`);
     }
 
     addControllerToSwagger(controllerName, controllerRoutes) {
-        // Read current swagger.json
-        let swaggerSpec;
-        try {
-            const swaggerContent = fs.readFileSync(this.outputPath, 'utf8');
-            swaggerSpec = JSON.parse(swaggerContent);
-        } catch (error) {
-            // If file doesn't exist, create base structure
-            swaggerSpec = {
-                "openapi": "3.0.0",
-                "info": {
-                    "title": "SongBanks API",
-                    "description": "API documentation for SongBanks application",
-                    "version": "1.0.0"
-                },
-                "servers": [
-                    {
-                        "url": "http://localhost:3000/api",
-                        "description": "Development server"
-                    },
-                    {
-                        "url": "https://be-songbanks.tahumeat.com/api",
-                        "description": "Production server"
-                    }
-                ],
-                "components": {
-                    "schemas": {},
-                    "securitySchemes": {
-                        "bearerAuth": {
-                            "type": "http",
-                            "scheme": "bearer",
-                            "bearerFormat": "JWT"
-                        }
-                    }
-                },
-                "paths": {}
-            };
-        }
+        // Always create fresh swagger.json - scan all controllers and regenerate completely
+        const allControllers = this.scanControllers();
         
-        // Add controller-specific schemas
-        this.addControllerSchemas(swaggerSpec, controllerName);
-        
-        // Add or update paths for this controller
-        controllerRoutes.forEach(route => {
-            const swaggerPath = this.routerPathToSwaggerPath(route.routerPath);
+        // Create fresh swagger spec
+        const swaggerSpec = {
+            "openapi": "3.0.0",
+            "info": {
+                "title": "SongBanks API",
+                "description": "Auto-generated API documentation using Swagpress framework",
+                "version": "1.0.0"
+            },
+            "servers": [
+                {
+                    "url": "http://localhost:3000/api",
+                    "description": "Development server"
+                },
+                {
+                    "url": "https://api.tahumeat.com/api",
+                    "description": "Production server"
+                }
+            ],
+            "components": {
+                "schemas": {},
+                "securitySchemes": {
+                    "bearerAuth": {
+                        "type": "http",
+                        "scheme": "bearer",
+                        "bearerFormat": "JWT"
+                    }
+                }
+            },
+            "paths": {}
+        };
+
+        // Add base schemas first
+        swaggerSpec.components.schemas = {
+            ...swaggerSpec.components.schemas,
+            ...this.getBaseSchemas()
+        };
+
+        // Generate routes for ALL controllers
+        Object.keys(allControllers).forEach(currentControllerName => {
+            const controller = allControllers[currentControllerName];
             
-            if (!swaggerSpec.paths[swaggerPath]) {
-                swaggerSpec.paths[swaggerPath] = {};
-            }
+            // Add controller-specific schemas
+            this.addControllerSchemas(swaggerSpec, currentControllerName);
             
-            swaggerSpec.paths[swaggerPath][route.httpMethod] = this.generateSwaggerOperation(route, controllerName);
+            // Generate routes for this controller
+            Object.keys(controller.methods).forEach(methodName => {
+                const method = controller.methods[methodName];
+                const routePath = method.endpointPath || this.generateRoutePath({
+                    controller: currentControllerName,
+                    method: methodName,
+                    httpMethod: method.httpMethod
+                });
+                
+                const route = {
+                    controller: currentControllerName,
+                    method: methodName,
+                    httpMethod: method.httpMethod,
+                    endpointPath: method.endpointPath,
+                    path: routePath,
+                    routerPath: routePath.replace('/api', ''),
+                    fullMethodName: `${currentControllerName}.${methodName}`
+                };
+
+                const swaggerPath = this.routerPathToSwaggerPath(route.routerPath);
+                
+                if (!swaggerSpec.paths[swaggerPath]) {
+                    swaggerSpec.paths[swaggerPath] = {};
+                }
+                
+                swaggerSpec.paths[swaggerPath][route.httpMethod] = this.generateSwaggerOperation(route, currentControllerName);
+            });
         });
         
-        // Write updated swagger.json
+        // Write completely fresh swagger.json
         fs.writeFileSync(this.outputPath, JSON.stringify(swaggerSpec, null, 2));
         
-        console.log(`✅ Added ${controllerRoutes.length} ${controllerName} endpoints to swagger.json`);
+        const totalEndpoints = Object.keys(swaggerSpec.paths).reduce((total, path) => {
+            return total + Object.keys(swaggerSpec.paths[path]).length;
+        }, 0);
+        
+        console.log(`✅ Generated fresh swagger.json with ${totalEndpoints} total endpoints from ${Object.keys(allControllers).length} controllers`);
     }
     
     updateRoutesFile(controllerName, controllerRoutes) {
-        // Read current routes file
-        const routesContent = fs.readFileSync(this.routesPath, 'utf8');
+        // For complete rewrite, regenerate the entire routes file when any controller is processed
+        this.generateCompleteRoutesFile();
+    }
+
+    generateCompleteRoutesFile() {
+        console.log('🔄 Regenerating complete routes file...');
         
-        // Check if controller is already imported
-        const controllerImportPattern = new RegExp(`const ${controllerName} = require\\('\\.\\./app/controllers/${controllerName}'\\);`);
-        let updatedContent = routesContent;
+        // Scan all controllers to get complete picture
+        const allControllers = this.scanControllers();
         
-        if (!controllerImportPattern.test(routesContent)) {
-            // Add import after the last controller import
-            const lastImportMatch = routesContent.match(/const \w+Controller = require\('\.\./app/controllers/\w+Controller'\);/g);
-            if (lastImportMatch) {
-                const lastImport = lastImportMatch[lastImportMatch.length - 1];
-                const lastImportIndex = routesContent.indexOf(lastImport) + lastImport.length;
-                updatedContent = routesContent.slice(0, lastImportIndex) + 
-                    `\nconst ${controllerName} = require('../app/controllers/${controllerName}');` +
-                    routesContent.slice(lastImportIndex);
+        // Organize controllers by groups and resources
+        const groupedControllers = {};
+        const resourceControllers = {};
+        const ungroupedControllers = {};
+        
+        Object.keys(allControllers).forEach(controllerName => {
+            const controller = allControllers[controllerName];
+            
+            // Check if controller has group or resource annotations
+            let hasGroup = false;
+            let hasResource = false;
+            let groupName = null;
+            let resourceName = null;
+            
+            Object.keys(controller.methods).forEach(methodName => {
+                const method = controller.methods[methodName];
+                if (method.annotations) {
+                    if (method.annotations.group) {
+                        hasGroup = true;
+                        groupName = method.annotations.group;
+                    }
+                    if (method.annotations.resource) {
+                        hasResource = true;
+                        resourceName = method.annotations.resource;
+                    }
+                }
+            });
+            
+            if (hasResource) {
+                if (!resourceControllers[resourceName]) {
+                    resourceControllers[resourceName] = [];
+                }
+                resourceControllers[resourceName].push({
+                    controllerName,
+                    controller
+                });
+            } else if (hasGroup) {
+                if (!groupedControllers[groupName]) {
+                    groupedControllers[groupName] = [];
+                }
+                groupedControllers[groupName].push({
+                    controllerName,
+                    controller
+                });
+            } else {
+                ungroupedControllers[controllerName] = controller;
+            }
+        });
+        
+        // Generate routes file content
+        let routesContent = this.generateRoutesFileHeader(Object.keys(allControllers));
+        
+        // Add resource routes
+        Object.keys(resourceControllers).forEach(resourceName => {
+            routesContent += this.generateResourceRoutes(resourceName, resourceControllers[resourceName]);
+        });
+        
+        // Add grouped routes
+        Object.keys(groupedControllers).forEach(groupName => {
+            routesContent += this.generateGroupRoutes(groupName, groupedControllers[groupName]);
+        });
+        
+        // Add ungrouped routes
+        Object.keys(ungroupedControllers).forEach(controllerName => {
+            routesContent += this.generateControllerRoutes(controllerName, ungroupedControllers[controllerName]);
+        });
+        
+        // Add footer
+        routesContent += '\nmodule.exports = router;\n';
+        
+        // Write the complete routes file
+        fs.writeFileSync(this.routesPath, routesContent);
+        
+        console.log('✅ Generated complete routes file with groups and resources');
+    }
+
+    generateRoutesFileHeader(controllerNames) {
+        let header = `const express = require('express');
+const router = express.Router();
+`;
+        
+        // Add controller imports
+        controllerNames.forEach(controllerName => {
+            header += `const ${controllerName} = require('../app/controllers/${controllerName}');\n`;
+        });
+        
+        // Add middleware imports
+        header += `const { authenticateToken } = require('../app/middlewares/auth');\n\n`;
+        
+        return header;
+    }
+
+    generateResourceRoutes(resourceName, resourceControllers) {
+        let routesContent = `// ${resourceName} Resource Routes (RESTful CRUD)\n`;
+        
+        resourceControllers.forEach(({ controllerName, controller }) => {
+            const resourcePath = `/${resourceName.toLowerCase()}s`;
+            
+            // Identify CRUD methods
+            const crudMethods = this.identifyCrudMethods(controller.methods);
+            
+            if (this.isCrudController(crudMethods)) {
+                // Generate standard RESTful routes
+                routesContent += `// RESTful routes for ${resourceName}\n`;
+                
+                // Map CRUD methods to routes
+                const routeMap = {
+                    'index': { method: 'get', path: resourcePath },
+                    'show': { method: 'get', path: `${resourcePath}/:id` },
+                    'create': { method: 'post', path: resourcePath },
+                    'update': { method: 'put', path: `${resourcePath}/:id` },
+                    'destroy': { method: 'delete', path: `${resourcePath}/:id` }
+                };
+                
+                crudMethods.forEach(crudMethod => {
+                    if (routeMap[crudMethod]) {
+                        const { method: httpMethod, path } = routeMap[crudMethod];
+                        const methodName = this.findMethodForCrudAction(controller.methods, crudMethod);
+                        if (methodName) {
+                            routesContent += `router.${httpMethod}('${path}', ${controllerName}.${methodName});\n`;
+                        }
+                    }
+                });
+                
+                routesContent += '\n';
+            } else {
+                // Generate individual routes
+                Object.keys(controller.methods).forEach(methodName => {
+                    const method = controller.methods[methodName];
+                    const route = this.generateRouteFromMethod(controllerName, methodName, method);
+                    if (route) {
+                        routesContent += `${route}\n`;
+                    }
+                });
+                routesContent += '\n';
+            }
+        });
+        
+        return routesContent;
+    }
+
+    generateGroupRoutes(groupName, groupControllers) {
+        let routesContent = `// ${groupName} Group Routes\n`;
+        
+        groupControllers.forEach(({ controllerName, controller }) => {
+            Object.keys(controller.methods).forEach(methodName => {
+                const method = controller.methods[methodName];
+                const route = this.generateRouteFromMethod(controllerName, methodName, method);
+                if (route) {
+                    routesContent += `${route}\n`;
+                }
+            });
+        });
+        
+        routesContent += '\n';
+        return routesContent;
+    }
+
+    generateControllerRoutes(controllerName, controller) {
+        let routesContent = `// ${controllerName} Routes\n`;
+        
+        Object.keys(controller.methods).forEach(methodName => {
+            const method = controller.methods[methodName];
+            const route = this.generateRouteFromMethod(controllerName, methodName, method);
+            if (route) {
+                routesContent += `${route}\n`;
+            }
+        });
+        
+        routesContent += '\n';
+        return routesContent;
+    }
+
+    generateRouteFromMethod(controllerName, methodName, method) {
+        const httpMethod = method.httpMethod || this.inferHttpMethod(methodName);
+        
+        // Use explicit endpoint path if available, otherwise generate
+        let routePath;
+        if (method.annotations && method.annotations.endpointPath) {
+            routePath = method.annotations.endpointPath.replace('/api', '');
+        } else {
+            routePath = this.generateRoutePath({
+                controller: controllerName,
+                method: methodName,
+                httpMethod: httpMethod
+            }).replace('/api', '');
+        }
+        
+        return `router.${httpMethod}('${routePath}', ${controllerName}.${methodName});`;
+    }
+
+    findMethodForCrudAction(methods, crudAction) {
+        // Find the actual method name that corresponds to a CRUD action
+        const searchTerms = {
+            'index': ['index', 'getall', 'list'],
+            'show': ['show', 'getbyid', 'get'],
+            'create': ['create', 'post', 'add'],
+            'update': ['update', 'put', 'edit'],
+            'destroy': ['destroy', 'delete', 'remove']
+        };
+        
+        const terms = searchTerms[crudAction] || [];
+        
+        for (const methodName of Object.keys(methods)) {
+            const lowerMethodName = methodName.toLowerCase();
+            for (const term of terms) {
+                if (lowerMethodName.includes(term)) {
+                    return methodName;
+                }
             }
         }
         
-        // Remove existing routes for this controller
-        const existingPattern = new RegExp(`router\\.[a-z]+\\('[^']*',\\s*${controllerName}\\.[a-zA-Z]+\\);`, 'g');
-        const existingMatches = updatedContent.match(existingPattern) || [];
+        return null;
+    }
+
+    identifyCrudMethods(methods) {
+        const crudMapping = {
+            'index': 'index',
+            'show': 'show', 
+            'create': 'create',
+            'update': 'update',
+            'destroy': 'destroy'
+        };
         
-        if (existingMatches.length > 0) {
-            console.log(`⚠️  Found ${existingMatches.length} existing ${controllerName} routes. Removing duplicates...`);
-            
-            existingMatches.forEach(routeMatch => {
-                updatedContent = updatedContent.replace(routeMatch, '');
+        const foundMethods = [];
+        Object.keys(methods).forEach(methodName => {
+            const lowerMethod = methodName.toLowerCase();
+            Object.keys(crudMapping).forEach(crudAction => {
+                if (lowerMethod.includes(crudAction) || 
+                    lowerMethod.includes(crudMapping[crudAction])) {
+                    if (!foundMethods.includes(crudAction)) {
+                        foundMethods.push(crudAction);
+                    }
+                }
             });
-        }
-        
-        // Add simple route definitions (no swagger docs)
-        let routeDefinitions = '';
-        controllerRoutes.forEach(route => {
-            routeDefinitions += `router.${route.httpMethod}('${route.routerPath}', ${controllerName}.${route.method});\n`;
         });
         
-        // Add the route definitions before module.exports
-        const moduleExportsIndex = updatedContent.indexOf('module.exports = router;');
-        if (moduleExportsIndex !== -1) {
-            updatedContent = updatedContent.slice(0, moduleExportsIndex) + 
-                routeDefinitions + '\n' +
-                updatedContent.slice(moduleExportsIndex);
-        }
-        
-        // Write updated content
-        fs.writeFileSync(this.routesPath, updatedContent);
-        
-        console.log(`✅ Added ${controllerRoutes.length} ${controllerName} routes to api.js`);
+        return foundMethods;
+    }
+
+    isCrudController(crudMethods) {
+        // Consider it a CRUD controller if it has at least 3 CRUD methods
+        return crudMethods.length >= 3;
     }
 
     routerPathToSwaggerPath(routerPath) {
@@ -318,6 +567,8 @@ Available controllers:`);
         } else if (controllerName === 'AuthController') {
             if (route.method === 'apiLogin') {
                 return { "$ref": "#/components/schemas/LoginRequest" };
+            } else if (route.method === 'apiVerifyToken') {
+                return { "$ref": "#/components/schemas/VerifyTokenRequest" };
             }
         }
         
@@ -450,6 +701,10 @@ Available controllers:`);
                 return { "$ref": "#/components/schemas/LoginResponse" };
             } else if (route.method === 'apiLogout') {
                 return { "$ref": "#/components/schemas/LogoutResponse" };
+            } else if (route.method === 'apiVerifyToken') {
+                return { "$ref": "#/components/schemas/VerifyTokenResponse" };
+            } else if (route.method === 'apiRefreshToken') {
+                return { "$ref": "#/components/schemas/RefreshTokenResponse" };
             }
         } else if (controllerName === 'NoteController') {
             return { "$ref": "#/components/schemas/NotesResponse" };
@@ -784,6 +1039,69 @@ Available controllers:`);
                         "example": "Logout successful"
                     }
                 }
+            },
+            "VerifyTokenRequest": {
+                "type": "object",
+                "required": ["token"],
+                "properties": {
+                    "token": {
+                        "type": "string",
+                        "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    }
+                }
+            },
+            "VerifyTokenResponse": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/BaseResponseWithData"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "code": {
+                                "example": 200
+                            },
+                            "message": {
+                                "example": "Token verified successfully"
+                            },
+                            "data": {
+                                "type": "object",
+                                "properties": {
+                                    "user": {
+                                        "$ref": "#/components/schemas/User"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "RefreshTokenResponse": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/BaseResponseWithData"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "code": {
+                                "example": 200
+                            },
+                            "message": {
+                                "example": "Token refreshed successfully"
+                            },
+                            "data": {
+                                "type": "object",
+                                "properties": {
+                                    "token": {
+                                        "type": "string",
+                                        "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ]
             }
         };
     }
@@ -1009,43 +1327,128 @@ Available controllers:`);
     extractControllerMethods(content) {
         const methods = {};
         
-        // Match static async methods that are NOT commented out
+        // Match both static async methods and static arrow function methods
         const lines = content.split('\n');
-        let inCommentBlock = false;
+        let inJSDocBlock = false;
+        let currentJSDoc = [];
         
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
             
-            // Check for comment blocks
-            if (line.includes('/*') && !line.includes('*/')) {
-                inCommentBlock = true;
+            // Check for JSDoc comment blocks
+            if (line.includes('/**')) {
+                inJSDocBlock = true;
+                currentJSDoc = [line];
                 continue;
             }
-            if (line.includes('*/')) {
-                inCommentBlock = false;
+            if (inJSDocBlock) {
+                currentJSDoc.push(line);
+                if (line.includes('*/')) {
+                    inJSDocBlock = false;
+                    // Keep JSDoc for the next method
+                }
                 continue;
             }
             
-            // Skip if in comment block
-            if (inCommentBlock) {
+            // Skip if commented line
+            if (line.startsWith('//')) {
                 continue;
             }
             
-            // Match static async methods
-            const methodMatch = line.match(/static\s+async\s+(\w+)\s*\([^)]*\)/);
-            if (methodMatch) {
-                const methodName = methodMatch[1];
+            // Match static async methods: static async methodName(...)
+            const asyncMethodMatch = line.match(/static\s+async\s+(\w+)\s*\([^)]*\)/);
+            if (asyncMethodMatch) {
+                const methodName = asyncMethodMatch[1];
+                const annotations = this.parseJSDocAnnotations(currentJSDoc);
                 
                 methods[methodName] = {
                     name: methodName,
                     isAsync: true,
                     httpMethod: this.inferHttpMethod(methodName),
-                    lineNumber: i + 1
+                    lineNumber: i + 1,
+                    jsDoc: currentJSDoc.join('\n'),
+                    annotations: annotations
                 };
+                currentJSDoc = [];
+                continue;
+            }
+            
+            // Match static arrow function methods: static MethodName = ErrorHandler.asyncHandler(async (req, res) =>
+            const arrowMethodMatch = line.match(/static\s+(\w+)\s*=\s*ErrorHandler\.asyncHandler\s*\(\s*async/);
+            if (arrowMethodMatch) {
+                const methodName = arrowMethodMatch[1];
+                const annotations = this.parseJSDocAnnotations(currentJSDoc);
+                
+                methods[methodName] = {
+                    name: methodName,
+                    isAsync: true,
+                    httpMethod: this.inferHttpMethod(methodName),
+                    lineNumber: i + 1,
+                    jsDoc: currentJSDoc.join('\n'),
+                    annotations: annotations
+                };
+                currentJSDoc = [];
+                continue;
+            }
+            
+            // Match other static methods: static methodName = 
+            const staticMethodMatch = line.match(/static\s+(\w+)\s*=/);
+            if (staticMethodMatch) {
+                const methodName = staticMethodMatch[1];
+                const annotations = this.parseJSDocAnnotations(currentJSDoc);
+                
+                methods[methodName] = {
+                    name: methodName,
+                    isAsync: false,
+                    httpMethod: this.inferHttpMethod(methodName),
+                    lineNumber: i + 1,
+                    jsDoc: currentJSDoc.join('\n'),
+                    annotations: annotations
+                };
+                currentJSDoc = [];
             }
         }
         
         return methods;
+    }
+
+    parseJSDocAnnotations(jsDocLines) {
+        const annotations = {
+            group: null,
+            resource: null,
+            summary: null,
+            endpointPath: null
+        };
+        
+        jsDocLines.forEach(line => {
+            const trimmed = line.trim();
+            
+            // Extract @group annotation
+            const groupMatch = trimmed.match(/@group\s+(\w+)/);
+            if (groupMatch) {
+                annotations.group = groupMatch[1];
+            }
+            
+            // Extract @resource annotation  
+            const resourceMatch = trimmed.match(/@resource\s+(\w+)/);
+            if (resourceMatch) {
+                annotations.resource = resourceMatch[1];
+            }
+            
+            // Extract @summary annotation
+            const summaryMatch = trimmed.match(/@summary\s+(.+)/);
+            if (summaryMatch) {
+                annotations.summary = summaryMatch[1];
+            }
+            
+            // Extract endpoint path from comments like "GET /api/users"
+            const pathMatch = trimmed.match(/^\*\s*(GET|POST|PUT|DELETE)\s+(\/[\/\w\-:]+)/);
+            if (pathMatch) {
+                annotations.endpointPath = pathMatch[2];
+            }
+        });
+        
+        return annotations;
     }
 
     inferHttpMethod(methodName) {
@@ -1059,6 +1462,14 @@ Available controllers:`);
         };
         
         const lowerMethod = methodName.toLowerCase();
+        
+        // Specific auth method mappings
+        if (lowerMethod.includes('apilogin')) return 'post';
+        if (lowerMethod.includes('apilogout')) return 'post';
+        if (lowerMethod.includes('apiverifytoken')) return 'post';
+        if (lowerMethod.includes('apirefreshtoken')) return 'post';
+        if (lowerMethod.includes('apichangepassword')) return 'post';
+        if (lowerMethod.includes('apiupdateprofile')) return 'put';
         
         for (const [pattern, httpMethod] of Object.entries(methodMap)) {
             if (lowerMethod.includes(pattern)) {
@@ -1103,6 +1514,18 @@ Available controllers:`);
         }
         if (method.includes('apilogout')) {
             return `/api/auth/logout`;
+        }
+        if (method.includes('apiverifytoken')) {
+            return `/api/auth/verify`;
+        }
+        if (method.includes('apirefreshtoken')) {
+            return `/api/auth/refresh`;
+        }
+        if (method.includes('apichangepassword')) {
+            return `/api/auth/change-password`;
+        }
+        if (method.includes('apiupdateprofile')) {
+            return `/api/auth/profile`;
         }
         
         // Default fallback

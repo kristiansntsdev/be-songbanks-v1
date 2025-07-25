@@ -22,6 +22,14 @@ class User extends BaseModel {
         };
     }
 
+    static get scopes() {
+        return {
+            withPassword: {
+                attributes: { exclude: [] } // Include all attributes including password
+            }
+        };
+    }
+
     static associate(models) {
         this.hasMany(models.Note, {
             foreignKey: 'user_id', 
