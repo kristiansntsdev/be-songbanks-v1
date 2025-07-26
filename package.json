@@ -16,7 +16,8 @@
     "seed": "sequelize-cli db:seed:all",
     "seed:undo": "sequelize-cli db:seed:undo:all",
     "swagpress:seed": "sequelize-cli db:seed:all",
-    "swagpress:generate-api": "node package/src/commands/SwaggerCommand.js",
+    "swagpress:generate-api": "node package/src/commands/SwaggerCommand.js generate all",
+    "swagpress:generate-api-single": "node package/src/commands/SwaggerCommand.js",
     "swagpress:resource": "node package/src/commands/ResourceCommand.js --",
     "swagpress:make": "node package/src/commands/MakeCommand.js",
     "swagpress:docs": "node package/src/commands/DocsCommand.js"

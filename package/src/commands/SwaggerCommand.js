@@ -162,7 +162,7 @@ Available controllers:`);
                     "description": "Development server"
                 },
                 {
-                    "url": "https://api.tahumeat.com/api",
+                    "url": "https://songbanks-v1-1.vercel.app/api",
                     "description": "Production server"
                 }
             ],
@@ -1446,6 +1446,12 @@ const router = express.Router();
             if (pathMatch) {
                 annotations.endpointPath = pathMatch[2];
             }
+            
+            // Also check for paths in summary comments
+            const summaryPathMatch = trimmed.match(/^\*\s*(GET|POST|PUT|DELETE)\s+(\/api\/[\/\w\-:]+)/);
+            if (summaryPathMatch) {
+                annotations.endpointPath = summaryPathMatch[2];
+            }
         });
         
         return annotations;
@@ -1471,6 +1477,30 @@ const router = express.Router();
         if (lowerMethod.includes('apichangepassword')) return 'post';
         if (lowerMethod.includes('apiupdateprofile')) return 'put';
         
+        // Specific playlist method mappings
+        if (lowerMethod.includes('generateshareablelink')) return 'post';
+        if (lowerMethod.includes('joinplaylistvialink')) return 'post';
+        if (lowerMethod.includes('getsharedplaylistdetails')) return 'get';
+        if (lowerMethod.includes('addsongtoplaylist')) return 'post';
+        if (lowerMethod.includes('removesongfromplaylist')) return 'delete';
+        if (lowerMethod.includes('reorderplaylistsongs')) return 'put';
+        if (lowerMethod.includes('getuserplaylists')) return 'get';
+        
+        // Specific playlist team method mappings
+        if (lowerMethod.includes('invitemembertoteam')) return 'post';
+        if (lowerMethod.includes('updateteamvisibility')) return 'put';
+        if (lowerMethod.includes('addmembertoteam')) return 'post';
+        if (lowerMethod.includes('removememberfromteam')) return 'delete';
+        if (lowerMethod.includes('updatememberrole')) return 'put';
+        if (lowerMethod.includes('getuserteams')) return 'get';
+        
+        // Specific song method mappings
+        if (lowerMethod.includes('addtagtosong')) return 'post';
+        if (lowerMethod.includes('removetagfromsong')) return 'delete';
+        
+        // Other specific mappings
+        if (lowerMethod.includes('requestvolaccess')) return 'post';
+        
         for (const [pattern, httpMethod] of Object.entries(methodMap)) {
             if (lowerMethod.includes(pattern)) {
                 return httpMethod;
@@ -1489,26 +1519,97 @@ const router = express.Router();
         const controller = route.controller.replace('Controller', '').toLowerCase();
         const method = route.method.toLowerCase();
         
-        // Generate RESTful paths based on method patterns
-        if (method.includes('getall') || method.includes('index')) {
-            return `/api/${controller}s`;
-        } else if (method.includes('getbyid') || method.includes('show')) {
-            return `/api/${controller}s/:id`;
-        } else if (method.includes('create') || method.includes('store')) {
-            return `/api/${controller}s`;
-        } else if (method.includes('update')) {
-            return `/api/${controller}s/:id`;
-        } else if (method.includes('delete') || method.includes('destroy')) {
-            return `/api/${controller}s/:id`;
+        // First check if there's an explicit endpoint path from JSDoc annotations
+        if (route.annotations && route.annotations.endpointPath) {
+            return route.annotations.endpointPath.replace('/api', '');
         }
         
-        // Special cases
-        if (method.includes('getuseraccess') || method.includes('updateuseraccess')) {
-            return method.includes('update') ? `/api/admin/user-access/:user_id` : `/api/admin/user-access`;
+        // Note-specific endpoints (MUST come before general patterns)
+        if (method.includes('createnoteforsong') || method.includes('createnotefor')) {
+            return `/api/notes/:user_id/:song_id`;
         }
-        if (method.includes('getnotebyuserid')) {
+        if (method.includes('getallusernotes') || method.includes('getalluser')) {
             return `/api/notes/:user_id`;
         }
+        if (method.includes('getnotebyid') && controller === 'note') {
+            return `/api/notes/:user_id/:id`;
+        }
+        if (method.includes('updatenote') && controller === 'note') {
+            return `/api/notes/:user_id/:id`;
+        }
+        if (method.includes('deletenote') && controller === 'note') {
+            return `/api/notes/:user_id/:id`;
+        }
+        if (method.includes('getrecentnotes')) {
+            return `/api/notes`;
+        }
+        if (method.includes('createnote') && !method.includes('forsong')) {
+            return `/api/notes`;
+        }
+        
+        // Playlist-specific endpoints (MUST come before general patterns)
+        if (controller === 'playlist') {
+            if (method.includes('getuserplaylists')) {
+                return `/api/users/:user_id/playlists`;
+            }
+            if (method.includes('addsongtoplaylist')) {
+                return `/api/playlists/:id/songs/:song_id`;
+            }
+            if (method.includes('removesongfromplaylist')) {
+                return `/api/playlists/:id/songs/:song_id`;
+            }
+            if (method.includes('reorderplaylistsongs')) {
+                return `/api/playlists/:id/reorder`;
+            }
+            if (method.includes('generateshareablelink')) {
+                return `/api/playlists/:id/share`;
+            }
+            if (method.includes('joinplaylistvialink')) {
+                return `/api/playlists/join/:share_token`;
+            }
+            if (method.includes('getsharedplaylistdetails')) {
+                return `/api/playlists/shared/:share_token`;
+            }
+        }
+        
+        // PlaylistTeam-specific endpoints
+        if (controller === 'playlistteam') {
+            if (method.includes('addmembertoteam')) {
+                return `/api/playlistteams/:id/members`;
+            }
+            if (method.includes('removememberfromteam')) {
+                return `/api/playlistteams/:id/members/:member_id`;
+            }
+            if (method.includes('updatememberrole')) {
+                return `/api/playlistteams/:id/members/:member_id/role`;
+            }
+            if (method.includes('getuserteams')) {
+                return `/api/users/:user_id/teams`;
+            }
+            if (method.includes('invitemembertoteam')) {
+                return `/api/playlistteams/:id/invite`;
+            }
+            if (method.includes('updateteamvisibility')) {
+                return `/api/playlistteams/:id/visibility`;
+            }
+        }
+        
+        // Song-specific endpoints
+        if (controller === 'song') {
+            if (method.includes('addtagtosong')) {
+                return `/api/songs/:id/tags`;
+            }
+            if (method.includes('removetagfromsong')) {
+                return `/api/songs/:id/tags/:tag_id`;
+            }
+        }
+        
+        // Special cases for other controllers
+        if (method.includes('getuseraccess') || method.includes('updateuseraccess')) {
+            return method.includes('update') ? `/api/users/:id` : `/api/admin/user-access`;
+        }
+        
+        // Auth endpoints
         if (method.includes('apilogin')) {
             return `/api/auth/login`;
         }
@@ -1526,6 +1627,19 @@ const router = express.Router();
         }
         if (method.includes('apiupdateprofile')) {
             return `/api/auth/profile`;
+        }
+        
+        // Generate RESTful paths based on method patterns (fallback)
+        if (method.includes('getall') || method.includes('index')) {
+            return `/api/${controller}s`;
+        } else if (method.includes('getbyid') || method.includes('show')) {
+            return `/api/${controller}s/:id`;
+        } else if (method.includes('create') || method.includes('store')) {
+            return `/api/${controller}s`;
+        } else if (method.includes('update')) {
+            return `/api/${controller}s/:id`;
+        } else if (method.includes('delete') || method.includes('destroy')) {
+            return `/api/${controller}s/:id`;
         }
         
         // Default fallback

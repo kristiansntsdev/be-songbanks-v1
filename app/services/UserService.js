@@ -105,6 +105,23 @@ class UserService {
             }))
         };
     }
+
+    static async requestVolAccess(userId, message) {
+        const user = await this.validateUserExists(userId);
+        
+        // Check if user already has vol_user status or is already requesting
+        if (user.status === 'active' || user.status === 'request') {
+            throw new Error('User already has access or has pending request');
+        }
+        
+        // Update user status to request
+        await user.update({ status: 'request' });
+        
+        return {
+            status: 'request',
+            message: 'Access request submitted successfully'
+        };
+    }
 }
 
 module.exports = UserService;

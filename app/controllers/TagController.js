@@ -38,8 +38,8 @@ class TagController {
     });
 
     /**
-     * POST /api/tags/
-     * @summary Create new tag
+     * POST /api/admin/tags
+     * @summary Create new tag (Admin Only)
      * @resource Tag
      * @body {name: string, description?: string}
      * @returns {tag: object}
@@ -52,13 +52,16 @@ class TagController {
         res.status(201).json({
             code: 201,
             message: 'Tag created successfully',
-            data: tag
+            data: {
+                id: tag.id,
+                name: tag.name
+            }
         });
     });
 
     /**
-     * PUT /api/tags/:id
-     * @summary Update tag by ID
+     * PUT /api/admin/tags/:id
+     * @summary Update tag (Admin Only)
      * @resource Tag
      * @param {string} id - Tag ID parameter
      * @body {name?: string, description?: string}
@@ -70,23 +73,29 @@ class TagController {
         res.json({
             code: 200,
             message: 'Tag updated successfully',
-            data: tag
+            data: {
+                id: tag.id,
+                name: tag.name
+            }
         });
     });
 
     /**
-     * DELETE /api/tags/:id
-     * @summary Delete tag by ID
+     * DELETE /api/admin/tags/:id
+     * @summary Delete tag (Admin Only)
      * @resource Tag
      * @param {string} id - Tag ID parameter
      * @returns {message: string}
      */
     static DeleteTag = ErrorHandler.asyncHandler(async (req, res) => {
-        const result = await TagService.deleteTag(req.params.id);
+        await TagService.deleteTag(req.params.id);
         
         res.json({
             code: 200,
-            message: result.message
+            message: 'Tag deleted successfully',
+            data: {
+                id: req.params.id
+            }
         });
     });
 }

@@ -19,7 +19,7 @@ class NoteService {
         return this.paginatedResponse(rows, count, page, limit);
     }
 
-    static async getNoteById(noteId) {
+    static async getNoteByIdLegacy(noteId) {
         const note = await Note.query()
             .with(['user:id,email,role', 'song:id,title,artist,base_chord'])
             .findByPk(noteId);
@@ -39,7 +39,7 @@ class NoteService {
             notes: noteData.notes
         });
 
-        return this.getNoteById(note.id);
+        return this.getNoteByIdLegacy(note.id);
     }
 
     static async updateNote(noteId, updateData, userId) {
@@ -49,7 +49,7 @@ class NoteService {
         await this.validateNoteOwnership(note, userId);
         await note.update({ notes: updateData.notes });
         
-        return this.getNoteById(noteId);
+        return this.getNoteByIdLegacy(noteId);
     }
 
     static async deleteNote(noteId, userId) {
@@ -133,7 +133,7 @@ class NoteService {
             await note.update({ notes: noteContent });
         }
 
-        return this.getNoteById(note.id);
+        return this.getNoteByIdLegacy(note.id);
     }
 
     static async deleteNotesByUser(userId, requesterId) {
@@ -154,6 +154,115 @@ class NoteService {
             .with(['user:id,email,role', 'song:id,title,artist'])
             .limit(limit)
             .latest();
+    }
+
+    /**
+     * Add note to song - New API pattern
+     * POST /api/notes/:user_id/:song_id
+     */
+    static async addNoteToSong(userId, songId, noteContent) {
+        await this.validateSongExists(songId);
+        await this.validateUserExists(userId);
+        await this.ensureUniqueUserSongNote(userId, songId);
+
+        const note = await Note.create({
+            user_id: userId,
+            song_id: songId,
+            notes: noteContent
+        });
+
+        return {
+            id: note.id,
+            user_id: userId,
+            song_id: songId,
+            notes: noteContent
+        };
+    }
+
+    /**
+     * Get all user notes - New API pattern
+     * GET /api/notes/:user_id
+     */
+    static async getAllUserNotes(userId) {
+        await this.validateUserExists(userId);
+        
+        const notes = await Note.findAll({
+            where: { user_id: userId },
+            include: [{
+                model: Song,
+                attributes: ['id', 'title', 'artist']
+            }],
+            order: [['createdAt', 'DESC']]
+        });
+
+        return notes.map(note => ({
+            id: note.id,
+            user_id: note.user_id,
+            song_id: note.song_id,
+            notes: note.notes
+        }));
+    }
+
+    /**
+     * Get note by ID with user validation - New API pattern
+     * GET /api/notes/:user_id/:id
+     */
+    static async getNoteById(noteId, userId = null) {
+        const note = await Note.findByPk(noteId, {
+            include: [{
+                model: Song,
+                attributes: ['id', 'title', 'artist']
+            }]
+        });
+        
+        if (!note) throw new Error('Note not found');
+        
+        if (userId && note.user_id !== userId) {
+            throw new Error('Note not found'); // Don't reveal existence of note
+        }
+        
+        return {
+            id: note.id,
+            user_id: note.user_id,
+            song_id: note.song_id,
+            notes: note.notes
+        };
+    }
+
+    /**
+     * Update note - New API pattern
+     * PUT /api/notes/:user_id/:id
+     */
+    static async updateNote(noteId, userId, noteContent) {
+        const note = await Note.findByPk(noteId);
+        if (!note) throw new Error('Note not found');
+        
+        if (note.user_id !== userId) {
+            throw new Error('Note not found'); // Don't reveal existence
+        }
+        
+        await note.update({ notes: noteContent });
+        
+        return {
+            id: noteId,
+            notes: noteContent
+        };
+    }
+
+    /**
+     * Delete note - New API pattern
+     * DELETE /api/notes/:user_id/:id
+     */
+    static async deleteNote(noteId, userId) {
+        const note = await Note.findByPk(noteId);
+        if (!note) throw new Error('Note not found');
+        
+        if (note.user_id !== userId) {
+            throw new Error('Note not found'); // Don't reveal existence
+        }
+        
+        await note.destroy();
+        return true;
     }
 
     static async validateSongExists(songId) {

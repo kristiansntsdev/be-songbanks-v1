@@ -825,6 +825,89 @@ Response:
 }
 ```
 
+### 5.6. Generate Shareable Link (Vol_User Only)
+POST /api/playlists/:id/share
+
+Description: Generate a shareable link for a playlist. This automatically creates a hidden playlist team that becomes visible when users join via the link. The playlist becomes locked from other users joining once someone uses the shareable link.
+
+Request:
+
+Bearer token (Vol_User - playlist owner)
+
+Response:
+
+```json
+{
+    "code": 201,
+    "message": "Shareable link generated successfully",
+    "data": {
+        "id": "playlist_abc",
+        "sharable_link": "https://songbanks-v1-1.vercel.app/share/playlist_abc_xyz123",
+        "team_id": "team_hidden_abc",
+        "is_shared": true,
+        "is_locked": false
+    }
+}
+```
+
+### 5.7. Join Playlist via Shareable Link (Vol_User Only)
+POST /api/playlists/join/:share_token
+
+Description: Join a playlist using a shareable link token. This adds the user to the playlist team and locks the playlist from further joins unless invited by the team leader.
+
+Request:
+
+Bearer token (Vol_User)
+
+Response:
+
+```json
+{
+    "code": 200,
+    "message": "Successfully joined playlist",
+    "data": {
+        "playlist_id": "playlist_abc",
+        "team_id": "team_hidden_abc",
+        "role": "member",
+        "is_locked": true
+    }
+}
+```
+
+### 5.8. Get Shared Playlist Details (Public Access via Link)
+GET /api/playlists/shared/:share_token
+
+Description: Get playlist details using shareable link without authentication (for preview). Shows basic playlist info and songs.
+
+Request:
+
+No Bearer token required
+
+Response:
+
+```json
+{
+    "code": 200,
+    "message": "Shared playlist details retrieved successfully",
+    "data": {
+        "id": "playlist_abc",
+        "playlist_name": "Awesome Worship Songs",
+        "owner_email": "owner@example.com",
+        "songs_count": 12,
+        "songs": [
+            {
+                "id": "song001",
+                "title": "Song Title 1",
+                "artist": "Artist A",
+                "order_index": 0
+            }
+        ],
+        "is_locked": true,
+        "created_at": "2024-01-15T10:30:00Z"
+    }
+}
+```
+
 ## 6. Playlist Team Endpoints
 
 ### 6.1. Retrieve All Playlist Teams (Vol_User Only)
@@ -991,6 +1074,68 @@ Response:
     "data": {
         "team_id": "team_xyz",
         "user_id": "user789"
+    }
+}
+```
+
+### 6.7. Invite Member to Playlist Team (Vol_User Lead Only)
+POST /api/playlist-teams/:team_id/invite
+
+Description: Team leader can invite new members to a locked playlist team. This bypasses the sharing lock restriction.
+
+Request:
+
+Bearer token (Vol_User who is the team leader)
+
+req.body:
+
+```json
+{
+    "user_email": "newmember@example.com",
+    "role": "member"
+}
+```
+
+Response:
+
+```json
+{
+    "code": 201,
+    "message": "Member invited successfully",
+    "data": {
+        "team_id": "team_xyz",
+        "invited_user_id": "user_new123",
+        "role": "member"
+    }
+}
+```
+
+### 6.8. Update Team Visibility (Vol_User Lead Only)
+PUT /api/playlist-teams/:team_id/visibility
+
+Description: Team leader can toggle team visibility. Hidden teams are created when sharing links are generated.
+
+Request:
+
+Bearer token (Vol_User who is the team leader)
+
+req.body:
+
+```json
+{
+    "is_hidden": false
+}
+```
+
+Response:
+
+```json
+{
+    "code": 200,
+    "message": "Team visibility updated successfully",
+    "data": {
+        "team_id": "team_xyz",
+        "is_hidden": false
     }
 }
 ```
