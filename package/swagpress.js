@@ -1,30 +1,30 @@
 /**
  * Swagpress Framework - Main entry point
- * 
+ *
  * This file provides easy access to all Swagpress framework features.
  * Import this file to get access to all exceptions, models, and utilities.
  */
 
 // Re-export everything from the engine
-module.exports = require('./src/engine');
+module.exports = require("./src/engine");
 
 // Export schemas for swagger documentation
-const schemas = require('./src/schemas');
+const schemas = require("./src/schemas");
 module.exports.schemas = schemas;
 
 // Add convenient aliases for the most commonly used exceptions
 const {
-    ValidationException,
-    AuthenticationException,
-    BadRequestException,
-    UnauthorizedException,
-    ForbiddenException,
-    NotFoundException,
-    ModelNotFoundException,
-    AccountAccessDeniedException,
-    DuplicateResourceException,
-    ConflictException
-} = require('./src/engine');
+  ValidationException,
+  AuthenticationException,
+  BadRequestException,
+  UnauthorizedException,
+  ForbiddenException,
+  NotFoundException,
+  ModelNotFoundException,
+  AccountAccessDeniedException,
+  DuplicateResourceException,
+  ConflictException,
+} = require("./src/engine");
 
 // Export the most commonly used exceptions as named exports for convenience
 module.exports.ValidationException = ValidationException;

@@ -3,15 +3,15 @@ module.exports = {
   properties: {
     error: {
       type: "string",
-      example: "Not Found"
+      example: "Not Found",
     },
     message: {
       type: "string",
-      example: "Resource not found"
+      example: "Resource not found",
     },
     statusCode: {
       type: "integer",
-      example: 404
-    }
-  }
+      example: 404,
+    },
+  },
 };

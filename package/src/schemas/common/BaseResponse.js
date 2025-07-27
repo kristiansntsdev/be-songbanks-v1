@@ -3,11 +3,11 @@ module.exports = {
   properties: {
     code: {
       type: "integer",
-      description: "HTTP status code"
+      description: "HTTP status code",
     },
     message: {
       type: "string",
-      description: "Response message"
-    }
-  }
+      description: "Response message",
+    },
+  },
 };

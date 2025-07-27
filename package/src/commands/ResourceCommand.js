@@ -1,43 +1,43 @@
 #!/usr/bin/env node
 
-const ResourceGenerator = require('../generators/ResourceGenerator');
+const ResourceGenerator = require("../generators/ResourceGenerator");
 
 class ResourceCommand {
-    constructor() {
-        this.generator = new ResourceGenerator();
+  constructor() {
+    this.generator = new ResourceGenerator();
+  }
+
+  execute() {
+    // Get all arguments after --
+    const allArgs = process.argv.slice(2);
+
+    // Find --name= argument
+    const nameArg = allArgs.find((arg) => arg.startsWith("--name="));
+
+    if (!nameArg) {
+      console.error("❌ --name parameter is required");
+      this.showUsage();
+      return;
     }
 
-    execute() {
-        // Get all arguments after --
-        const allArgs = process.argv.slice(2);
-        
-        // Find --name= argument
-        const nameArg = allArgs.find(arg => arg.startsWith('--name='));
-        
-        if (!nameArg) {
-            console.error('❌ --name parameter is required');
-            this.showUsage();
-            return;
-        }
+    const resourceName = nameArg.replace("--name=", "");
 
-        const resourceName = nameArg.replace('--name=', '');
-        
-        if (!resourceName.trim()) {
-            console.error('❌ Resource name cannot be empty');
-            this.showUsage();
-            return;
-        }
-
-        try {
-            this.generator.generate(resourceName.trim());
-        } catch (error) {
-            console.error(`❌ ${error.message}`);
-            process.exit(1);
-        }
+    if (!resourceName.trim()) {
+      console.error("❌ Resource name cannot be empty");
+      this.showUsage();
+      return;
     }
 
-    showUsage() {
-        console.log(`
+    try {
+      this.generator.generate(resourceName.trim());
+    } catch (error) {
+      console.error(`❌ ${error.message}`);
+      process.exit(1);
+    }
+  }
+
+  showUsage() {
+    console.log(`
 🔧 Complete Resource Generator
 
 Usage:
@@ -59,13 +59,13 @@ This generates a complete resource with:
 
 Based on TagController pattern with Sequelize ORM integration.
 `);
-    }
+  }
 }
 
 // Run the command if this file is executed directly
 if (require.main === module) {
-    const command = new ResourceCommand();
-    command.execute();
+  const command = new ResourceCommand();
+  command.execute();
 }
 
 module.exports = ResourceCommand;

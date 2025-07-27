@@ -1,5 +1,5 @@
 module.exports = {
-  BaseResponse: require('./BaseResponse'),
-  BaseResponseWithData: require('./BaseResponseWithData'),
-  PaginatedResponse: require('./PaginatedResponse')
+  BaseResponse: require("./BaseResponse"),
+  BaseResponseWithData: require("./BaseResponseWithData"),
+  PaginatedResponse: require("./PaginatedResponse"),
 };

@@ -78,18 +78,21 @@ songbanks-v1.1/                    # Swagpress API Demo
 ## Architecture Patterns
 
 ### API-First Design
+
 - **Pure API Focus**: No web routes, dedicated to API development
 - **Swagger Documentation**: Auto-generated from JSDoc comments
 - **RESTful Endpoints**: Clean, predictable API structure
 - **JSON Responses**: Consistent response formatting
 
 ### Service Layer Pattern
+
 - **Controllers**: Handle HTTP requests and responses
 - **Services**: Contain business logic and complex operations
 - **Models**: Database interactions and relationships
 - **Separation of Concerns**: Clear boundaries between layers
 
 ### JSDoc Documentation System
+
 - **Source Code Documentation**: JSDoc comments in controllers
 - **Auto-Generation**: Swagger JSON generated from comments
 - **Live Documentation**: Always up-to-date API specs
@@ -117,6 +120,7 @@ static async GetTags(req, res) {
 ```
 
 ### JSDoc Annotations
+
 - `@summary`: Brief endpoint description
 - `@description`: Detailed explanation
 - `@tags`: Group endpoints by domain
@@ -128,23 +132,26 @@ static async GetTags(req, res) {
 ## Swagger Generation System
 
 ### Automatic Documentation
+
 1. **JSDoc Parsing**: Framework scans controller comments
 2. **Schema Generation**: Auto-generates OpenAPI schemas
 3. **JSON Output**: Creates `swagger/swagger.json`
 4. **UI Serving**: Swagger UI loads from generated JSON
 
 ### Generation Commands
+
 ```bash
 npm run swagpress:make-migration
 npm run swagpress:migrate
 npm run swagpress:make-seeder
-npm run swagpress:seeder       
+npm run swagpress:seeder
 npm run swagpress:generate     # Generate swagger.json
 npm run swagpress:watch        # Auto-regenerate on changes
 npm run dev                  # Start server with docs generation
 ```
 
 ### Swagger Directory Structure
+
 ```
 swagger/
 ├── swagger.json             # Main OpenAPI specification
@@ -158,102 +165,108 @@ swagger/
 ## Database Architecture
 
 ### Enhanced Model Structure
+
 Songbanks uses **Laravel-inspired Sequelize models** that provide rich functionality, clear organization, and professional development patterns.
 
 ### Model Organization
+
 ```javascript
 // app/models/User.js - Enhanced structure
-const { Sequelize, DataTypes } = require('sequelize');
-const { ulid } = require('ulid');
-const sequelize = require('../../config/database');
+const { Sequelize, DataTypes } = require("sequelize");
+const { ulid } = require("ulid");
+const sequelize = require("../../config/database");
 
 class User extends Sequelize.Model {
-    // Configuration
-    static get fillable() {
-        return ['first_name', 'last_name', 'email', 'password', 'role', 'status'];
-    }
+  // Configuration
+  static get fillable() {
+    return ["first_name", "last_name", "email", "password", "role", "status"];
+  }
 
-    static get hidden() {
-        return ['password'];
-    }
+  static get hidden() {
+    return ["password"];
+  }
 
-    static get casts() {
-        return {
-            'id': 'string',
-            'created_at': 'date',
-            'updated_at': 'date'
-        };
-    }
+  static get casts() {
+    return {
+      id: "string",
+      created_at: "date",
+      updated_at: "date",
+    };
+  }
 
-    // Associations
-    static associate(models) {
-        this.hasMany(models.Song, { foreignKey: 'created_by', as: 'songs' });
-        this.hasMany(models.Note, { foreignKey: 'user_id', as: 'notes' });
-    }
+  // Associations
+  static associate(models) {
+    this.hasMany(models.Song, { foreignKey: "created_by", as: "songs" });
+    this.hasMany(models.Note, { foreignKey: "user_id", as: "notes" });
+  }
 
-    // Scopes
-    static get scopes() {
-        return {
-            active: { where: { status: 'active' } },
-            admins: { where: { role: 'admin' } }
-        };
-    }
+  // Scopes
+  static get scopes() {
+    return {
+      active: { where: { status: "active" } },
+      admins: { where: { role: "admin" } },
+    };
+  }
 
-    // Instance methods
-    isAdmin() {
-        return this.role === 'admin';
-    }
+  // Instance methods
+  isAdmin() {
+    return this.role === "admin";
+  }
 
-    getFullName() {
-        return `${this.first_name || ''} ${this.last_name || ''}`.trim();
-    }
+  getFullName() {
+    return `${this.first_name || ""} ${this.last_name || ""}`.trim();
+  }
 
-    // Static methods
-    static async findByRole(role) {
-        return this.findAll({ where: { role } });
-    }
+  // Static methods
+  static async findByRole(role) {
+    return this.findAll({ where: { role } });
+  }
 }
 
 // Model initialization with enhanced schema
-User.init({
+User.init(
+  {
     id: {
-        type: DataTypes.STRING(26),
-        primaryKey: true,
-        defaultValue: () => ulid()
+      type: DataTypes.STRING(26),
+      primaryKey: true,
+      defaultValue: () => ulid(),
     },
     first_name: {
-        type: DataTypes.STRING(100),
-        allowNull: true
+      type: DataTypes.STRING(100),
+      allowNull: true,
     },
     email: {
-        type: DataTypes.STRING(255),
-        allowNull: false,
-        unique: true,
-        validate: { isEmail: true }
+      type: DataTypes.STRING(255),
+      allowNull: false,
+      unique: true,
+      validate: { isEmail: true },
     },
     role: {
-        type: DataTypes.ENUM('admin', 'member', 'guest'),
-        defaultValue: 'member'
-    }
+      type: DataTypes.ENUM("admin", "member", "guest"),
+      defaultValue: "member",
+    },
     // ... other fields
-}, {
+  },
+  {
     sequelize,
-    modelName: 'User',
-    tableName: 'users',
+    modelName: "User",
+    tableName: "users",
     indexes: [
-        { unique: true, fields: ['email'] },
-        { fields: ['role'] },
-        { fields: ['status'] }
+      { unique: true, fields: ["email"] },
+      { fields: ["role"] },
+      { fields: ["status"] },
     ],
     defaultScope: {
-        attributes: { exclude: ['password'] }
-    }
-});
+      attributes: { exclude: ["password"] },
+    },
+  }
+);
 ```
 
 ### Model Features
 
 #### **Laravel-Inspired Patterns**
+
 - **Fillable Arrays**: Define mass-assignable attributes
 - **Hidden Attributes**: Exclude sensitive data from JSON output
 - **Attribute Casting**: Automatic type conversion
@@ -261,6 +274,7 @@ User.init({
 - **Relationships**: Clean association definitions
 
 #### **Enhanced Functionality**
+
 - **Instance Methods**: Business logic attached to model instances
 - **Static Methods**: Class-level utility functions
 - **Validation Rules**: Built-in data validation
@@ -268,6 +282,7 @@ User.init({
 - **Query Builders**: Chainable query methods
 
 #### **Professional Organization**
+
 - **Clear Structure**: Logical grouping of model concerns
 - **Self-Documenting**: Method names indicate functionality
 - **Maintainable**: Easy to extend and modify
@@ -276,46 +291,51 @@ User.init({
 ### Data Models
 
 #### **User Model**
+
 ```javascript
 // Enhanced user management with roles and relationships
 class User extends Sequelize.Model {
-    // Properties: id, first_name, last_name, email, role, status
-    // Methods: isAdmin(), getFullName(), findByRole()
-    // Relations: songs, notes, profile
+  // Properties: id, first_name, last_name, email, role, status
+  // Methods: isAdmin(), getFullName(), findByRole()
+  // Relations: songs, notes, profile
 }
 ```
 
-#### **Song Model**  
+#### **Song Model**
+
 ```javascript
 // Music track management with metadata and relationships
 class Song extends Sequelize.Model {
-    // Properties: id, title, artist, album, base_chord, lyrics_and_chords
-    // Methods: search(), getFormattedDuration(), addTags()
-    // Relations: creator, tags, notes
+  // Properties: id, title, artist, album, base_chord, lyrics_and_chords
+  // Methods: search(), getFormattedDuration(), addTags()
+  // Relations: creator, tags, notes
 }
 ```
 
 #### **Tag Model**
+
 ```javascript
 // Categorization system for songs
 class Tag extends Sequelize.Model {
-    // Properties: id, name, description, color
-    // Methods: findPopular(), getUsageCount()
-    // Relations: songs
+  // Properties: id, name, description, color
+  // Methods: findPopular(), getUsageCount()
+  // Relations: songs
 }
 ```
 
 #### **Note Model**
+
 ```javascript
 // User annotations and comments on songs
 class Note extends Sequelize.Model {
-    // Properties: id, content, user_id, song_id
-    // Methods: getExcerpt(), isOwner()
-    // Relations: user, song
+  // Properties: id, content, user_id, song_id
+  // Methods: getExcerpt(), isOwner()
+  // Relations: user, song
 }
 ```
 
 ### Database Features
+
 - **ULID Primary Keys**: Better than auto-increment integers
 - **Comprehensive Indexing**: Optimized query performance
 - **Relationship Integrity**: Foreign key constraints
@@ -336,6 +356,7 @@ API Request → CORS → Auth Middleware → Controller → Service → Model �
 ```
 
 ### JWT Implementation
+
 1. **Login**: User credentials validation
 2. **Token Generation**: JWT with user payload
 3. **Token Transmission**: Authorization header
@@ -345,12 +366,14 @@ API Request → CORS → Auth Middleware → Controller → Service → Model �
 ## File Storage System
 
 ### Storage Organization
+
 - **uploads/**: User-uploaded files
 - **public/**: Publicly accessible files
 - **cache/**: Temporary application data
 - **logs/**: Application logging
 
 ### File Serving
+
 - **API Endpoints**: `/api/files/:type/:filename`
 - **Upload Handling**: Multer middleware
 - **Security**: File type validation
@@ -359,12 +382,14 @@ API Request → CORS → Auth Middleware → Controller → Service → Model �
 ## Error Handling
 
 ### Centralized Error Management
+
 - **ErrorController**: Standardized error responses
 - **HTTP Status Codes**: Proper status code usage
 - **Error Logging**: Debugging and monitoring
 - **Consistent Format**: Predictable error structure
 
 ### Error Response Format
+
 ```json
 {
   "error": "ValidationError",
@@ -380,6 +405,7 @@ API Request → CORS → Auth Middleware → Controller → Service → Model �
 ## API Development Workflow
 
 ### Development Process
+
 1. **Design API**: Define endpoints and schemas
 2. **Write Controllers**: Add JSDoc documentation
 3. **Generate Docs**: Run `npm run swagger:generate`
@@ -387,6 +413,7 @@ API Request → CORS → Auth Middleware → Controller → Service → Model �
 5. **Iterate**: Refine based on testing
 
 ### Documentation Workflow
+
 1. **JSDoc Comments**: Document in controller code
 2. **Auto-Generation**: Framework creates swagger.json
 3. **Live Updates**: Documentation stays current
@@ -395,46 +422,51 @@ API Request → CORS → Auth Middleware → Controller → Service → Model �
 ## Testing Strategy
 
 ### Test Organization
+
 - **API Tests**: Endpoint functionality testing
 - **Service Tests**: Business logic validation
 - **Model Tests**: Database interaction testing
 - **Integration Tests**: Full workflow testing
 
 ### Test Tools
+
 - **Jest**: Testing framework
 - **Supertest**: API endpoint testing
 - **Factory Pattern**: Test data generation using model factories
 - **Mock Data**: Realistic test scenarios
 
 ### Model Testing Examples
+
 ```javascript
 // tests/models/User.test.js
-describe('User Model', () => {
-    test('should create user with valid data', async () => {
-        const userData = UserFactory.build();
-        const user = await User.create(userData);
-        expect(user.isAdmin()).toBe(false);
-        expect(user.getFullName()).toContain(userData.first_name);
-    });
+describe("User Model", () => {
+  test("should create user with valid data", async () => {
+    const userData = UserFactory.build();
+    const user = await User.create(userData);
+    expect(user.isAdmin()).toBe(false);
+    expect(user.getFullName()).toContain(userData.first_name);
+  });
 
-    test('should find users by role', async () => {
-        await User.createAdmin({ email: 'admin@test.com' });
-        const admins = await User.findByRole('admin');
-        expect(admins.length).toBeGreaterThan(0);
-        expect(admins[0].isAdmin()).toBe(true);
-    });
+  test("should find users by role", async () => {
+    await User.createAdmin({ email: "admin@test.com" });
+    const admins = await User.findByRole("admin");
+    expect(admins.length).toBeGreaterThan(0);
+    expect(admins[0].isAdmin()).toBe(true);
+  });
 });
 ```
 
 ## Security Features
 
 ### Authentication & Authorization
+
 - **JWT Tokens**: Stateless authentication
 - **Bearer Token**: Standard authorization header
 - **Token Expiration**: Security through time limits
 - **Role-Based Access**: Admin/user permissions
 
 ### Data Protection
+
 - **Input Validation**: Request data sanitization
 - **SQL Injection Prevention**: ORM protection
 - **CORS Configuration**: Cross-origin security
@@ -443,12 +475,14 @@ describe('User Model', () => {
 ## Scalability Considerations
 
 ### Performance Optimization
+
 - **Database Indexing**: Query optimization
 - **Connection Pooling**: Efficient database connections
 - **Caching Strategy**: Reduced database load
 - **File Storage**: Efficient file serving
 
 ### Architecture Benefits
+
 - **Stateless Design**: Horizontal scaling capability
 - **Microservice Ready**: Service layer separation
 - **Container Friendly**: Docker deployment ready
@@ -457,18 +491,21 @@ describe('User Model', () => {
 ## Development Experience
 
 ### Developer Tools
+
 - **Auto-Generated Docs**: Always current API documentation
 - **Interactive Testing**: Swagger UI for API exploration
 - **Hot Reloading**: Development server with auto-restart
 - **Rich CLI**: Framework commands for scaffolding
 
 ### Framework Features
+
 - **Convention over Configuration**: Sensible defaults
 - **Code Generation**: Automated boilerplate creation
 - **Documentation First**: JSDoc-driven development
 - **Beautiful Output**: Clean, professional API docs
 
 ### Model Development Workflow
+
 1. **Create Migration**: Define database schema
 2. **Generate Model**: Use enhanced Laravel-inspired structure
 3. **Add Relationships**: Define model associations
@@ -477,6 +514,7 @@ describe('User Model', () => {
 6. **Implement Methods**: Add business logic
 
 ### Code Quality Benefits
+
 - **Readable Code**: Self-documenting model structure
 - **Maintainable Logic**: Clear separation of concerns
 - **Testable Units**: Isolated functionality

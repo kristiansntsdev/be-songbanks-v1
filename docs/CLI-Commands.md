@@ -36,6 +36,7 @@ npm run swagpress:make --controller --name=PostController
 ```
 
 **What it creates:**
+
 - `app/controllers/PostController.js`
 - Full CRUD methods (index, show, store, update, destroy)
 - Laravel-style method naming
@@ -44,34 +45,36 @@ npm run swagpress:make --controller --name=PostController
 - JSDoc comments for documentation
 
 **Smart File Handling:**
+
 - If file exists, automatically creates `PostControllerCopy.js`
 - Subsequent runs create `PostControllerCopy2.js`, `PostControllerCopy3.js`, etc.
 - Class names inside files are automatically updated to match
 
 **Generated Controller Structure:**
+
 ```javascript
-const PostService = require('../services/PostService');
-const ErrorHandler = require('../middleware/ErrorHandler');
+const PostService = require("../services/PostService");
+const ErrorHandler = require("../middleware/ErrorHandler");
 
 class PostController {
-    // GET /api/posts
-    static index = ErrorHandler.asyncHandler(async (req, res) => {
-        const options = {
-            page: parseInt(req.query.page) || 1,
-            limit: parseInt(req.query.limit) || 10,
-            search: req.query.search
-        };
-        
-        const result = await PostService.getAllPosts(options);
-        
-        res.json({
-            code: 200,
-            message: 'Get all posts',
-            data: result
-        });
+  // GET /api/posts
+  static index = ErrorHandler.asyncHandler(async (req, res) => {
+    const options = {
+      page: parseInt(req.query.page) || 1,
+      limit: parseInt(req.query.limit) || 10,
+      search: req.query.search,
+    };
+
+    const result = await PostService.getAllPosts(options);
+
+    res.json({
+      code: 200,
+      message: "Get all posts",
+      data: result,
     });
-    
-    // ... other CRUD methods
+  });
+
+  // ... other CRUD methods
 }
 ```
 
@@ -82,6 +85,7 @@ npm run swagpress:make --service --name=PostService
 ```
 
 **What it creates:**
+
 - `app/services/PostService.js`
 - Business logic layer with comprehensive methods
 - Database operations with proper error handling
@@ -89,56 +93,61 @@ npm run swagpress:make --service --name=PostService
 - Exception handling using Swagpress exceptions
 
 **Smart File Handling:**
+
 - If file exists, automatically creates `PostServiceCopy.js`
 - Class names are automatically updated to match the filename
 
 **Generated Service Structure:**
+
 ```javascript
-const { Op } = require('sequelize');
-const Post = require('../models/Post');
-const { ModelNotFoundException, ValidationException } = require('../../swagpress');
+const { Op } = require("sequelize");
+const Post = require("../models/Post");
+const {
+  ModelNotFoundException,
+  ValidationException,
+} = require("../../swagpress");
 
 class PostService {
-    static async getAllPosts(options = {}) {
-        const {
-            page = 1,
-            limit = 10,
-            search,
-            sortBy = 'createdAt',
-            sortOrder = 'DESC'
-        } = options;
+  static async getAllPosts(options = {}) {
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      sortBy = "createdAt",
+      sortOrder = "DESC",
+    } = options;
 
-        const offset = (page - 1) * limit;
-        const where = {};
+    const offset = (page - 1) * limit;
+    const where = {};
 
-        // Add search filter
-        if (search) {
-            where[Op.or] = [
-                // Add searchable fields here
-            ];
-        }
-
-        const { count, rows } = await Post.findAndCountAll({
-            where,
-            limit: parseInt(limit),
-            offset,
-            order: [[sortBy, sortOrder]]
-        });
-
-        return {
-            posts: rows,
-            pagination: {
-                currentPage: parseInt(page),
-                totalPages: Math.ceil(count / limit),
-                totalItems: count,
-                itemsPerPage: parseInt(limit),
-                hasNextPage: page * limit < count,
-                hasPrevPage: page > 1
-            }
-        };
+    // Add search filter
+    if (search) {
+      where[Op.or] = [
+        // Add searchable fields here
+      ];
     }
-    
-    // ... other service methods
+
+    const { count, rows } = await Post.findAndCountAll({
+      where,
+      limit: parseInt(limit),
+      offset,
+      order: [[sortBy, sortOrder]],
+    });
+
+    return {
+      posts: rows,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(count / limit),
+        totalItems: count,
+        itemsPerPage: parseInt(limit),
+        hasNextPage: page * limit < count,
+        hasPrevPage: page > 1,
+      },
+    };
+  }
+
+  // ... other service methods
 }
 ```
 
@@ -149,6 +158,7 @@ npm run swagpress:make --model --name=Post
 ```
 
 **What it creates:**
+
 - `app/models/Post.js`
 - Enhanced BaseModel with Laravel-like features
 - Fillable attributes
@@ -158,51 +168,53 @@ npm run swagpress:make --model --name=Post
 - Model factory registration
 
 **Smart File Handling:**
+
 - If file exists, automatically creates `PostCopy.js`
 - Class names and table names are automatically updated
 
 **Generated Model Structure:**
+
 ```javascript
-const { BaseModel, ModelFactory } = require('../../package/src/engine');
-const sequelize = require('../../config/database');
+const { BaseModel, ModelFactory } = require("../../package/src/engine");
+const sequelize = require("../../config/database");
 
 class Post extends BaseModel {
-    static get fillable() {
-        return [
-            // Add fillable fields here
-            // 'title',
-            // 'content',
-            // 'status'
-        ];
-    }
+  static get fillable() {
+    return [
+      // Add fillable fields here
+      // 'title',
+      // 'content',
+      // 'status'
+    ];
+  }
 
-    static get hidden() {
-        return [
-            // Add fields to hide from JSON output
-            // 'password',
-            // 'secret_key'
-        ];
-    }
+  static get hidden() {
+    return [
+      // Add fields to hide from JSON output
+      // 'password',
+      // 'secret_key'
+    ];
+  }
 
-    static get casts() {
-        return {
-            // Add type casting here
-            // 'is_active': 'boolean',
-            // 'created_at': 'date'
-        };
-    }
+  static get casts() {
+    return {
+      // Add type casting here
+      // 'is_active': 'boolean',
+      // 'created_at': 'date'
+    };
+  }
 
-    static associate(models) {
-        // Define relationships here
-        // this.belongsTo(models.User, {
-        //     foreignKey: 'user_id',
-        //     as: 'user'
-        // });
-    }
+  static associate(models) {
+    // Define relationships here
+    // this.belongsTo(models.User, {
+    //     foreignKey: 'user_id',
+    //     as: 'user'
+    // });
+  }
 }
 
 module.exports = ModelFactory.register(Post, sequelize, {
-    tableName: 'posts'
+  tableName: "posts",
 });
 ```
 
@@ -215,6 +227,7 @@ npm run swagpress:docs --generate
 ```
 
 **What it does:**
+
 - Auto-discovers all controllers in `app/controllers/`
 - Generates complete OpenAPI 3.0 specification
 - Creates standardized route patterns
@@ -223,6 +236,7 @@ npm run swagpress:docs --generate
 - Convention over configuration approach
 
 **Features:**
+
 - **Auto-Discovery**: Finds all controller methods automatically
 - **REST Conventions**: Follows Laravel/Rails REST patterns
 - **Error Schemas**: Includes all standard error responses
@@ -230,6 +244,7 @@ npm run swagpress:docs --generate
 - **Validation**: Includes request validation schemas
 
 **Generated Documentation Includes:**
+
 - Complete API paths for all controllers
 - Request/response schemas
 - Authentication requirements
@@ -244,7 +259,7 @@ npm run swagpress:docs --generate
 ```bash
 # Generate a complete blog post resource
 npm run swagpress:make --model --name=Post
-npm run swagpress:make --service --name=PostService  
+npm run swagpress:make --service --name=PostService
 npm run swagpress:make --controller --name=PostController
 
 # Generate documentation
@@ -295,7 +310,7 @@ DELETE /api/posts/:id       # PostController.destroy
 # Controller generation
 npm run swagpress:make --controller --name=ControllerName
 
-# Service generation  
+# Service generation
 npm run swagpress:make --service --name=ServiceName
 
 # Model generation
@@ -303,6 +318,7 @@ npm run swagpress:make --model --name=ModelName
 ```
 
 **Naming Conventions:**
+
 - Controllers: Always end with "Controller" (auto-added if missing)
 - Services: Always end with "Service" (auto-added if missing)
 - Models: Singular, PascalCase (e.g., "Post", "User", "BlogPost")
@@ -315,6 +331,7 @@ npm run swagpress:docs --generate
 ```
 
 **Features:**
+
 - Scans all controllers automatically
 - Updates existing swagger.json
 - Preserves custom schemas
@@ -346,6 +363,7 @@ npm run swagpress:docs --generate
 ```
 
 **Why this order:**
+
 1. **Model first**: Defines the data structure
 2. **Service next**: Implements business logic using the model
 3. **Controller last**: Handles HTTP requests using the service
@@ -381,6 +399,7 @@ npm run swagpress:docs --generate
 ```
 
 **When to regenerate docs:**
+
 - After adding new controllers
 - After modifying controller methods
 - After changing route patterns
@@ -449,21 +468,23 @@ npm run swagpress:docs --generate
 ### Common Issues
 
 1. **"Controller already exists"**
+
    ```bash
    # The command automatically creates a copy with suffix when file exists
    npm run swagpress:make --controller --name=ExistingController
    # Creates: ExistingControllerCopy.js
-   
+
    # Running again creates incremental copies
-   npm run swagpress:make --controller --name=ExistingController  
+   npm run swagpress:make --controller --name=ExistingController
    # Creates: ExistingControllerCopy2.js
-   
+
    # To overwrite existing file, delete it first
    rm app/controllers/ExistingController.js
    npm run swagpress:make --controller --name=ExistingController
    ```
 
 2. **"Directory not found"**
+
    ```bash
    # Make sure you're in the project root directory
    cd /path/to/your/swagpress/project
@@ -501,6 +522,7 @@ The generated templates are optimized for Laravel developers transitioning to No
 ### Integration with Existing Code
 
 Generated code integrates seamlessly with:
+
 - Existing Sequelize models
 - Custom middleware
 - Authentication systems

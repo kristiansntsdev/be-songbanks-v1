@@ -4,12 +4,12 @@ module.exports = {
     code: {
       type: "integer",
       example: 200,
-      description: "HTTP status code"
+      description: "HTTP status code",
     },
     message: {
       type: "string",
       example: "Token verified successfully",
-      description: "Response message"
+      description: "Response message",
     },
     data: {
       type: "object",
@@ -19,19 +19,19 @@ module.exports = {
           properties: {
             id: {
               type: "string",
-              example: "01K0HRB1K30FG2B0K9476V3JN8"
+              example: "01K0HRB1K30FG2B0K9476V3JN8",
             },
             email: {
               type: "string",
-              example: "user@example.com"
+              example: "user@example.com",
             },
             role: {
               type: "string",
-              example: "user"
-            }
-          }
-        }
-      }
-    }
-  }
+              example: "user",
+            },
+          },
+        },
+      },
+    },
+  },
 };

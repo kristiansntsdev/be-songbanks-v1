@@ -5,7 +5,7 @@ module.exports = {
     user_id: {
       type: "string",
       example: "user123",
-      description: "The ID of the user requesting vol_user access"
-    }
-  }
+      description: "The ID of the user requesting vol_user access",
+    },
+  },
 };

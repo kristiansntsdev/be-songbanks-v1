@@ -6,7 +6,7 @@ module.exports = {
       type: "string",
       enum: ["active", "suspend"],
       description: "User access status",
-      example: "active"
-    }
-  }
+      example: "active",
+    },
+  },
 };
