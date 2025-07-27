@@ -18,9 +18,9 @@ router.delete('/tags/:id', TagController.DeleteTag);
 
 // AuthController Routes
 router.post('/auth/login', AuthController.apiLogin);
-router.post('/auth/logout', AuthController.apiLogout);
+router.post('/auth/logout', authenticateToken, AuthController.apiLogout);
 router.post('/auth/verify', AuthController.apiVerifyToken);
-router.post('/auth/refresh', AuthController.apiRefreshToken);
+router.post('/auth/refresh', authenticateToken, AuthController.apiRefreshToken);
 
 // NoteController Routes
 router.post('/notes/:user_id/:song_id', NoteController.createNoteForSong);

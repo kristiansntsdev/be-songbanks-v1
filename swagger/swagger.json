@@ -240,6 +240,24 @@
           }
         ]
       },
+      "LoginRequest": {
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "password123"
+          }
+        }
+      },
       "RequestVolAccessRequest": {
         "type": "object",
         "required": [
@@ -268,6 +286,84 @@
             "example": "active"
           }
         }
+      },
+      "VerifyTokenRequest": {
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          }
+        }
+      },
+      "LoginResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseResponseWithData"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "example": 200
+              },
+              "message": {
+                "example": "Login successful"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  },
+                  "user": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "LogoutResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Logout successful"
+          }
+        }
+      },
+      "RefreshTokenResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseResponseWithData"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "example": 200
+              },
+              "message": {
+                "example": "Token refreshed successfully"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  }
+                }
+              }
+            }
+          }
+        ]
       },
       "RequestVolAccessResponse": {
         "202": {
@@ -378,6 +474,32 @@
           }
         ]
       },
+      "VerifyTokenResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseResponseWithData"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "example": 200
+              },
+              "message": {
+                "example": "Token verified successfully"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "user": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
       "User": {
         "type": "object",
         "properties": {
@@ -414,128 +536,6 @@
             "description": "Only present for admin users"
           }
         }
-      },
-      "LoginRequest": {
-        "type": "object",
-        "required": [
-          "email",
-          "password"
-        ],
-        "properties": {
-          "email": {
-            "type": "string",
-            "format": "email",
-            "example": "user@example.com"
-          },
-          "password": {
-            "type": "string",
-            "example": "password123"
-          }
-        }
-      },
-      "LoginResponse": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/BaseResponseWithData"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "code": {
-                "example": 200
-              },
-              "message": {
-                "example": "Login successful"
-              },
-              "data": {
-                "type": "object",
-                "properties": {
-                  "token": {
-                    "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  },
-                  "user": {
-                    "$ref": "#/components/schemas/User"
-                  }
-                }
-              }
-            }
-          }
-        ]
-      },
-      "LogoutResponse": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "example": "Logout successful"
-          }
-        }
-      },
-      "VerifyTokenRequest": {
-        "type": "object",
-        "required": [
-          "token"
-        ],
-        "properties": {
-          "token": {
-            "type": "string",
-            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-          }
-        }
-      },
-      "VerifyTokenResponse": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/BaseResponseWithData"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "code": {
-                "example": 200
-              },
-              "message": {
-                "example": "Token verified successfully"
-              },
-              "data": {
-                "type": "object",
-                "properties": {
-                  "user": {
-                    "$ref": "#/components/schemas/User"
-                  }
-                }
-              }
-            }
-          }
-        ]
-      },
-      "RefreshTokenResponse": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/BaseResponseWithData"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "code": {
-                "example": 200
-              },
-              "message": {
-                "example": "Token refreshed successfully"
-              },
-              "data": {
-                "type": "object",
-                "properties": {
-                  "token": {
-                    "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  }
-                }
-              }
-            }
-          }
-        ]
       },
       "Song": {
         "type": "object",
@@ -730,6 +730,16 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorized - invalid email or password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal server error",
             "content": {
@@ -750,22 +760,6 @@
         "tags": [
           "Auth"
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "type": "object",
-                    "description": "Request payload"
-                  }
-                }
-              }
-            }
-          }
-        },
         "security": [
           {
             "bearerAuth": []
@@ -792,6 +786,16 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorized - invalid or missing token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal server error",
             "content": {
@@ -808,7 +812,7 @@
     "/auth/verify": {
       "post": {
         "summary": "Verify JWT token",
-        "description": "Auto-generated endpoint for AuthController.apiVerifyToken",
+        "description": "Verify the validity of a JWT token and return user information",
         "tags": [
           "Auth"
         ],
@@ -843,6 +847,16 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorized - invalid or expired token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal server error",
             "content": {
@@ -859,26 +873,15 @@
     "/auth/refresh": {
       "post": {
         "summary": "Refresh JWT token",
-        "description": "Auto-generated endpoint for AuthController.apiRefreshToken",
+        "description": "Generate a new JWT token for authenticated user",
         "tags": [
           "Auth"
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "type": "object",
-                    "description": "Request payload"
-                  }
-                }
-              }
-            }
+        "security": [
+          {
+            "bearerAuth": []
           }
-        },
+        ],
         "responses": {
           "200": {
             "description": "Successful response",
@@ -896,6 +899,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
                 }
               }
             }
@@ -931,22 +944,6 @@
             "description": "The user ID"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "type": "object",
-                    "description": "Request payload"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful response",
@@ -1101,22 +1098,6 @@
             "description": "The user ID"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "type": "object",
-                    "description": "Request payload"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful response",
@@ -1247,22 +1228,6 @@
         "tags": [
           "Playlist"
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "type": "object",
-                    "description": "Request payload"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful response",
@@ -1315,22 +1280,6 @@
             "description": "The id parameter"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "type": "object",
-                    "description": "Request payload"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful response",
@@ -1485,22 +1434,6 @@
             "description": "The id parameter"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "type": "object",
-                    "description": "Request payload"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful response",
@@ -1603,22 +1536,6 @@
             "description": "The id parameter"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "type": "object",
-                    "description": "Request payload"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful response",
@@ -1671,22 +1588,6 @@
             "description": "The id parameter"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "type": "object",
-                    "description": "Request payload"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful response",
@@ -1739,22 +1640,6 @@
             "description": "The share_token parameter"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "type": "object",
-                    "description": "Request payload"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful response",
@@ -1887,22 +1772,6 @@
         "tags": [
           "PlaylistTeam"
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "type": "object",
-                    "description": "Request payload"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful response",
@@ -1955,22 +1824,6 @@
             "description": "The id parameter"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "type": "object",
-                    "description": "Request payload"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful response",
@@ -2073,22 +1926,6 @@
             "description": "The id parameter"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "type": "object",
-                    "description": "Request payload"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful response",
@@ -2193,22 +2030,6 @@
             "description": "The id parameter"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "type": "object",
-                    "description": "Request payload"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful response",
@@ -2313,22 +2134,6 @@
             "description": "The id parameter"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "type": "object",
-                    "description": "Request payload"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful response",
@@ -2381,22 +2186,6 @@
             "description": "The id parameter"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "type": "object",
-                    "description": "Request payload"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful response",
@@ -2477,22 +2266,6 @@
         "tags": [
           "Song"
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "type": "object",
-                    "description": "Request payload"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful response",
@@ -2545,22 +2318,6 @@
             "description": "The id parameter"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "type": "object",
-                    "description": "Request payload"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful response",
@@ -2663,22 +2420,6 @@
             "description": "The id parameter"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "type": "object",
-                    "description": "Request payload"
-                  }
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful response",
@@ -2811,16 +2552,6 @@
         "tags": [
           "Tag"
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateTagRequest"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful response",
@@ -2873,16 +2604,6 @@
             "description": "The id parameter"
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateTagRequest"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful response",

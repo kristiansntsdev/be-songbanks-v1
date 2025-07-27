@@ -827,9 +827,9 @@ const router = express.Router();
         
         // Only add request body if:
         // 1. There are explicit body parameters, OR
-        // 2. There's a @Body annotation, OR
-        // 3. It's POST/PUT and there are no @Param annotations (legacy fallback)
-        if (hasBodyParam || hasBodyAnnotation || ((route.httpMethod === 'post' || route.httpMethod === 'put') && !hasAnyParams)) {
+        // 2. There's a @Body annotation
+        // Note: Removed automatic body generation for POST/PUT to avoid unnecessary request bodies
+        if (hasBodyParam || hasBodyAnnotation) {
             let requestSchema;
             
             // Check if there's a @Body annotation first
