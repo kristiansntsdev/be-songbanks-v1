@@ -10,6 +10,196 @@ class SwaggerCommand {
         this.routesPath = path.join(process.cwd(), 'routes/api.js');
         this.outputPath = path.join(process.cwd(), 'swagger/swagger.json');
         this.args = process.argv.slice(2);
+        this.packageSchemasPath = path.join(__dirname, '../schemas');
+        this.userSchemasPath = path.join(process.cwd(), 'schemas');
+        this.loadedSchemas = null;
+    }
+
+    loadSchemas() {
+        if (this.loadedSchemas) {
+            return this.loadedSchemas;
+        }
+
+        const schemas = {
+            errors: {},
+            responses: {},
+            requests: {},
+            common: {},
+            models: {}
+        };
+
+        // Load package schemas first (defaults)
+        try {
+            if (fs.existsSync(this.packageSchemasPath)) {
+                // Load package error schemas
+                const packageErrorsPath = path.join(this.packageSchemasPath, 'errors');
+                if (fs.existsSync(packageErrorsPath)) {
+                    const errorFiles = fs.readdirSync(packageErrorsPath).filter(f => f.endsWith('.js') && f !== 'index.js');
+                    errorFiles.forEach(file => {
+                        const schemaName = path.basename(file, '.js');
+                        try {
+                            schemas.errors[schemaName] = require(path.join(packageErrorsPath, file));
+                        } catch (error) {
+                            console.warn(`Warning: Could not load package error schema ${schemaName}: ${error.message}`);
+                        }
+                    });
+                }
+
+                // Load package common schemas
+                const packageCommonPath = path.join(this.packageSchemasPath, 'common');
+                if (fs.existsSync(packageCommonPath)) {
+                    const commonFiles = fs.readdirSync(packageCommonPath).filter(f => f.endsWith('.js') && f !== 'index.js');
+                    commonFiles.forEach(file => {
+                        const schemaName = path.basename(file, '.js');
+                        try {
+                            schemas.common[schemaName] = require(path.join(packageCommonPath, file));
+                        } catch (error) {
+                            console.warn(`Warning: Could not load package common schema ${schemaName}: ${error.message}`);
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            console.warn(`Warning: Could not load package schemas: ${error.message}`);
+        }
+
+        // Load user schemas (overrides)
+        try {
+            if (fs.existsSync(this.userSchemasPath)) {
+                // Load user error schemas (override package defaults)
+                const userErrorsPath = path.join(this.userSchemasPath, 'errors');
+                if (fs.existsSync(userErrorsPath)) {
+                    const errorFiles = fs.readdirSync(userErrorsPath).filter(f => f.endsWith('.js') && f !== 'index.js');
+                    errorFiles.forEach(file => {
+                        const schemaName = path.basename(file, '.js');
+                        try {
+                            schemas.errors[schemaName] = require(path.join(userErrorsPath, file));
+                        } catch (error) {
+                            console.warn(`Warning: Could not load user error schema ${schemaName}: ${error.message}`);
+                        }
+                    });
+                }
+
+                // Load user response schemas
+                const userResponsesPath = path.join(this.userSchemasPath, 'responses');
+                if (fs.existsSync(userResponsesPath)) {
+                    const responseFiles = fs.readdirSync(userResponsesPath).filter(f => f.endsWith('.js') && f !== 'index.js');
+                    responseFiles.forEach(file => {
+                        const schemaName = path.basename(file, '.js');
+                        try {
+                            schemas.responses[schemaName] = require(path.join(userResponsesPath, file));
+                        } catch (error) {
+                            console.warn(`Warning: Could not load user response schema ${schemaName}: ${error.message}`);
+                        }
+                    });
+                }
+
+                // Load user request schemas
+                const userRequestsPath = path.join(this.userSchemasPath, 'requests');
+                if (fs.existsSync(userRequestsPath)) {
+                    const requestFiles = fs.readdirSync(userRequestsPath).filter(f => f.endsWith('.js') && f !== 'index.js');
+                    requestFiles.forEach(file => {
+                        const schemaName = path.basename(file, '.js');
+                        try {
+                            schemas.requests[schemaName] = require(path.join(userRequestsPath, file));
+                        } catch (error) {
+                            console.warn(`Warning: Could not load user request schema ${schemaName}: ${error.message}`);
+                        }
+                    });
+                }
+
+                // Load user model schemas (new Go-style models)
+                const userModelsPath = path.join(this.userSchemasPath, 'models');
+                if (fs.existsSync(userModelsPath)) {
+                    const modelFiles = fs.readdirSync(userModelsPath).filter(f => f.endsWith('.js') && f !== 'index.js');
+                    modelFiles.forEach(file => {
+                        const schemaName = path.basename(file, '.js');
+                        try {
+                            // Store models in a separate namespace
+                            if (!schemas.models) schemas.models = {};
+                            schemas.models[schemaName] = require(path.join(userModelsPath, file));
+                        } catch (error) {
+                            console.warn(`Warning: Could not load user model schema ${schemaName}: ${error.message}`);
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            console.warn(`Warning: Could not load user schemas: ${error.message}`);
+        }
+
+        this.loadedSchemas = schemas;
+        return schemas;
+    }
+
+    getSchema(schemaName) {
+        const schemas = this.loadSchemas();
+        
+        // Try to find in responses first
+        if (schemas.responses[schemaName]) {
+            return schemas.responses[schemaName];
+        }
+        
+        // Then try errors
+        if (schemas.errors[schemaName]) {
+            return schemas.errors[schemaName];
+        }
+        
+        // Then try requests
+        if (schemas.requests[schemaName]) {
+            return schemas.requests[schemaName];
+        }
+        
+        // Finally try common
+        if (schemas.common[schemaName]) {
+            return schemas.common[schemaName];
+        }
+        
+        // Try models (Go-style)
+        if (schemas.models[schemaName]) {
+            return schemas.models[schemaName];
+        }
+        
+        // Try model.* references
+        if (schemaName.startsWith('model.')) {
+            const modelName = schemaName.substring(6); // Remove 'model.' prefix
+            if (schemas.models[modelName]) {
+                return schemas.models[modelName];
+            }
+        }
+        
+        return null;
+    }
+
+    convertSchemasForSwagger(loadedSchemas) {
+        const flatSchemas = {};
+        
+        // Flatten error schemas
+        Object.keys(loadedSchemas.errors).forEach(errorName => {
+            flatSchemas[errorName] = loadedSchemas.errors[errorName];
+        });
+        
+        // Flatten common schemas
+        Object.keys(loadedSchemas.common).forEach(commonName => {
+            flatSchemas[commonName] = loadedSchemas.common[commonName];
+        });
+        
+        // Flatten model schemas
+        Object.keys(loadedSchemas.models).forEach(modelName => {
+            flatSchemas[modelName] = loadedSchemas.models[modelName];
+        });
+        
+        // Flatten request schemas
+        Object.keys(loadedSchemas.requests).forEach(requestName => {
+            flatSchemas[requestName] = loadedSchemas.requests[requestName];
+        });
+        
+        // Flatten response schemas  
+        Object.keys(loadedSchemas.responses).forEach(responseName => {
+            flatSchemas[responseName] = loadedSchemas.responses[responseName];
+        });
+        
+        return flatSchemas;
     }
 
     execute() {
@@ -118,11 +308,25 @@ Available controllers:`);
         
         Object.keys(controller.methods).forEach(methodName => {
             const method = controller.methods[methodName];
-            const routePath = method.endpointPath || this.generateRoutePath({
-                controller: controllerName,
-                method: methodName,
-                httpMethod: method.httpMethod
-            });
+            
+            // Use @Router annotation if available
+            let routePath = method.endpointPath;
+            if (method.annotations && method.annotations.Router) {
+                // Extract path from "@Router /api/vol_user/request-vol-access [post]"
+                const routerMatch = method.annotations.Router.match(/([^\[\s]+)/);
+                if (routerMatch) {
+                    routePath = routerMatch[1];
+                }
+            }
+            
+            // Fallback to generated path
+            if (!routePath) {
+                routePath = this.generateRoutePath({
+                    controller: controllerName,
+                    method: methodName,
+                    httpMethod: method.httpMethod
+                });
+            }
             
             controllerRoutes.push({
                 controller: controllerName,
@@ -131,7 +335,8 @@ Available controllers:`);
                 endpointPath: method.endpointPath,
                 path: routePath,
                 routerPath: routePath.replace('/api', ''),
-                fullMethodName: `${controllerName}.${methodName}`
+                fullMethodName: `${controllerName}.${methodName}`,
+                annotations: method.annotations
             });
         });
 
@@ -179,10 +384,13 @@ Available controllers:`);
             "paths": {}
         };
 
-        // Add base schemas first
+        // Add schemas from the new schema loader system
+        const loadedSchemas = this.loadSchemas();
         swaggerSpec.components.schemas = {
             ...swaggerSpec.components.schemas,
-            ...this.getBaseSchemas()
+            ...this.getBaseSchemas(),
+            // Add schemas loaded from files
+            ...this.convertSchemasForSwagger(loadedSchemas)
         };
 
         // Generate routes for ALL controllers
@@ -195,11 +403,25 @@ Available controllers:`);
             // Generate routes for this controller
             Object.keys(controller.methods).forEach(methodName => {
                 const method = controller.methods[methodName];
-                const routePath = method.endpointPath || this.generateRoutePath({
-                    controller: currentControllerName,
-                    method: methodName,
-                    httpMethod: method.httpMethod
-                });
+                
+                // Use @Router annotation if available
+                let routePath = method.endpointPath;
+                if (method.annotations && method.annotations.Router) {
+                    // Extract path from "@Router /api/vol_user/request-vol-access [post]"
+                    const routerMatch = method.annotations.Router.match(/([^\[\s]+)/);
+                    if (routerMatch) {
+                        routePath = routerMatch[1];
+                    }
+                }
+                
+                // Fallback to generated path
+                if (!routePath) {
+                    routePath = this.generateRoutePath({
+                        controller: currentControllerName,
+                        method: methodName,
+                        httpMethod: method.httpMethod
+                    });
+                }
                 
                 const route = {
                     controller: currentControllerName,
@@ -208,7 +430,8 @@ Available controllers:`);
                     endpointPath: method.endpointPath,
                     path: routePath,
                     routerPath: routePath.replace('/api', ''),
-                    fullMethodName: `${currentControllerName}.${methodName}`
+                    fullMethodName: `${currentControllerName}.${methodName}`,
+                    annotations: method.annotations
                 };
 
                 const swaggerPath = this.routerPathToSwaggerPath(route.routerPath);
@@ -420,9 +643,22 @@ const router = express.Router();
         
         // Use explicit endpoint path if available, otherwise generate
         let routePath;
-        if (method.annotations && method.annotations.endpointPath) {
+        
+        // Check for @Router annotation first
+        if (method.annotations && method.annotations.Router) {
+            // Extract path from "@Router /api/vol_user/request-vol-access [post]"
+            const routerMatch = method.annotations.Router.match(/([^\[\s]+)/);
+            if (routerMatch) {
+                // Convert {param} to :param for Express.js
+                routePath = routerMatch[1].replace('/api', '').replace(/\{(\w+)\}/g, ':$1');
+            }
+        }
+        // Fallback to endpointPath annotation
+        else if (method.annotations && method.annotations.endpointPath) {
             routePath = method.annotations.endpointPath.replace('/api', '');
-        } else {
+        }
+        // Generate path as last resort
+        else {
             routePath = this.generateRoutePath({
                 controller: controllerName,
                 method: methodName,
@@ -430,7 +666,14 @@ const router = express.Router();
             }).replace('/api', '');
         }
         
-        return `router.${httpMethod}('${routePath}', ${controllerName}.${methodName});`;
+        // Add authentication middleware if @auth annotation is present
+        const middlewares = [];
+        if (method.annotations && method.annotations.auth) {
+            middlewares.push('authenticateToken');
+        }
+        
+        const middlewareStr = middlewares.length > 0 ? middlewares.join(', ') + ', ' : '';
+        return `router.${httpMethod}('${routePath}', ${middlewareStr}${controllerName}.${methodName});`;
     }
 
     findMethodForCrudAction(methods, crudAction) {
@@ -497,40 +740,140 @@ const router = express.Router();
         const hasPathParam = route.routerPath.includes(':');
         const pathParam = hasPathParam ? route.routerPath.match(/:(\w+)/)[1] : null;
         
+        // Use annotations from the JSDoc if available
+        const annotations = route.annotations || {};
+        
         // Generate method-specific summaries and descriptions
         const { summary, description } = this.generateMethodSummaryAndDescription(route);
         
         const operation = {
-            summary: summary,
-            description: description,
-            tags: [tag]
+            summary: annotations.Summary || annotations.summary || summary,
+            description: annotations.Description || description,
+            tags: annotations.Tags || [tag]
         };
         
-        // Add parameters if needed
-        if (hasPathParam) {
-            operation.parameters = [
-                {
-                    in: "path",
-                    name: pathParam,
-                    required: true,
-                    schema: {
-                        type: "string"
-                    },
-                    description: pathParam === 'user_id' ? 'The user ID' : `The ${pathParam} parameter`
+        // Handle parameters from Go-style @Param annotations
+        const parameters = [];
+        
+        // Add parsed @Param annotations (exclude body parameters)
+        if (annotations.Param && annotations.Param.length > 0) {
+            annotations.Param.forEach(param => {
+                // Skip body parameters as they should be in requestBody, not parameters array
+                if (param.in === 'body') {
+                    return;
                 }
-            ];
+                
+                const paramObj = {
+                    in: param.in,
+                    name: param.name,
+                    required: param.required,
+                    schema: { type: param.type },
+                    description: param.description || param.name
+                };
+                
+                // Handle enum values
+                if (param.enum) {
+                    paramObj.schema.enum = param.enum;
+                }
+                
+                // Handle model references for header parameters
+                if (param.in === 'header' && param.model) {
+                    // For header models like AuthorizedCommonHeaders, expand to individual parameters
+                    const headerModel = this.getSchema(param.model);
+                    if (headerModel && headerModel.properties) {
+                        Object.keys(headerModel.properties).forEach(headerName => {
+                            const headerProp = headerModel.properties[headerName];
+                            parameters.push({
+                                in: 'header',
+                                name: headerName,
+                                required: headerModel.required && headerModel.required.includes(headerName),
+                                schema: {
+                                    type: headerProp.type,
+                                    enum: headerProp.enum
+                                },
+                                description: headerProp.description || headerName,
+                                example: headerProp.example
+                            });
+                        });
+                    }
+                } else {
+                    parameters.push(paramObj);
+                }
+            });
         }
         
-        // Add request body for POST/PUT methods
-        if (route.httpMethod === 'post' || route.httpMethod === 'put') {
-            operation.requestBody = {
+        // Legacy parameter handling for path params if no @Param annotations
+        if (hasPathParam && parameters.filter(p => p.in === 'path').length === 0) {
+            parameters.push({
+                in: "path",
+                name: pathParam,
                 required: true,
-                content: {
-                    "application/json": {
-                        schema: this.getRequestBodySchema(route, controllerName)
+                schema: {
+                    type: "string"
+                },
+                description: pathParam === 'user_id' ? 'The user ID' : `The ${pathParam} parameter`
+            });
+        }
+        
+        if (parameters.length > 0) {
+            operation.parameters = parameters;
+        }
+        
+        // Add request body for POST/PUT methods or from @Param body annotations or @Body annotation
+        const bodyParams = annotations.Param ? annotations.Param.filter(p => p.in === 'body') : [];
+        const hasBodyParam = bodyParams.length > 0;
+        const hasBodyAnnotation = annotations.Body && annotations.Body.schema;
+        const hasAnyParams = annotations.Param && annotations.Param.length > 0;
+        
+        // Only add request body if:
+        // 1. There are explicit body parameters, OR
+        // 2. There's a @Body annotation, OR
+        // 3. It's POST/PUT and there are no @Param annotations (legacy fallback)
+        if (hasBodyParam || hasBodyAnnotation || ((route.httpMethod === 'post' || route.httpMethod === 'put') && !hasAnyParams)) {
+            let requestSchema;
+            
+            // Check if there's a @Body annotation first
+            if (hasBodyAnnotation) {
+                const bodyAnnotation = annotations.Body;
+                const schemaPath = this.parseSchemaPath(bodyAnnotation.schema);
+                requestSchema = { "$ref": `#/components/schemas/${schemaPath.schemaName}` };
+            } else if (hasBodyParam) {
+                // Check if there's a body parameter from @Param annotation
+                const bodyParam = bodyParams[0]; // Use first body param
+                if (bodyParam.model) {
+                    requestSchema = { "$ref": `#/components/schemas/${bodyParam.model}` };
+                } else {
+                    requestSchema = { 
+                        type: bodyParam.type || 'object',
+                        properties: {
+                            [bodyParam.name]: {
+                                type: bodyParam.type,
+                                enum: bodyParam.enum,
+                                description: bodyParam.description
+                            }
+                        }
+                    };
+                    if (bodyParam.required) {
+                        requestSchema.required = [bodyParam.name];
                     }
                 }
-            };
+            } else {
+                requestSchema = this.getRequestBodySchema(route, controllerName, annotations);
+            }
+            
+            if (requestSchema) {
+                // Determine content type from @Accept annotation or default to application/json
+                const contentType = annotations.Accept || "application/json";
+                
+                operation.requestBody = {
+                    required: true,
+                    content: {
+                        [contentType]: {
+                            schema: requestSchema
+                        }
+                    }
+                };
+            }
         }
         
         // Add security for routes that need authentication
@@ -543,19 +886,34 @@ const router = express.Router();
         }
         
         // Add responses
-        operation.responses = this.generateResponses(route, controllerName);
+        operation.responses = this.generateResponses(route, controllerName, annotations);
         
         return operation;
     }
 
     requiresAuthentication(route) {
-        // Check if route typically requires authentication
+        // Check if route has @auth annotation
+        if (route.annotations && route.annotations.auth) {
+            return true;
+        }
+        
+        // Fallback: Check if route typically requires authentication
         const authRoutes = ['admin', 'logout'];
         return authRoutes.some(authRoute => route.routerPath.includes(authRoute));
     }
 
-    getRequestBodySchema(route, controllerName) {
-        // Use specific schemas for tag operations
+    getRequestBodySchema(route, controllerName, annotations) {
+        // First, check if there's a @request annotation
+        if (annotations && annotations.request) {
+            const schema = this.getSchema(annotations.request);
+            if (schema) {
+                return schema;
+            }
+            // If schema not found, reference it anyway (might be defined elsewhere)
+            return { "$ref": `#/components/schemas/${annotations.request}` };
+        }
+        
+        // Fallback to legacy hardcoded schemas
         if (controllerName === 'TagController') {
             if (route.httpMethod === 'post') {
                 return { "$ref": "#/components/schemas/CreateTagRequest" };
@@ -584,7 +942,161 @@ const router = express.Router();
         };
     }
 
-    generateResponses(route, controllerName) {
+    generateResponses(route, controllerName, annotations) {
+        const responses = {};
+        const contentType = annotations.Produce || "application/json";
+        
+        // Handle Go-style @Success annotations
+        if (annotations && annotations.Success && annotations.Success.length > 0) {
+            annotations.Success.forEach(success => {
+                // Check if the model is a response schema with status code structure
+                const responseSchema = this.getSchema(success.model);
+                if (responseSchema && responseSchema[success.code]) {
+                    // Use the complete response definition from the response schema
+                    responses[success.code] = responseSchema[success.code];
+                } else {
+                    // Fallback to simple schema reference
+                    responses[success.code] = {
+                        description: success.description || "Successful response",
+                        content: {
+                            [contentType]: {
+                                schema: success.model ? 
+                                    { "$ref": `#/components/schemas/${success.model}` } :
+                                    { type: success.type || "object" }
+                            }
+                        }
+                    };
+                }
+            });
+        }
+        
+        // Handle Go-style @Failure annotations  
+        if (annotations && annotations.Failure && annotations.Failure.length > 0) {
+            annotations.Failure.forEach(failure => {
+                responses[failure.code] = {
+                    description: failure.description || "Error response",
+                    content: {
+                        [contentType]: {
+                            schema: failure.model ? 
+                                { "$ref": `#/components/schemas/${failure.model}` } :
+                                { type: failure.type || "object" }
+                        }
+                    }
+                };
+            });
+        }
+        
+        // Add default success response if no @Success was provided
+        const hasSuccessResponse = annotations && annotations.Success && annotations.Success.length > 0;
+        
+        if (!hasSuccessResponse) {
+            // Legacy @response handling
+            if (annotations && annotations.response) {
+                const responseSchema = this.getSchema(annotations.response);
+                if (responseSchema) {
+                    // The response schema should contain status codes as keys
+                    Object.keys(responseSchema).forEach(statusCode => {
+                        responses[statusCode] = responseSchema[statusCode];
+                    });
+                } else {
+                    // Fallback: assume it's a 200 response
+                    responses["200"] = {
+                        description: "Successful response",
+                        content: {
+                            [contentType]: {
+                                schema: { "$ref": `#/components/schemas/${annotations.response}` }
+                            }
+                        }
+                    };
+                }
+            } else {
+                // Default success response
+                responses["200"] = {
+                    description: "Successful response",
+                    content: {
+                        [contentType]: {
+                            schema: this.getResponseSchema(route, controllerName)
+                        }
+                    }
+                };
+            }
+        }
+        
+        // Add error responses from @errors annotation
+        if (annotations && annotations.errors && annotations.errors.length > 0) {
+            annotations.errors.forEach(errorName => {
+                const errorSchema = this.getSchema(errorName);
+                if (errorSchema) {
+                    // Determine status code from error name or properties
+                    let statusCode = "400"; // default
+                    if (errorName.includes("NotFound") || errorName.includes("404")) statusCode = "404";
+                    else if (errorName.includes("Unauthorized") || errorName.includes("401")) statusCode = "401";
+                    else if (errorName.includes("Forbidden") || errorName.includes("403")) statusCode = "403";
+                    else if (errorName.includes("Validation") || errorName.includes("422")) statusCode = "422";
+                    else if (errorName.includes("InternalServer") || errorName.includes("500")) statusCode = "500";
+                    
+                    responses[statusCode] = {
+                        description: this.getErrorDescription(errorName),
+                        content: {
+                            "application/json": {
+                                schema: errorSchema
+                            }
+                        }
+                    };
+                } else {
+                    // Reference schema even if not found locally
+                    let statusCode = "400";
+                    if (errorName.includes("NotFound")) statusCode = "404";
+                    else if (errorName.includes("Unauthorized")) statusCode = "401";
+                    else if (errorName.includes("Forbidden")) statusCode = "403";
+                    
+                    responses[statusCode] = {
+                        description: this.getErrorDescription(errorName),
+                        content: {
+                            "application/json": {
+                                schema: { "$ref": `#/components/schemas/${errorName}` }
+                            }
+                        }
+                    };
+                }
+            });
+        } else {
+            // Default error responses
+            responses["400"] = {
+                description: "Bad request",
+                content: {
+                    "application/json": {
+                        schema: { "$ref": "#/components/schemas/BadRequestError" }
+                    }
+                }
+            };
+            responses["500"] = {
+                description: "Internal server error", 
+                content: {
+                    "application/json": {
+                        schema: { "$ref": "#/components/schemas/InternalServerError" }
+                    }
+                }
+            };
+        }
+        
+        return responses;
+    }
+    
+    getErrorDescription(errorName) {
+        const descriptions = {
+            'BadRequestError': 'Bad request',
+            'UnauthorizedError': 'Unauthorized',
+            'ForbiddenError': 'Forbidden',
+            'NotFoundError': 'Resource not found',
+            'ValidationError': 'Validation failed',
+            'InternalServerError': 'Internal server error'
+        };
+        return descriptions[errorName] || 'Error';
+    }
+
+    legacyGenerateResponses(route, controllerName) {
+        // Keep this for backward compatibility if needed
         const responses = {
             "200": {
                 description: "Successful response",
@@ -1414,10 +1926,27 @@ const router = express.Router();
 
     parseJSDocAnnotations(jsDocLines) {
         const annotations = {
+            // Legacy format support
             group: null,
             resource: null,
             summary: null,
-            endpointPath: null
+            endpointPath: null,
+            response: null,
+            request: null,
+            errors: [],
+            
+            // Go-style format support
+            Summary: null,
+            Description: null,
+            Tags: null,
+            Accept: null,
+            Produce: null,
+            Param: [],
+            Body: null,
+            Success: [],
+            Failure: [],
+            Router: null,
+            auth: false
         };
         
         jsDocLines.forEach(line => {
@@ -1441,6 +1970,117 @@ const router = express.Router();
                 annotations.summary = summaryMatch[1];
             }
             
+            // Extract @response annotation
+            const responseMatch = trimmed.match(/@response\s+(\w+)/);
+            if (responseMatch) {
+                annotations.response = responseMatch[1];
+            }
+            
+            // Extract @request annotation
+            const requestMatch = trimmed.match(/@request\s+(\w+)/);
+            if (requestMatch) {
+                annotations.request = requestMatch[1];
+            }
+            
+            // Extract @errors annotation (can be multiple, comma-separated)
+            const errorsMatch = trimmed.match(/@errors\s+(.+)/);
+            if (errorsMatch) {
+                const errorsList = errorsMatch[1].split(',').map(e => e.trim());
+                annotations.errors = errorsList;
+            }
+            
+            // Go-style annotations parsing
+            
+            // Extract @Summary annotation
+            const SummaryMatch = trimmed.match(/@Summary\s+(.+)/);
+            if (SummaryMatch) {
+                annotations.Summary = SummaryMatch[1];
+            }
+            
+            // Extract @Description annotation
+            const DescriptionMatch = trimmed.match(/@Description\s+(.+)/);
+            if (DescriptionMatch) {
+                annotations.Description = DescriptionMatch[1];
+            }
+            
+            // Extract @Tags annotation
+            const TagsMatch = trimmed.match(/@Tags\s+(.+)/);
+            if (TagsMatch) {
+                annotations.Tags = TagsMatch[1];
+            }
+            
+            // Extract @Accept annotation
+            const AcceptMatch = trimmed.match(/@Accept\s+(.+)/);
+            if (AcceptMatch) {
+                annotations.Accept = AcceptMatch[1];
+            }
+            
+            // Extract @Produce annotation
+            const ProduceMatch = trimmed.match(/@Produce\s+(.+)/);
+            if (ProduceMatch) {
+                annotations.Produce = ProduceMatch[1];
+            }
+            
+            // Extract @Param annotation
+            // Format: @Param name location type required "description" [default(value)]
+            const ParamMatch = trimmed.match(/@Param\s+(.+)/);
+            if (ParamMatch) {
+                const paramString = ParamMatch[1];
+                const paramParts = this.parseParamString(paramString);
+                if (paramParts) {
+                    annotations.Param.push(paramParts);
+                }
+            }
+            
+            // Extract @Body annotation
+            // Format: @Body {object} dir.SchemaName "description"
+            const BodyMatch = trimmed.match(/@Body\s+\{([^}]+)\}\s+([^\s"]+)(?:\s+"([^"]*)")?/);
+            if (BodyMatch) {
+                annotations.Body = {
+                    type: BodyMatch[1],
+                    schema: BodyMatch[2],
+                    description: BodyMatch[3] || ''
+                };
+            }
+            
+            // Extract @Success annotation
+            // Format: @Success code {object} model.ResponseType
+            const SuccessMatch = trimmed.match(/@Success\s+(\d+)\s+\{([^}]+)\}\s+(.+)/);
+            if (SuccessMatch) {
+                annotations.Success.push({
+                    code: SuccessMatch[1],
+                    type: SuccessMatch[2],
+                    model: SuccessMatch[3]
+                });
+            }
+            
+            // Extract @Failure annotation
+            // Format: @Failure code {object} model.ErrorType
+            const FailureMatch = trimmed.match(/@Failure\s+(\d+)\s+\{([^}]+)\}\s+(.+)/);
+            if (FailureMatch) {
+                annotations.Failure.push({
+                    code: FailureMatch[1],
+                    type: FailureMatch[2],
+                    model: FailureMatch[3]
+                });
+            }
+            
+            // Extract @Router annotation
+            // Format: @Router /path [method]
+            const RouterMatch = trimmed.match(/@Router\s+(.+)\s+\[(\w+)\]/);
+            if (RouterMatch) {
+                annotations.Router = {
+                    path: RouterMatch[1],
+                    method: RouterMatch[2].toLowerCase()
+                };
+            }
+            
+            // Extract @auth annotation
+            const AuthMatch = trimmed.match(/@auth/);
+            if (AuthMatch) {
+                annotations.auth = true;
+            }
+            
             // Extract endpoint path from comments like "GET /api/users"
             const pathMatch = trimmed.match(/^\*\s*(GET|POST|PUT|DELETE)\s+(\/[\/\w\-:]+)/);
             if (pathMatch) {
@@ -1455,6 +2095,65 @@ const router = express.Router();
         });
         
         return annotations;
+    }
+
+    parseParamString(paramString) {
+        // Parse parameter string like: "name location type required description" or "model.Type header model.ModelType true "description""
+        const parts = [];
+        let current = '';
+        let inQuotes = false;
+        let inBrackets = false;
+        
+        for (let i = 0; i < paramString.length; i++) {
+            const char = paramString[i];
+            
+            if (char === '"' && !inBrackets) {
+                inQuotes = !inQuotes;
+                if (!inQuotes && current.trim()) {
+                    parts.push(current.trim());
+                    current = '';
+                }
+            } else if (char === '[' && !inQuotes) {
+                inBrackets = true;
+                current += char;
+            } else if (char === ']' && !inQuotes) {
+                inBrackets = false;
+                current += char;
+            } else if (char === ' ' && !inQuotes && !inBrackets) {
+                if (current.trim()) {
+                    parts.push(current.trim());
+                    current = '';
+                }
+            } else {
+                current += char;
+            }
+        }
+        
+        if (current.trim()) {
+            parts.push(current.trim());
+        }
+        
+        if (parts.length >= 4) {
+            const param = {
+                name: parts[0],
+                location: parts[1], // header, path, query, body
+                type: parts[2],
+                required: parts[3] === 'true',
+                description: parts[4] || '',
+            };
+            
+            // Handle default values like default(1)
+            if (parts.length > 5 && parts[5].startsWith('default(')) {
+                const defaultMatch = parts[5].match(/default\((.+)\)/);
+                if (defaultMatch) {
+                    param.default = defaultMatch[1];
+                }
+            }
+            
+            return param;
+        }
+        
+        return null;
     }
 
     inferHttpMethod(methodName) {
@@ -1644,6 +2343,143 @@ const router = express.Router();
         
         // Default fallback
         return `/api/${controller}s`;
+    }
+
+    parseJSDocAnnotations(jsDocLines) {
+        const annotations = {
+            // Legacy format support
+            group: null, resource: null, summary: null, endpointPath: null,
+            response: null, request: null, errors: [],
+            // Go-style format support  
+            Summary: null, Description: null, Tags: null, Accept: null,
+            Produce: null, Param: [], Body: null, Success: [], Failure: [], Router: null, auth: false
+        };
+
+        jsDocLines.forEach(line => {
+            const trimmed = line.trim();
+            
+            // Legacy annotations
+            if (trimmed.startsWith('* @group ')) {
+                annotations.group = trimmed.replace('* @group ', '').trim();
+            } else if (trimmed.startsWith('* @resource ')) {
+                annotations.resource = trimmed.replace('* @resource ', '').trim();
+            } else if (trimmed.startsWith('* @summary ')) {
+                annotations.summary = trimmed.replace('* @summary ', '').trim();
+            } else if (trimmed.startsWith('* @endpointPath ')) {
+                annotations.endpointPath = trimmed.replace('* @endpointPath ', '').trim();
+            } else if (trimmed.startsWith('* @response ')) {
+                annotations.response = trimmed.replace('* @response ', '').trim();
+            } else if (trimmed.startsWith('* @request ')) {
+                annotations.request = trimmed.replace('* @request ', '').trim();
+            } else if (trimmed.startsWith('* @errors ')) {
+                const errorsStr = trimmed.replace('* @errors ', '').trim();
+                annotations.errors = errorsStr.split(',').map(e => e.trim());
+            }
+            
+            // Go-style annotations
+            else if (trimmed.startsWith('* @Summary ')) {
+                annotations.Summary = trimmed.replace('* @Summary ', '').trim();
+            } else if (trimmed.startsWith('* @Description ')) {
+                annotations.Description = trimmed.replace('* @Description ', '').trim();
+            } else if (trimmed.startsWith('* @Tags ')) {
+                annotations.Tags = trimmed.replace('* @Tags ', '').trim().split(',').map(t => t.trim());
+            } else if (trimmed.startsWith('* @Accept ')) {
+                annotations.Accept = trimmed.replace('* @Accept ', '').trim();
+            } else if (trimmed.startsWith('* @Produce ')) {
+                annotations.Produce = trimmed.replace('* @Produce ', '').trim();
+            } else if (trimmed.startsWith('* @Router ')) {
+                annotations.Router = trimmed.replace('* @Router ', '').trim();
+            } else if (trimmed.startsWith('* @Param ')) {
+                const paramStr = trimmed.replace('* @Param ', '').trim();
+                const param = this.parseParamString(paramStr);
+                if (param) annotations.Param.push(param);
+            } else if (trimmed.startsWith('* @Body ')) {
+                const bodyStr = trimmed.replace('* @Body ', '').trim();
+                const bodyMatch = bodyStr.match(/\{([^}]+)\}\s+([^\s"]+)(?:\s+"([^"]*)")?/);
+                if (bodyMatch) {
+                    annotations.Body = {
+                        type: bodyMatch[1],
+                        schema: bodyMatch[2],
+                        description: bodyMatch[3] || ''
+                    };
+                }
+            } else if (trimmed.startsWith('* @Success ')) {
+                const successStr = trimmed.replace('* @Success ', '').trim();
+                const success = this.parseResponseString(successStr, 'success');
+                if (success) annotations.Success.push(success);
+            } else if (trimmed.startsWith('* @Failure ')) {
+                const failureStr = trimmed.replace('* @Failure ', '').trim();
+                const failure = this.parseResponseString(failureStr, 'failure');
+                if (failure) annotations.Failure.push(failure);
+            } else if (trimmed.startsWith('* @auth')) {
+                annotations.auth = true;
+            }
+        });
+
+        return annotations;
+    }
+
+    parseParamString(paramStr) {
+        // Parse: name location type required "description" enum:val1,val2 model:ModelName
+        // Example: Authorization header string true "Bearer token" model:AuthorizedCommonHeaders
+        const parts = paramStr.split(' ');
+        if (parts.length < 4) return null;
+
+        const param = {
+            name: parts[0],
+            in: parts[1], // header, path, query, body
+            type: parts[2],
+            required: parts[3] === 'true'
+        };
+
+        // Extract description (quoted text)
+        const quotedMatch = paramStr.match(/"([^"]+)"/);
+        if (quotedMatch) {
+            param.description = quotedMatch[1];
+        }
+
+        // Extract enum values
+        const enumMatch = paramStr.match(/enum:([^\s]+)/);
+        if (enumMatch) {
+            param.enum = enumMatch[1].split(',');
+        }
+
+        // Extract model reference
+        const modelMatch = paramStr.match(/model:([^\s]+)/);
+        if (modelMatch) {
+            param.model = modelMatch[1];
+        }
+
+        return param;
+    }
+
+    parseSchemaPath(schemaPath) {
+        // Parse schema path like: "request.RequestVolAccessRequest" or "responses.RequestVolAccessResponse"
+        // Format: directory.filename -> { directory: 'request', schemaName: 'RequestVolAccessRequest' }
+        const parts = schemaPath.split('.');
+        if (parts.length !== 2) {
+            // If no directory specified, assume it's just the schema name
+            return { directory: null, schemaName: schemaPath };
+        }
+        
+        return {
+            directory: parts[0], // 'request', 'responses', 'models', etc.
+            schemaName: parts[1] // 'RequestVolAccessRequest', etc.
+        };
+    }
+
+    parseResponseString(responseStr, type) {
+        // Parse: code {type} ModelName "description"
+        // Example: 200 {object} UserResponse "Successfully retrieved user"
+        const match = responseStr.match(/^(\d+)\s+\{([^}]+)\}\s+(\w+)\s+"([^"]+)"/);
+        if (!match) return null;
+
+        return {
+            code: match[1],
+            type: match[2],
+            model: match[3],
+            description: match[4]
+        };
     }
 }
 
