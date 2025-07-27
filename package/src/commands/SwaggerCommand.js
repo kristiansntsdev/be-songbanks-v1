@@ -207,6 +207,22 @@ class SwaggerCommand {
     return null;
   }
 
+  parseSchemaPath(schema) {
+    // Handle different schema formats
+    if (typeof schema === 'string') {
+      // Simple schema name like "LoginRequest"
+      return { schemaName: schema };
+    }
+    
+    if (schema && schema.type) {
+      // Object schema with type property
+      return { schemaName: schema.type };
+    }
+    
+    // Default fallback
+    return { schemaName: 'object' };
+  }
+
   convertSchemasForSwagger(loadedSchemas) {
     const flatSchemas = {};
 
@@ -349,9 +365,12 @@ Available controllers:`);
       let routePath = method.endpointPath;
       if (method.annotations && method.annotations.Router) {
         // Extract path from "@Router /api/vol_user/request-vol-access [post]"
-        const routerMatch = method.annotations.Router.match(/([^[\s]+)/);
-        if (routerMatch) {
-          routePath = routerMatch[1];
+        const routerAnnotation = method.annotations.Router;
+        if (typeof routerAnnotation === 'string') {
+          const routerMatch = routerAnnotation.match(/([^[\s]+)/);
+          if (routerMatch) {
+            routePath = routerMatch[1];
+          }
         }
       }
 
@@ -447,9 +466,12 @@ Available controllers:`);
         let routePath = method.endpointPath;
         if (method.annotations && method.annotations.Router) {
           // Extract path from "@Router /api/vol_user/request-vol-access [post]"
-          const routerMatch = method.annotations.Router.match(/([^[\s]+)/);
-          if (routerMatch) {
-            routePath = routerMatch[1];
+          const routerAnnotation = method.annotations.Router;
+          if (typeof routerAnnotation === 'string') {
+            const routerMatch = routerAnnotation.match(/([^[\s]+)/);
+            if (routerMatch) {
+              routePath = routerMatch[1];
+            }
           }
         }
 
@@ -718,12 +740,15 @@ const router = express.Router();
     // Check for @Router annotation first
     if (method.annotations && method.annotations.Router) {
       // Extract path from "@Router /api/vol_user/request-vol-access [post]"
-      const routerMatch = method.annotations.Router.match(/([^[\s]+)/);
-      if (routerMatch) {
-        // Convert {param} to :param for Express.js
-        routePath = routerMatch[1]
-          .replace("/api", "")
-          .replace(/\{(\w+)\}/g, ":$1");
+      const routerAnnotation = method.annotations.Router;
+      if (typeof routerAnnotation === 'string') {
+        const routerMatch = routerAnnotation.match(/([^[\s]+)/);
+        if (routerMatch) {
+          // Convert {param} to :param for Express.js
+          routePath = routerMatch[1]
+            .replace("/api", "")
+            .replace(/\{(\w+)\}/g, ":$1");
+        }
       }
     }
     // Fallback to endpointPath annotation
