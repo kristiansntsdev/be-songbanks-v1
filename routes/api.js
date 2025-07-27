@@ -10,16 +10,11 @@ const UserController = require('../app/controllers/UserController');
 const { authenticateToken } = require('../app/middlewares/auth');
 
 // Tag Resource Routes (RESTful CRUD)
-router.get('/tags/', TagController.GetTags);
-router.get('/tags/:id', TagController.GetTagById);
-router.post('/admin/tags', TagController.CreateTag);
-router.put('/admin/tags/:id', TagController.UpdateTag);
-router.delete('/admin/tags/:id', TagController.DeleteTag);
-
-// User Group Routes
-router.get('/admin/user-access', UserController.getUserAccess);
-router.put('/admin/user-access/:user_id', UserController.updateUserAccess);
-router.post('/vol_user/request-vol-access', UserController.requestVolAccess);
+router.get('/tags', TagController.GetTags);
+router.get('/tags', TagController.GetTagById);
+router.post('/tags', TagController.CreateTag);
+router.put('/tags/:id', TagController.UpdateTag);
+router.delete('/tags/:id', TagController.DeleteTag);
 
 // AuthController Routes
 router.post('/auth/login', AuthController.apiLogin);
@@ -36,7 +31,7 @@ router.delete('/notes/:user_id/:id', NoteController.deleteNote);
 
 // PlaylistController Routes
 router.get('/playlists', PlaylistController.getAllPlaylists);
-router.get('/playlists/:id', PlaylistController.getPlaylistById);
+router.get('/playlists', PlaylistController.getPlaylistById);
 router.post('/playlists', PlaylistController.createPlaylist);
 router.put('/playlists/:id', PlaylistController.updatePlaylist);
 router.delete('/playlists/:id', PlaylistController.deletePlaylist);
@@ -49,26 +44,31 @@ router.post('/playlists/join/:share_token', PlaylistController.joinPlaylistViaLi
 router.get('/playlists/shared/:share_token', PlaylistController.getSharedPlaylistDetails);
 
 // PlaylistTeamController Routes
-router.get('/playlist-teams', PlaylistTeamController.getAllPlaylistTeams);
-router.get('/playlist-teams/:id', PlaylistTeamController.getPlaylistTeamById);
-router.post('/playlist-teams', PlaylistTeamController.createPlaylistTeam);
-router.put('/playlist-teams/:id', PlaylistTeamController.updatePlaylistTeam);
-router.delete('/playlist-teams/:id', PlaylistTeamController.deletePlaylistTeam);
-router.post('/playlist-teams/:id/members/:user_id', PlaylistTeamController.addMemberToTeam);
-router.delete('/playlist-teams/:id/members/:user_id', PlaylistTeamController.removeMemberFromTeam);
-router.put('/playlist-teams/:id/members/:user_id/role', PlaylistTeamController.updateMemberRole);
+router.get('/playlistteams', PlaylistTeamController.getAllPlaylistTeams);
+router.get('/playlistteams', PlaylistTeamController.getPlaylistTeamById);
+router.post('/playlistteams', PlaylistTeamController.createPlaylistTeam);
+router.put('/playlistteams/:id', PlaylistTeamController.updatePlaylistTeam);
+router.delete('/playlistteams/:id', PlaylistTeamController.deletePlaylistTeam);
+router.post('/playlistteams/:id/members', PlaylistTeamController.addMemberToTeam);
+router.delete('/playlistteams/:id/members/:member_id', PlaylistTeamController.removeMemberFromTeam);
+router.put('/playlistteams/:id/members/:member_id/role', PlaylistTeamController.updateMemberRole);
 router.get('/users/:user_id/teams', PlaylistTeamController.getUserTeams);
-router.post('/playlist-teams/:id/invite', PlaylistTeamController.inviteMemberToTeam);
-router.put('/playlist-teams/:id/visibility', PlaylistTeamController.updateTeamVisibility);
+router.post('/playlistteams/:id/invite', PlaylistTeamController.inviteMemberToTeam);
+router.put('/playlistteams/:id/visibility', PlaylistTeamController.updateTeamVisibility);
 
 // SongController Routes
 router.get('/songs', SongController.getAllSongs);
-router.get('/songs/:id', SongController.getSongById);
-router.post('/admin/songs', SongController.createSong);
-router.put('/admin/songs/:id', SongController.updateSong);
-router.delete('/admin/songs/:id', SongController.deleteSong);
-router.post('/admin/songs/:song_id/tags/:tag_id', SongController.addTagToSong);
-router.delete('/admin/songs/:song_id/tags/:tag_id', SongController.removeTagFromSong);
+router.get('/songs', SongController.getSongById);
+router.post('/songs', SongController.createSong);
+router.put('/songs/:id', SongController.updateSong);
+router.delete('/songs/:id', SongController.deleteSong);
+router.post('/songs/:id/tags', SongController.addTagToSong);
+router.delete('/songs/:id/tags/:tag_id', SongController.removeTagFromSong);
+
+// UserController Routes
+router.get('/admin/user-access', authenticateToken, UserController.getUserAccess);
+router.put('/admin/user-access/:user_id', authenticateToken, UserController.updateUserAccess);
+router.post('/users/request-vol-access', UserController.requestVolAccess);
 
 
 module.exports = router;

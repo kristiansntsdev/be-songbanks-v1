@@ -8,6 +8,10 @@
 // Re-export everything from the engine
 module.exports = require('./src/engine');
 
+// Export schemas for swagger documentation
+const schemas = require('./src/schemas');
+module.exports.schemas = schemas;
+
 // Add convenient aliases for the most commonly used exceptions
 const {
     ValidationException,
