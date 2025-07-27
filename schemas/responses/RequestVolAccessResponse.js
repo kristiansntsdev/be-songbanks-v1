@@ -1,6 +1,7 @@
 module.exports = {
   202: {
-    description: "Vol_user access request sent successfully. Awaiting admin approval.",
+    description:
+      "Vol_user access request sent successfully. Awaiting admin approval.",
     content: {
       "application/json": {
         schema: {
@@ -8,11 +9,12 @@ module.exports = {
           properties: {
             code: {
               type: "integer",
-              example: 202
+              example: 202,
             },
             message: {
               type: "string",
-              example: "Vol_user access request sent successfully. Awaiting admin approval."
+              example:
+                "Vol_user access request sent successfully. Awaiting admin approval.",
             },
             data: {
               type: "object",
@@ -20,18 +22,18 @@ module.exports = {
                 user_id: {
                   type: "string",
                   description: "The ID of the user requesting access",
-                  example: "user123"
+                  example: "user123",
                 },
                 status: {
                   type: "string",
                   description: "The status of the request",
-                  example: "request"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+                  example: "request",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
 };

@@ -242,10 +242,7 @@
       },
       "LoginRequest": {
         "type": "object",
-        "required": [
-          "email",
-          "password"
-        ],
+        "required": ["email", "password"],
         "properties": {
           "email": {
             "type": "string",
@@ -260,9 +257,7 @@
       },
       "RequestVolAccessRequest": {
         "type": "object",
-        "required": [
-          "user_id"
-        ],
+        "required": ["user_id"],
         "properties": {
           "user_id": {
             "type": "string",
@@ -273,25 +268,18 @@
       },
       "UpdateUserAccessRequest": {
         "type": "object",
-        "required": [
-          "status"
-        ],
+        "required": ["status"],
         "properties": {
           "status": {
             "type": "string",
-            "enum": [
-              "active",
-              "suspend"
-            ],
+            "enum": ["active", "suspend"],
             "example": "active"
           }
         }
       },
       "VerifyTokenRequest": {
         "type": "object",
-        "required": [
-          "token"
-        ],
+        "required": ["token"],
         "properties": {
           "token": {
             "type": "string",
@@ -513,21 +501,12 @@
           },
           "role": {
             "type": "string",
-            "enum": [
-              "admin",
-              "member"
-            ],
+            "enum": ["admin", "member"],
             "example": "member"
           },
           "status": {
             "type": "string",
-            "enum": [
-              "active",
-              "pending",
-              "suspend",
-              "request",
-              "guest"
-            ],
+            "enum": ["active", "pending", "suspend", "request", "guest"],
             "example": "active"
           },
           "is_admin": {
@@ -624,9 +603,7 @@
       },
       "CreateTagRequest": {
         "type": "object",
-        "required": [
-          "name"
-        ],
+        "required": ["name"],
         "properties": {
           "name": {
             "type": "string",
@@ -696,9 +673,7 @@
       "post": {
         "summary": "User login",
         "description": "Authenticate user with email and password",
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "requestBody": {
           "required": true,
           "content": {
@@ -757,9 +732,7 @@
       "post": {
         "summary": "User logout",
         "description": "Logout authenticated user",
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "security": [
           {
             "bearerAuth": []
@@ -813,9 +786,7 @@
       "post": {
         "summary": "Verify JWT token",
         "description": "Verify the validity of a JWT token and return user information",
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "requestBody": {
           "required": true,
           "content": {
@@ -874,9 +845,7 @@
       "post": {
         "summary": "Refresh JWT token",
         "description": "Generate a new JWT token for authenticated user",
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "security": [
           {
             "bearerAuth": []
@@ -930,9 +899,7 @@
       "post": {
         "summary": "Add note to song (Vol_User Only)",
         "description": "Auto-generated endpoint for NoteController.createNoteForSong",
-        "tags": [
-          "Note"
-        ],
+        "tags": ["Note"],
         "parameters": [
           {
             "in": "path",
@@ -982,9 +949,7 @@
       "get": {
         "summary": "Get all notes by user (Vol_User Only)",
         "description": "Auto-generated endpoint for NoteController.getAllUserNotes",
-        "tags": [
-          "Note"
-        ],
+        "tags": ["Note"],
         "parameters": [
           {
             "in": "path",
@@ -1034,9 +999,7 @@
       "get": {
         "summary": "Get note by ID (Vol_User Only)",
         "description": "Auto-generated endpoint for NoteController.getNoteById",
-        "tags": [
-          "Note"
-        ],
+        "tags": ["Note"],
         "parameters": [
           {
             "in": "path",
@@ -1084,9 +1047,7 @@
       "put": {
         "summary": "Update note (Vol_User Only)",
         "description": "Auto-generated endpoint for NoteController.updateNote",
-        "tags": [
-          "Note"
-        ],
+        "tags": ["Note"],
         "parameters": [
           {
             "in": "path",
@@ -1134,9 +1095,7 @@
       "delete": {
         "summary": "Delete note (Vol_User Only)",
         "description": "Auto-generated endpoint for NoteController.deleteNote",
-        "tags": [
-          "Note"
-        ],
+        "tags": ["Note"],
         "parameters": [
           {
             "in": "path",
@@ -1186,9 +1145,7 @@
       "get": {
         "summary": "Get playlist by ID",
         "description": "Auto-generated endpoint for PlaylistController.getPlaylistById",
-        "tags": [
-          "Playlist"
-        ],
+        "tags": ["Playlist"],
         "responses": {
           "200": {
             "description": "Successful response",
@@ -1225,9 +1182,7 @@
       "post": {
         "summary": "Create new playlist",
         "description": "Auto-generated endpoint for PlaylistController.createPlaylist",
-        "tags": [
-          "Playlist"
-        ],
+        "tags": ["Playlist"],
         "responses": {
           "200": {
             "description": "Successful response",
@@ -1266,9 +1221,7 @@
       "put": {
         "summary": "Update playlist",
         "description": "Auto-generated endpoint for PlaylistController.updatePlaylist",
-        "tags": [
-          "Playlist"
-        ],
+        "tags": ["Playlist"],
         "parameters": [
           {
             "in": "path",
@@ -1316,9 +1269,7 @@
       "delete": {
         "summary": "Delete playlist",
         "description": "Auto-generated endpoint for PlaylistController.deletePlaylist",
-        "tags": [
-          "Playlist"
-        ],
+        "tags": ["Playlist"],
         "parameters": [
           {
             "in": "path",
@@ -1368,9 +1319,7 @@
       "get": {
         "summary": "Get user playlists",
         "description": "Auto-generated endpoint for PlaylistController.getUserPlaylists",
-        "tags": [
-          "Playlist"
-        ],
+        "tags": ["Playlist"],
         "parameters": [
           {
             "in": "path",
@@ -1420,9 +1369,7 @@
       "post": {
         "summary": "Add song to playlist",
         "description": "Auto-generated endpoint for PlaylistController.addSongToPlaylist",
-        "tags": [
-          "Playlist"
-        ],
+        "tags": ["Playlist"],
         "parameters": [
           {
             "in": "path",
@@ -1470,9 +1417,7 @@
       "delete": {
         "summary": "Remove song from playlist",
         "description": "Auto-generated endpoint for PlaylistController.removeSongFromPlaylist",
-        "tags": [
-          "Playlist"
-        ],
+        "tags": ["Playlist"],
         "parameters": [
           {
             "in": "path",
@@ -1522,9 +1467,7 @@
       "put": {
         "summary": "Reorder playlist songs",
         "description": "Auto-generated endpoint for PlaylistController.reorderPlaylistSongs",
-        "tags": [
-          "Playlist"
-        ],
+        "tags": ["Playlist"],
         "parameters": [
           {
             "in": "path",
@@ -1574,9 +1517,7 @@
       "post": {
         "summary": "Generate shareable link for playlist",
         "description": "Auto-generated endpoint for PlaylistController.generateShareableLink",
-        "tags": [
-          "Playlist"
-        ],
+        "tags": ["Playlist"],
         "parameters": [
           {
             "in": "path",
@@ -1626,9 +1567,7 @@
       "post": {
         "summary": "Join playlist via shareable link",
         "description": "Auto-generated endpoint for PlaylistController.joinPlaylistViaLink",
-        "tags": [
-          "Playlist"
-        ],
+        "tags": ["Playlist"],
         "parameters": [
           {
             "in": "path",
@@ -1678,9 +1617,7 @@
       "get": {
         "summary": "Get shared playlist details (public access)",
         "description": "Auto-generated endpoint for PlaylistController.getSharedPlaylistDetails",
-        "tags": [
-          "Playlist"
-        ],
+        "tags": ["Playlist"],
         "parameters": [
           {
             "in": "path",
@@ -1730,9 +1667,7 @@
       "get": {
         "summary": "Get playlist team by ID",
         "description": "Auto-generated endpoint for PlaylistTeamController.getPlaylistTeamById",
-        "tags": [
-          "PlaylistTeam"
-        ],
+        "tags": ["PlaylistTeam"],
         "responses": {
           "200": {
             "description": "Successful response",
@@ -1769,9 +1704,7 @@
       "post": {
         "summary": "Create new playlist team",
         "description": "Auto-generated endpoint for PlaylistTeamController.createPlaylistTeam",
-        "tags": [
-          "PlaylistTeam"
-        ],
+        "tags": ["PlaylistTeam"],
         "responses": {
           "200": {
             "description": "Successful response",
@@ -1810,9 +1743,7 @@
       "put": {
         "summary": "Update playlist team",
         "description": "Auto-generated endpoint for PlaylistTeamController.updatePlaylistTeam",
-        "tags": [
-          "PlaylistTeam"
-        ],
+        "tags": ["PlaylistTeam"],
         "parameters": [
           {
             "in": "path",
@@ -1860,9 +1791,7 @@
       "delete": {
         "summary": "Delete playlist team",
         "description": "Auto-generated endpoint for PlaylistTeamController.deletePlaylistTeam",
-        "tags": [
-          "PlaylistTeam"
-        ],
+        "tags": ["PlaylistTeam"],
         "parameters": [
           {
             "in": "path",
@@ -1912,9 +1841,7 @@
       "post": {
         "summary": "Add member to playlist team",
         "description": "Auto-generated endpoint for PlaylistTeamController.addMemberToTeam",
-        "tags": [
-          "PlaylistTeam"
-        ],
+        "tags": ["PlaylistTeam"],
         "parameters": [
           {
             "in": "path",
@@ -1964,9 +1891,7 @@
       "delete": {
         "summary": "Remove member from playlist team",
         "description": "Auto-generated endpoint for PlaylistTeamController.removeMemberFromTeam",
-        "tags": [
-          "PlaylistTeam"
-        ],
+        "tags": ["PlaylistTeam"],
         "parameters": [
           {
             "in": "path",
@@ -2016,9 +1941,7 @@
       "put": {
         "summary": "Update member role in playlist team",
         "description": "Auto-generated endpoint for PlaylistTeamController.updateMemberRole",
-        "tags": [
-          "PlaylistTeam"
-        ],
+        "tags": ["PlaylistTeam"],
         "parameters": [
           {
             "in": "path",
@@ -2068,9 +1991,7 @@
       "get": {
         "summary": "Get user teams",
         "description": "Auto-generated endpoint for PlaylistTeamController.getUserTeams",
-        "tags": [
-          "PlaylistTeam"
-        ],
+        "tags": ["PlaylistTeam"],
         "parameters": [
           {
             "in": "path",
@@ -2120,9 +2041,7 @@
       "post": {
         "summary": "Invite member to playlist team",
         "description": "Auto-generated endpoint for PlaylistTeamController.inviteMemberToTeam",
-        "tags": [
-          "PlaylistTeam"
-        ],
+        "tags": ["PlaylistTeam"],
         "parameters": [
           {
             "in": "path",
@@ -2172,9 +2091,7 @@
       "put": {
         "summary": "Update team visibility",
         "description": "Auto-generated endpoint for PlaylistTeamController.updateTeamVisibility",
-        "tags": [
-          "PlaylistTeam"
-        ],
+        "tags": ["PlaylistTeam"],
         "parameters": [
           {
             "in": "path",
@@ -2224,9 +2141,7 @@
       "get": {
         "summary": "Get song by ID",
         "description": "Auto-generated endpoint for SongController.getSongById",
-        "tags": [
-          "Song"
-        ],
+        "tags": ["Song"],
         "responses": {
           "200": {
             "description": "Successful response",
@@ -2263,9 +2178,7 @@
       "post": {
         "summary": "Create new song (Admin Only)",
         "description": "Auto-generated endpoint for SongController.createSong",
-        "tags": [
-          "Song"
-        ],
+        "tags": ["Song"],
         "responses": {
           "200": {
             "description": "Successful response",
@@ -2304,9 +2217,7 @@
       "put": {
         "summary": "Update song (Admin Only)",
         "description": "Auto-generated endpoint for SongController.updateSong",
-        "tags": [
-          "Song"
-        ],
+        "tags": ["Song"],
         "parameters": [
           {
             "in": "path",
@@ -2354,9 +2265,7 @@
       "delete": {
         "summary": "Delete song (Admin Only)",
         "description": "Auto-generated endpoint for SongController.deleteSong",
-        "tags": [
-          "Song"
-        ],
+        "tags": ["Song"],
         "parameters": [
           {
             "in": "path",
@@ -2406,9 +2315,7 @@
       "post": {
         "summary": "Add tag to song (Admin Only)",
         "description": "Auto-generated endpoint for SongController.addTagToSong",
-        "tags": [
-          "Song"
-        ],
+        "tags": ["Song"],
         "parameters": [
           {
             "in": "path",
@@ -2458,9 +2365,7 @@
       "delete": {
         "summary": "Remove tag from song (Admin Only)",
         "description": "Auto-generated endpoint for SongController.removeTagFromSong",
-        "tags": [
-          "Song"
-        ],
+        "tags": ["Song"],
         "parameters": [
           {
             "in": "path",
@@ -2510,9 +2415,7 @@
       "get": {
         "summary": "Get tag by ID",
         "description": "Retrieve a specific tag by its ID",
-        "tags": [
-          "Tag"
-        ],
+        "tags": ["Tag"],
         "responses": {
           "200": {
             "description": "Successful response",
@@ -2549,9 +2452,7 @@
       "post": {
         "summary": "Create new tag (Admin Only)",
         "description": "Create a new tag with name and description",
-        "tags": [
-          "Tag"
-        ],
+        "tags": ["Tag"],
         "responses": {
           "200": {
             "description": "Successful response",
@@ -2590,9 +2491,7 @@
       "put": {
         "summary": "Update tag (Admin Only)",
         "description": "Update an existing tag by ID",
-        "tags": [
-          "Tag"
-        ],
+        "tags": ["Tag"],
         "parameters": [
           {
             "in": "path",
@@ -2640,9 +2539,7 @@
       "delete": {
         "summary": "Delete tag (Admin Only)",
         "description": "Delete a tag by ID",
-        "tags": [
-          "Tag"
-        ],
+        "tags": ["Tag"],
         "parameters": [
           {
             "in": "path",
@@ -2698,9 +2595,7 @@
       "get": {
         "summary": "Get user access management data",
         "description": "Retrieves a list of all users with their access status and permissions for administrative management",
-        "tags": [
-          "User"
-        ],
+        "tags": ["User"],
         "security": [
           {
             "bearerAuth": []
@@ -2851,9 +2746,7 @@
       "put": {
         "summary": "Update user access status",
         "description": "Updates the access status of a specific user (active/suspend) with admin privileges",
-        "tags": [
-          "User"
-        ],
+        "tags": ["User"],
         "parameters": [
           {
             "in": "path",
@@ -2870,10 +2763,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "enum": [
-                "active",
-                "suspend"
-              ]
+              "enum": ["active", "suspend"]
             },
             "description": "New access status"
           }
@@ -2976,9 +2866,7 @@
       "post": {
         "summary": "Request vol_user access",
         "description": "Submits a request for vol_user access privileges that requires admin approval",
-        "tags": [
-          "User"
-        ],
+        "tags": ["User"],
         "requestBody": {
           "required": true,
           "content": {

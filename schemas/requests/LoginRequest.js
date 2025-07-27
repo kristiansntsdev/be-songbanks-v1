@@ -6,12 +6,12 @@ module.exports = {
       type: "string",
       format: "email",
       example: "user@example.com",
-      description: "User's email address"
+      description: "User's email address",
     },
     password: {
       type: "string",
       example: "password123",
-      description: "User's password"
-    }
-  }
+      description: "User's password",
+    },
+  },
 };

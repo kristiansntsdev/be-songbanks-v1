@@ -30,34 +30,40 @@ A modern REST API built with Node.js, Express, and MySQL for managing music-rela
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd songbanks-v1.1
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Setup environment**
+
    ```bash
    cp .env.example .env
    # Edit .env with your database credentials
    ```
 
 4. **Start MySQL database**
+
    ```bash
    make songbank-db
    ```
 
 5. **Run migrations and seeders**
+
    ```bash
    make migrate
    make seed
    ```
 
 6. **Start the server**
+
    ```bash
    npm start
    ```
@@ -79,6 +85,7 @@ The API documentation is available at `http://localhost:3000/api-docs` when the 
 ### Authentication Flow
 
 1. **Login** to get JWT token:
+
    ```bash
    POST /api/login
    {
@@ -95,6 +102,7 @@ The API documentation is available at `http://localhost:3000/api-docs` when the 
 ## 🛠️ Development Commands
 
 ### Database Management
+
 ```bash
 make songbank-db              # Create MySQL database container
 make migrate                  # Run database migrations
@@ -104,6 +112,7 @@ make seed:undo                # Undo database seeders
 ```
 
 ### Code Generation
+
 ```bash
 make migration:create name=create_posts    # Create new migration
 make seeder:create name=demo_posts         # Create new seeder
@@ -112,6 +121,7 @@ make model:create name=Post                # Create new model
 ```
 
 ### Server Commands
+
 ```bash
 make start                    # Start development server
 make docs                     # Open API documentation
@@ -148,11 +158,11 @@ songbanks-v1.1/
 
 ## 🔧 Available Endpoints
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/api/login` | User authentication | No |
-| POST | `/api/logout` | User logout | Yes |
-| POST | `/api/users` | Create new user | Yes |
+| Method | Endpoint      | Description         | Auth Required |
+| ------ | ------------- | ------------------- | ------------- |
+| POST   | `/api/login`  | User authentication | No            |
+| POST   | `/api/logout` | User logout         | Yes           |
+| POST   | `/api/users`  | Create new user     | Yes           |
 
 ## 📦 Tech Stack
 
@@ -168,11 +178,13 @@ songbanks-v1.1/
 ## 🧪 Testing
 
 Test the API using:
+
 - **Swagger UI**: `http://localhost:3000/api-docs`
 - **Postman**: Import the API collection
 - **curl**: Command-line testing
 
 Example curl command:
+
 ```bash
 # Login
 curl -X POST http://localhost:3000/api/login \
@@ -222,6 +234,7 @@ DB_PASSWORD=songbank
 ## 🚀 Deployment
 
 ### Docker Deployment
+
 ```bash
 # Build image
 docker build -t songbanks-api .
@@ -231,6 +244,7 @@ docker run -p 3000:3000 songbanks-api
 ```
 
 ### Production Checklist
+
 - [ ] Update JWT secret in production
 - [ ] Configure secure database credentials
 - [ ] Set up proper logging

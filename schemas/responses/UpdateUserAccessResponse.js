@@ -8,11 +8,11 @@ module.exports = {
           properties: {
             code: {
               type: "integer",
-              example: 200
+              example: 200,
             },
             message: {
               type: "string",
-              example: "User status changed to active"
+              example: "User status changed to active",
             },
             data: {
               type: "object",
@@ -20,18 +20,18 @@ module.exports = {
                 id: {
                   type: "string",
                   description: "User ID",
-                  example: "user123"
+                  example: "user123",
                 },
                 status: {
                   type: "string",
                   description: "Updated user status",
-                  example: "active"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+                  example: "active",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
 };

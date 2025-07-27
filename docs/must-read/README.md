@@ -1,6 +1,7 @@
 # Songbanks API Documentation
 
 ## Table of Contents
+
 1. [Architecture Overview](#architecture-overview)
 2. [Getting Started](#getting-started)
 3. [API Development Guide](#api-development-guide)
@@ -14,6 +15,7 @@
 This is a REST API built with Node.js, Express, and MySQL using the MVC (Model-View-Controller) pattern.
 
 ### Tech Stack
+
 - **Runtime**: Node.js
 - **Framework**: Express.js
 - **Database**: MySQL
@@ -23,6 +25,7 @@ This is a REST API built with Node.js, Express, and MySQL using the MVC (Model-V
 - **Container**: Podman/Docker (for MySQL)
 
 ### Key Features
+
 - JWT-based authentication
 - RESTful API design
 - Swagger API documentation
@@ -33,6 +36,7 @@ This is a REST API built with Node.js, Express, and MySQL using the MVC (Model-V
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js (v14 or higher)
 - Podman or Docker
 - MySQL client (optional)
@@ -40,6 +44,7 @@ This is a REST API built with Node.js, Express, and MySQL using the MVC (Model-V
 ### Installation
 
 1. **Clone and install dependencies**:
+
 ```bash
 git clone <repository>
 cd songbanks-v1.1
@@ -47,28 +52,33 @@ npm install
 ```
 
 2. **Setup environment**:
+
 ```bash
 cp .env.example .env
 # Edit .env with your database credentials
 ```
 
 3. **Start MySQL database**:
+
 ```bash
 make songbank-db
 ```
 
 4. **Run migrations and seeders**:
+
 ```bash
 make migrate
 make seed
 ```
 
 5. **Start the server**:
+
 ```bash
 npm start
 ```
 
 6. **Access API documentation**:
+
 ```
 http://localhost:3000/api-docs
 ```

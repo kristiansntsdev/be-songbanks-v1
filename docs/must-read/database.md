@@ -9,8 +9,8 @@ This project uses Sequelize ORM with MySQL for database operations. Database sch
 ### Connection Setup (`config/database.js`)
 
 ```javascript
-const Sequelize = require('sequelize');
-const env = require('dotenv');
+const Sequelize = require("sequelize");
+const env = require("dotenv");
 env.config();
 
 const sequelize = new Sequelize(
@@ -18,8 +18,8 @@ const sequelize = new Sequelize(
   process.env.DB_USERNAME,
   process.env.DB_PASSWORD,
   {
-    dialect: 'mysql',
-    host: process.env.DB_HOST
+    dialect: "mysql",
+    host: process.env.DB_HOST,
   }
 );
 
@@ -29,7 +29,7 @@ module.exports = sequelize;
 ### Sequelize CLI Configuration (`config/config.js`)
 
 ```javascript
-const env = require('dotenv');
+const env = require("dotenv");
 env.config();
 
 module.exports = {
@@ -39,7 +39,7 @@ module.exports = {
     database: process.env.DB_DATABASE,
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
-    dialect: 'mysql'
+    dialect: "mysql",
   },
   // ... other environments
 };
@@ -59,51 +59,51 @@ make migration:create name=create_posts
 ### Migration Structure
 
 ```javascript
-'use strict';
+"use strict";
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('posts', {
+    await queryInterface.createTable("posts", {
       id: {
         allowNull: false,
         primaryKey: true,
-        type: Sequelize.STRING(26)
+        type: Sequelize.STRING(26),
       },
       title: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
       },
       content: {
         type: Sequelize.TEXT,
-        allowNull: false
+        allowNull: false,
       },
       userId: {
         type: Sequelize.STRING(26),
         allowNull: false,
         references: {
-          model: 'users',
-          key: 'id'
-        }
+          model: "users",
+          key: "id",
+        },
       },
       createdAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
       },
       updatedAt: {
         allowNull: false,
-        type: Sequelize.DATE
-      }
+        type: Sequelize.DATE,
+      },
     });
 
     // Add indexes
-    await queryInterface.addIndex('posts', ['userId']);
-    await queryInterface.addIndex('posts', ['createdAt']);
+    await queryInterface.addIndex("posts", ["userId"]);
+    await queryInterface.addIndex("posts", ["createdAt"]);
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('posts');
-  }
+    await queryInterface.dropTable("posts");
+  },
 };
 ```
 
@@ -132,28 +132,28 @@ npx sequelize-cli db:migrate:status
 
 ```javascript
 // Up
-await queryInterface.addColumn('posts', 'status', {
+await queryInterface.addColumn("posts", "status", {
   type: Sequelize.STRING,
-  defaultValue: 'draft'
+  defaultValue: "draft",
 });
 
 // Down
-await queryInterface.removeColumn('posts', 'status');
+await queryInterface.removeColumn("posts", "status");
 ```
 
 #### Modifying Columns
 
 ```javascript
 // Up
-await queryInterface.changeColumn('posts', 'title', {
+await queryInterface.changeColumn("posts", "title", {
   type: Sequelize.STRING(500),
-  allowNull: false
+  allowNull: false,
 });
 
 // Down
-await queryInterface.changeColumn('posts', 'title', {
+await queryInterface.changeColumn("posts", "title", {
   type: Sequelize.STRING(255),
-  allowNull: false
+  allowNull: false,
 });
 ```
 
@@ -161,32 +161,32 @@ await queryInterface.changeColumn('posts', 'title', {
 
 ```javascript
 // Up
-await queryInterface.addIndex('posts', ['title', 'status'], {
-  name: 'posts_title_status_index'
+await queryInterface.addIndex("posts", ["title", "status"], {
+  name: "posts_title_status_index",
 });
 
 // Down
-await queryInterface.removeIndex('posts', 'posts_title_status_index');
+await queryInterface.removeIndex("posts", "posts_title_status_index");
 ```
 
 #### Adding Foreign Keys
 
 ```javascript
 // Up
-await queryInterface.addConstraint('posts', {
-  fields: ['userId'],
-  type: 'foreign key',
-  name: 'posts_user_id_fk',
+await queryInterface.addConstraint("posts", {
+  fields: ["userId"],
+  type: "foreign key",
+  name: "posts_user_id_fk",
   references: {
-    table: 'users',
-    field: 'id'
+    table: "users",
+    field: "id",
   },
-  onDelete: 'CASCADE',
-  onUpdate: 'CASCADE'
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
 });
 
 // Down
-await queryInterface.removeConstraint('posts', 'posts_user_id_fk');
+await queryInterface.removeConstraint("posts", "posts_user_id_fk");
 ```
 
 ## Seeders
@@ -203,9 +203,9 @@ make seeder:create name=demo_posts
 ### Seeder Structure
 
 ```javascript
-'use strict';
+"use strict";
 
-const { ulid } = require('ulid');
+const { ulid } = require("ulid");
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
@@ -217,36 +217,44 @@ module.exports = {
     );
 
     if (users.length === 0) {
-      throw new Error('Admin user not found. Run user seeder first.');
+      throw new Error("Admin user not found. Run user seeder first.");
     }
 
     const adminUserId = users[0].id;
 
-    await queryInterface.bulkInsert('posts', [
-      {
-        id: ulid(),
-        title: 'Welcome to Songbanks API',
-        content: 'This is your first post in the Songbanks API system.',
-        userId: adminUserId,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: ulid(),
-        title: 'Getting Started Guide',
-        content: 'Learn how to use the API endpoints effectively.',
-        userId: adminUserId,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    ], {});
+    await queryInterface.bulkInsert(
+      "posts",
+      [
+        {
+          id: ulid(),
+          title: "Welcome to Songbanks API",
+          content: "This is your first post in the Songbanks API system.",
+          userId: adminUserId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: ulid(),
+          title: "Getting Started Guide",
+          content: "Learn how to use the API endpoints effectively.",
+          userId: adminUserId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+      {}
+    );
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.bulkDelete('posts', {
-      title: ['Welcome to Songbanks API', 'Getting Started Guide']
-    }, {});
-  }
+    await queryInterface.bulkDelete(
+      "posts",
+      {
+        title: ["Welcome to Songbanks API", "Getting Started Guide"],
+      },
+      {}
+    );
+  },
 };
 ```
 
@@ -280,50 +288,54 @@ make model:create name=Post
 ### Model Structure
 
 ```javascript
-const { DataTypes } = require('sequelize');
-const { ulid } = require('ulid');
-const sequelize = require('../../config/database');
+const { DataTypes } = require("sequelize");
+const { ulid } = require("ulid");
+const sequelize = require("../../config/database");
 
-const Post = sequelize.define('posts', {
-  id: {
-    type: DataTypes.STRING(26),
-    primaryKey: true,
-    allowNull: false,
-    defaultValue: () => ulid()
-  },
-  title: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: true,
-      len: [1, 255]
-    }
-  },
-  content: {
-    type: DataTypes.TEXT,
-    allowNull: false,
-    validate: {
-      notEmpty: true
-    }
-  },
-  userId: {
-    type: DataTypes.STRING(26),
-    allowNull: false,
-    references: {
-      model: 'users',
-      key: 'id'
-    }
-  }
-}, {
-  indexes: [
-    {
-      fields: ['userId']
+const Post = sequelize.define(
+  "posts",
+  {
+    id: {
+      type: DataTypes.STRING(26),
+      primaryKey: true,
+      allowNull: false,
+      defaultValue: () => ulid(),
     },
-    {
-      fields: ['createdAt']
-    }
-  ]
-});
+    title: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notEmpty: true,
+        len: [1, 255],
+      },
+    },
+    content: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+      validate: {
+        notEmpty: true,
+      },
+    },
+    userId: {
+      type: DataTypes.STRING(26),
+      allowNull: false,
+      references: {
+        model: "users",
+        key: "id",
+      },
+    },
+  },
+  {
+    indexes: [
+      {
+        fields: ["userId"],
+      },
+      {
+        fields: ["createdAt"],
+      },
+    ],
+  }
+);
 
 module.exports = Post;
 ```
@@ -332,42 +344,42 @@ module.exports = Post;
 
 ```javascript
 // In app/models/User.js
-User.hasMany(Post, { foreignKey: 'userId' });
+User.hasMany(Post, { foreignKey: "userId" });
 
 // In app/models/Post.js
-Post.belongsTo(User, { foreignKey: 'userId' });
+Post.belongsTo(User, { foreignKey: "userId" });
 ```
 
 ### Model Validations
 
 ```javascript
-const Post = sequelize.define('posts', {
+const Post = sequelize.define("posts", {
   title: {
     type: DataTypes.STRING,
     allowNull: false,
     validate: {
       notEmpty: {
-        msg: 'Title cannot be empty'
+        msg: "Title cannot be empty",
       },
       len: {
         args: [1, 255],
-        msg: 'Title must be between 1 and 255 characters'
-      }
-    }
+        msg: "Title must be between 1 and 255 characters",
+      },
+    },
   },
   content: {
     type: DataTypes.TEXT,
     allowNull: false,
     validate: {
       notEmpty: {
-        msg: 'Content cannot be empty'
+        msg: "Content cannot be empty",
       },
       len: {
         args: [1, 10000],
-        msg: 'Content must be between 1 and 10000 characters'
-      }
-    }
-  }
+        msg: "Content must be between 1 and 10000 characters",
+      },
+    },
+  },
 });
 ```
 
@@ -384,9 +396,9 @@ const Post = sequelize.define('posts', {
 
 ```javascript
 // Add indexes for commonly queried fields
-await queryInterface.addIndex('posts', ['userId']);
-await queryInterface.addIndex('posts', ['createdAt']);
-await queryInterface.addIndex('posts', ['title', 'status']);
+await queryInterface.addIndex("posts", ["userId"]);
+await queryInterface.addIndex("posts", ["createdAt"]);
+await queryInterface.addIndex("posts", ["title", "status"]);
 ```
 
 ### 3. Foreign Key Constraints
@@ -421,12 +433,16 @@ email: {
 
 ```javascript
 // Enable soft deletes (paranoid mode)
-const Post = sequelize.define('posts', {
-  // ... fields
-}, {
-  paranoid: true,
-  deletedAt: 'deletedAt'
-});
+const Post = sequelize.define(
+  "posts",
+  {
+    // ... fields
+  },
+  {
+    paranoid: true,
+    deletedAt: "deletedAt",
+  }
+);
 ```
 
 ## Common Database Operations
@@ -436,10 +452,10 @@ const Post = sequelize.define('posts', {
 ```javascript
 // Raw SQL query
 const results = await sequelize.query(
-  'SELECT * FROM posts WHERE userId = :userId',
+  "SELECT * FROM posts WHERE userId = :userId",
   {
-    replacements: { userId: 'user123' },
-    type: QueryTypes.SELECT
+    replacements: { userId: "user123" },
+    type: QueryTypes.SELECT,
   }
 );
 ```
@@ -452,8 +468,11 @@ const transaction = await sequelize.transaction();
 
 try {
   const user = await User.create({ email, password }, { transaction });
-  const post = await Post.create({ title, content, userId: user.id }, { transaction });
-  
+  const post = await Post.create(
+    { title, content, userId: user.id },
+    { transaction }
+  );
+
   await transaction.commit();
   return { user, post };
 } catch (error) {
@@ -467,15 +486,12 @@ try {
 ```javascript
 // Bulk insert
 await Post.bulkCreate([
-  { title: 'Post 1', content: 'Content 1', userId: 'user123' },
-  { title: 'Post 2', content: 'Content 2', userId: 'user123' }
+  { title: "Post 1", content: "Content 1", userId: "user123" },
+  { title: "Post 2", content: "Content 2", userId: "user123" },
 ]);
 
 // Bulk update
-await Post.update(
-  { status: 'published' },
-  { where: { userId: 'user123' } }
-);
+await Post.update({ status: "published" }, { where: { userId: "user123" } });
 ```
 
 ### 4. Pagination
@@ -483,10 +499,10 @@ await Post.update(
 ```javascript
 // Paginated query
 const { count, rows } = await Post.findAndCountAll({
-  where: { userId: 'user123' },
+  where: { userId: "user123" },
   limit: 10,
   offset: 0,
-  order: [['createdAt', 'DESC']]
+  order: [["createdAt", "DESC"]],
 });
 ```
 

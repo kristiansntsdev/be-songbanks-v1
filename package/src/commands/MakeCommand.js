@@ -1,61 +1,61 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 class MakeCommand {
-    constructor() {
-        this.args = process.argv.slice(2);
-        this.basePath = process.cwd();
-        this.templatesPath = path.join(__dirname, '../stubs');
+  constructor() {
+    this.args = process.argv.slice(2);
+    this.basePath = process.cwd();
+    this.templatesPath = path.join(__dirname, "../stubs");
+  }
+
+  execute() {
+    const options = this.parseArguments();
+
+    if (!options.type || !options.name) {
+      this.showUsage();
+      return;
     }
 
-    execute() {
-        const options = this.parseArguments();
-        
-        if (!options.type || !options.name) {
-            this.showUsage();
-            return;
-        }
+    switch (options.type) {
+      case "controller":
+        this.makeController(options.name);
+        break;
+      case "service":
+        this.makeService(options.name);
+        break;
+      case "model":
+        this.makeModel(options.name);
+        break;
+      default:
+        console.error(`❌ Unknown type: ${options.type}`);
+        this.showUsage();
+    }
+  }
 
-        switch (options.type) {
-            case 'controller':
-                this.makeController(options.name);
-                break;
-            case 'service':
-                this.makeService(options.name);
-                break;
-            case 'model':
-                this.makeModel(options.name);
-                break;
-            default:
-                console.error(`❌ Unknown type: ${options.type}`);
-                this.showUsage();
-        }
+  parseArguments() {
+    const options = {};
+
+    for (let i = 0; i < this.args.length; i++) {
+      const arg = this.args[i];
+
+      if (arg === "--controller") {
+        options.type = "controller";
+      } else if (arg === "--service") {
+        options.type = "service";
+      } else if (arg === "--model") {
+        options.type = "model";
+      } else if (arg.startsWith("--name=")) {
+        options.name = arg.split("=")[1];
+      }
     }
 
-    parseArguments() {
-        const options = {};
-        
-        for (let i = 0; i < this.args.length; i++) {
-            const arg = this.args[i];
-            
-            if (arg === '--controller') {
-                options.type = 'controller';
-            } else if (arg === '--service') {
-                options.type = 'service';
-            } else if (arg === '--model') {
-                options.type = 'model';
-            } else if (arg.startsWith('--name=')) {
-                options.name = arg.split('=')[1];
-            }
-        }
-        
-        return options;
-    }
+    return options;
+  }
 
-    showUsage() {
-        console.log(`
+  showUsage() {
+    console.log(`
 🚀 Swagpress Make Command (Laravel-inspired)
 
 Usage:
@@ -74,106 +74,144 @@ Options:
   --model         Generate a new model class
   --name=NAME     Specify the name of the class to generate
         `);
+  }
+
+  makeController(name) {
+    const controllerName = this.ensureSuffix(name, "Controller");
+    const serviceName = controllerName.replace("Controller", "Service");
+    const modelName = controllerName.replace("Controller", "");
+
+    const template = this.getControllerTemplate(
+      controllerName,
+      serviceName,
+      modelName
+    );
+    let filePath = path.join(
+      this.basePath,
+      "app/controllers",
+      `${controllerName}.js`
+    );
+    let finalControllerName = controllerName;
+
+    this.ensureDirectoryExists(path.dirname(filePath));
+
+    // If file exists, create a copy with suffix
+    if (fs.existsSync(filePath)) {
+      const { uniquePath, uniqueName } = this.getUniqueFilePath(
+        filePath,
+        controllerName
+      );
+      filePath = uniquePath;
+      finalControllerName = uniqueName;
+      console.log(
+        `⚠️  Controller ${controllerName} already exists, creating ${finalControllerName} instead`
+      );
     }
 
-    makeController(name) {
-        const controllerName = this.ensureSuffix(name, 'Controller');
-        const serviceName = controllerName.replace('Controller', 'Service');
-        const modelName = controllerName.replace('Controller', '');
-        
-        const template = this.getControllerTemplate(controllerName, serviceName, modelName);
-        let filePath = path.join(this.basePath, 'app/controllers', `${controllerName}.js`);
-        let finalControllerName = controllerName;
-        
-        this.ensureDirectoryExists(path.dirname(filePath));
-        
-        // If file exists, create a copy with suffix
-        if (fs.existsSync(filePath)) {
-            const { uniquePath, uniqueName } = this.getUniqueFilePath(filePath, controllerName);
-            filePath = uniquePath;
-            finalControllerName = uniqueName;
-            console.log(`⚠️  Controller ${controllerName} already exists, creating ${finalControllerName} instead`);
-        }
-        
-        // Update template with the final controller name
-        const finalTemplate = template.replace(new RegExp(controllerName, 'g'), finalControllerName);
-        
-        fs.writeFileSync(filePath, finalTemplate);
-        console.log(`✅ Controller created: app/controllers/${finalControllerName}.js`);
-        
-        // Suggest next steps
-        console.log(`
+    // Update template with the final controller name
+    const finalTemplate = template.replace(
+      new RegExp(controllerName, "g"),
+      finalControllerName
+    );
+
+    fs.writeFileSync(filePath, finalTemplate);
+    console.log(
+      `✅ Controller created: app/controllers/${finalControllerName}.js`
+    );
+
+    // Suggest next steps
+    console.log(`
 💡 Next steps:
    1. Create service: npm run swagpress:make --service --name=${serviceName}
    2. Update routes: Add routes in routes/api.js
    3. Generate docs: npm run swagpress:docs --generate
         `);
+  }
+
+  makeService(name) {
+    const serviceName = this.ensureSuffix(name, "Service");
+    const modelName = serviceName.replace("Service", "");
+
+    const template = this.getServiceTemplate(serviceName, modelName);
+    let filePath = path.join(
+      this.basePath,
+      "app/services",
+      `${serviceName}.js`
+    );
+    let finalServiceName = serviceName;
+
+    this.ensureDirectoryExists(path.dirname(filePath));
+
+    // If file exists, create a copy with suffix
+    if (fs.existsSync(filePath)) {
+      const { uniquePath, uniqueName } = this.getUniqueFilePath(
+        filePath,
+        serviceName
+      );
+      filePath = uniquePath;
+      finalServiceName = uniqueName;
+      console.log(
+        `⚠️  Service ${serviceName} already exists, creating ${finalServiceName} instead`
+      );
     }
 
-    makeService(name) {
-        const serviceName = this.ensureSuffix(name, 'Service');
-        const modelName = serviceName.replace('Service', '');
-        
-        const template = this.getServiceTemplate(serviceName, modelName);
-        let filePath = path.join(this.basePath, 'app/services', `${serviceName}.js`);
-        let finalServiceName = serviceName;
-        
-        this.ensureDirectoryExists(path.dirname(filePath));
-        
-        // If file exists, create a copy with suffix
-        if (fs.existsSync(filePath)) {
-            const { uniquePath, uniqueName } = this.getUniqueFilePath(filePath, serviceName);
-            filePath = uniquePath;
-            finalServiceName = uniqueName;
-            console.log(`⚠️  Service ${serviceName} already exists, creating ${finalServiceName} instead`);
-        }
-        
-        // Update template with the final service name
-        const finalTemplate = template.replace(new RegExp(serviceName, 'g'), finalServiceName);
-        
-        fs.writeFileSync(filePath, finalTemplate);
-        console.log(`✅ Service created: app/services/${finalServiceName}.js`);
-        
-        console.log(`
+    // Update template with the final service name
+    const finalTemplate = template.replace(
+      new RegExp(serviceName, "g"),
+      finalServiceName
+    );
+
+    fs.writeFileSync(filePath, finalTemplate);
+    console.log(`✅ Service created: app/services/${finalServiceName}.js`);
+
+    console.log(`
 💡 Next steps:
    1. Implement business logic in ${serviceName}
    2. Create controller: npm run swagpress:make --controller --name=${modelName}Controller
         `);
+  }
+
+  makeModel(name) {
+    const modelName = this.capitalize(name);
+
+    const template = this.getModelTemplate(modelName);
+    let filePath = path.join(this.basePath, "app/models", `${modelName}.js`);
+    let finalModelName = modelName;
+
+    this.ensureDirectoryExists(path.dirname(filePath));
+
+    // If file exists, create a copy with suffix
+    if (fs.existsSync(filePath)) {
+      const { uniquePath, uniqueName } = this.getUniqueFilePath(
+        filePath,
+        modelName
+      );
+      filePath = uniquePath;
+      finalModelName = uniqueName;
+      console.log(
+        `⚠️  Model ${modelName} already exists, creating ${finalModelName} instead`
+      );
     }
 
-    makeModel(name) {
-        const modelName = this.capitalize(name);
-        
-        const template = this.getModelTemplate(modelName);
-        let filePath = path.join(this.basePath, 'app/models', `${modelName}.js`);
-        let finalModelName = modelName;
-        
-        this.ensureDirectoryExists(path.dirname(filePath));
-        
-        // If file exists, create a copy with suffix
-        if (fs.existsSync(filePath)) {
-            const { uniquePath, uniqueName } = this.getUniqueFilePath(filePath, modelName);
-            filePath = uniquePath;
-            finalModelName = uniqueName;
-            console.log(`⚠️  Model ${modelName} already exists, creating ${finalModelName} instead`);
-        }
-        
-        // Update template with the final model name
-        const finalTemplate = template.replace(new RegExp(modelName, 'g'), finalModelName);
-        
-        fs.writeFileSync(filePath, finalTemplate);
-        console.log(`✅ Model created: app/models/${finalModelName}.js`);
-        
-        console.log(`
+    // Update template with the final model name
+    const finalTemplate = template.replace(
+      new RegExp(modelName, "g"),
+      finalModelName
+    );
+
+    fs.writeFileSync(filePath, finalTemplate);
+    console.log(`✅ Model created: app/models/${finalModelName}.js`);
+
+    console.log(`
 💡 Next steps:
    1. Define model fields and relationships in ${modelName}.js
    2. Create migration: npm run swagpress:make --migration --name=create_${name.toLowerCase()}s
    3. Create service: npm run swagpress:make --service --name=${modelName}Service
         `);
-    }
+  }
 
-    getControllerTemplate(controllerName, serviceName, modelName) {
-        return `const ${serviceName} = require('../services/${serviceName}');
+  getControllerTemplate(controllerName, serviceName, modelName) {
+    return `const ${serviceName} = require('../services/${serviceName}');
 const ErrorHandler = require('../middleware/ErrorHandler');
 
 class ${controllerName} {
@@ -277,10 +315,10 @@ class ${controllerName} {
 }
 
 module.exports = ${controllerName};`;
-    }
+  }
 
-    getServiceTemplate(serviceName, modelName) {
-        return `const { Op } = require('sequelize');
+  getServiceTemplate(serviceName, modelName) {
+    return `const { Op } = require('sequelize');
 const ${modelName} = require('../models/${modelName}');
 const { ModelNotFoundException, ValidationException } = require('../../package/swagpress');
 
@@ -412,10 +450,10 @@ class ${serviceName} {
 }
 
 module.exports = ${serviceName};`;
-    }
+  }
 
-    getModelTemplate(modelName) {
-        return `const { BaseModel, ModelFactory } = require('../../package/src/engine');
+  getModelTemplate(modelName) {
+    return `const { BaseModel, ModelFactory } = require('../../package/src/engine');
 const sequelize = require('../../config/database');
 
 class ${modelName} extends BaseModel {
@@ -473,56 +511,56 @@ class ${modelName} extends BaseModel {
 module.exports = ModelFactory.register(${modelName}, sequelize, {
     tableName: '${modelName.toLowerCase()}s'
 });`;
-    }
+  }
 
-    ensureSuffix(name, suffix) {
-        if (name.endsWith(suffix)) {
-            return name;
-        }
-        return name + suffix;
+  ensureSuffix(name, suffix) {
+    if (name.endsWith(suffix)) {
+      return name;
     }
+    return name + suffix;
+  }
 
-    capitalize(str) {
-        return str.charAt(0).toUpperCase() + str.slice(1);
-    }
+  capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
 
-    ensureDirectoryExists(dirPath) {
-        if (!fs.existsSync(dirPath)) {
-            fs.mkdirSync(dirPath, { recursive: true });
-        }
+  ensureDirectoryExists(dirPath) {
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
     }
+  }
 
-    /**
-     * Generate unique file path if original exists
-     * @param {string} originalPath - Original file path
-     * @param {string} originalName - Original class name
-     * @returns {Object} Object with uniquePath and uniqueName
-     */
-    getUniqueFilePath(originalPath, originalName) {
-        const dir = path.dirname(originalPath);
-        const ext = path.extname(originalPath);
-        const baseName = path.basename(originalPath, ext);
-        
-        let counter = 1;
-        let uniquePath;
-        let uniqueName;
-        
-        do {
-            const suffix = counter === 1 ? 'Copy' : `Copy${counter}`;
-            uniqueName = `${originalName}${suffix}`;
-            const uniqueFileName = `${baseName}${suffix}${ext}`;
-            uniquePath = path.join(dir, uniqueFileName);
-            counter++;
-        } while (fs.existsSync(uniquePath));
-        
-        return { uniquePath, uniqueName };
-    }
+  /**
+   * Generate unique file path if original exists
+   * @param {string} originalPath - Original file path
+   * @param {string} originalName - Original class name
+   * @returns {Object} Object with uniquePath and uniqueName
+   */
+  getUniqueFilePath(originalPath, originalName) {
+    const dir = path.dirname(originalPath);
+    const ext = path.extname(originalPath);
+    const baseName = path.basename(originalPath, ext);
+
+    let counter = 1;
+    let uniquePath;
+    let uniqueName;
+
+    do {
+      const suffix = counter === 1 ? "Copy" : `Copy${counter}`;
+      uniqueName = `${originalName}${suffix}`;
+      const uniqueFileName = `${baseName}${suffix}${ext}`;
+      uniquePath = path.join(dir, uniqueFileName);
+      counter++;
+    } while (fs.existsSync(uniquePath));
+
+    return { uniquePath, uniqueName };
+  }
 }
 
 // Run the command if this file is executed directly
 if (require.main === module) {
-    const command = new MakeCommand();
-    command.execute();
+  const command = new MakeCommand();
+  command.execute();
 }
 
 module.exports = MakeCommand;

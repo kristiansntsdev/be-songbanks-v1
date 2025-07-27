@@ -2,9 +2,9 @@ name: 🚀 Deploy website on push
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
   workflow_dispatch:
 
 jobs:
@@ -12,44 +12,44 @@ jobs:
     name: 🚀 SSH Deploy
     runs-on: ubuntu-latest
     steps:
-    - name: 🚚 Get latest code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: 🔑 Setup SSH key
-      uses: webfactory/ssh-agent@v0.7.0
-      with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: 🔑 Setup SSH key
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-    - name: 📡 Deploy via SSH
-      if: github.event_name == 'push'
-      run: |
-        ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_SERVER }} >> ~/.ssh/known_hosts
-        ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_SERVER }} "
-          cd ${{ secrets.SSH_DESTINATION_PATH }} &&
-          git config receive.denyCurrentBranch ignore &&
-          git remote set-url origin https://github.com/${GITHUB_REPOSITORY}.git &&
-          git config credential.helper store &&
-          echo 'https://x-access-token:${{ github.token }}@github.com' > ~/.git-credentials &&
-          git fetch origin main &&
-          git reset --hard origin/main &&
-          git clean -fd -e .htaccess -e index.html
-        "
-    
-    - name: 🧪 Test deployment configuration
-      if: github.event_name == 'pull_request'
-      run: |
-        ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_SERVER }} >> ~/.ssh/known_hosts
-        ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_SERVER }} "
-          echo 'SSH connection successful' &&
-          cd ${{ secrets.SSH_DESTINATION_PATH }} &&
-          echo 'Directory accessible' &&
-          git --version &&
-          git config receive.denyCurrentBranch ignore &&
-          git remote set-url origin https://github.com/${GITHUB_REPOSITORY}.git &&
-          git config credential.helper store &&
-          echo 'https://x-access-token:${{ github.token }}@github.com' > ~/.git-credentials &&
-          git fetch origin main &&
-          echo 'Git fetch test successful - deployment configuration verified'
-        "
+      - name: 📡 Deploy via SSH
+        if: github.event_name == 'push'
+        run: |
+          ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_SERVER }} >> ~/.ssh/known_hosts
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_SERVER }} "
+            cd ${{ secrets.SSH_DESTINATION_PATH }} &&
+            git config receive.denyCurrentBranch ignore &&
+            git remote set-url origin https://github.com/${GITHUB_REPOSITORY}.git &&
+            git config credential.helper store &&
+            echo 'https://x-access-token:${{ github.token }}@github.com' > ~/.git-credentials &&
+            git fetch origin main &&
+            git reset --hard origin/main &&
+            git clean -fd -e .htaccess -e index.html
+          "
+
+      - name: 🧪 Test deployment configuration
+        if: github.event_name == 'pull_request'
+        run: |
+          ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_SERVER }} >> ~/.ssh/known_hosts
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_SERVER }} "
+            echo 'SSH connection successful' &&
+            cd ${{ secrets.SSH_DESTINATION_PATH }} &&
+            echo 'Directory accessible' &&
+            git --version &&
+            git config receive.denyCurrentBranch ignore &&
+            git remote set-url origin https://github.com/${GITHUB_REPOSITORY}.git &&
+            git config credential.helper store &&
+            echo 'https://x-access-token:${{ github.token }}@github.com' > ~/.git-credentials &&
+            git fetch origin main &&
+            echo 'Git fetch test successful - deployment configuration verified'
+          "

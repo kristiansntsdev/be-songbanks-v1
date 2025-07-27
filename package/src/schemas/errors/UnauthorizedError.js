@@ -3,15 +3,15 @@ module.exports = {
   properties: {
     error: {
       type: "string",
-      example: "Unauthorized"
+      example: "Unauthorized",
     },
     message: {
       type: "string",
-      example: "Unauthorized"
+      example: "Unauthorized",
     },
     statusCode: {
       type: "integer",
-      example: 401
-    }
-  }
+      example: 401,
+    },
+  },
 };

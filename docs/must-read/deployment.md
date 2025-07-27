@@ -3,11 +3,13 @@
 ## Pre-Deployment Checklist
 
 ### 1. Database Setup
+
 - [ ] Create MySQL database in cPanel
 - [ ] Note database name, username, and password
 - [ ] Ensure database is accessible from your application
 
 ### 2. File Upload
+
 - [ ] Upload all project files to `/home/tahumeat/be-songbank.tahumeat.com/`
 - [ ] Ensure `index.js` is in the root directory
 - [ ] Upload `node_modules` OR let cPanel install dependencies
@@ -15,6 +17,7 @@
 ### 3. cPanel Node.js Configuration
 
 **Application Settings:**
+
 - **Node.js version**: `10.24.1` (or latest available)
 - **Application mode**: `Production`
 - **Application root**: `/home/tahumeat/be-songbank.tahumeat.com`
@@ -22,6 +25,7 @@
 - **Application startup file**: `index.js`
 
 **Environment Variables:**
+
 ```
 NODE_ENV = production
 PORT = 3000
@@ -47,6 +51,7 @@ npm run seed
 ### 5. Testing
 
 Test your API endpoints:
+
 - **API Docs**: `https://be-songbank.tahumeat.com/api-docs`
 - **Login**: `POST https://be-songbank.tahumeat.com/api/login`
 - **Health Check**: `GET https://be-songbank.tahumeat.com/api/health`
@@ -54,6 +59,7 @@ Test your API endpoints:
 ## Files to Upload
 
 ### Required Files:
+
 ```
 /home/tahumeat/be-songbank.tahumeat.com/
 ├── app/                    # Controllers, models, middleware
@@ -67,6 +73,7 @@ Test your API endpoints:
 ```
 
 ### Optional Files (don't upload):
+
 - `.env` (use environment variables instead)
 - `docs/` (documentation)
 - `Makefile` (development only)
@@ -75,18 +82,21 @@ Test your API endpoints:
 ## Production Considerations
 
 ### 1. Security
+
 - Use strong JWT secret
 - Use environment variables for sensitive data
 - Enable HTTPS in production
 - Update CORS settings for production domain
 
 ### 2. Performance
+
 - Set NODE_ENV to production
 - Use production database
 - Enable gzip compression
 - Consider using PM2 for process management
 
 ### 3. Monitoring
+
 - Set up error logging
 - Monitor API performance
 - Set up health checks
@@ -125,6 +135,7 @@ Test your API endpoints:
 ## Support
 
 If you encounter issues:
+
 1. Check cPanel error logs
 2. Review application logs
 3. Verify environment variables
@@ -134,6 +145,7 @@ If you encounter issues:
 ## Production URLs
 
 After successful deployment:
+
 - **API Base URL**: `https://be-songbank.tahumeat.com/api`
 - **Documentation**: `https://be-songbank.tahumeat.com/api-docs`
 - **Login Endpoint**: `https://be-songbank.tahumeat.com/api/login`

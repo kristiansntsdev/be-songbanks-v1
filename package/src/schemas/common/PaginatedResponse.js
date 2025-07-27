@@ -1,7 +1,7 @@
 module.exports = {
   allOf: [
     {
-      $ref: "#/components/schemas/BaseResponse"
+      $ref: "#/components/schemas/BaseResponse",
     },
     {
       type: "object",
@@ -12,41 +12,41 @@ module.exports = {
             items: {
               type: "array",
               items: {
-                type: "object"
-              }
+                type: "object",
+              },
             },
             pagination: {
               type: "object",
               properties: {
                 currentPage: {
                   type: "integer",
-                  example: 1
+                  example: 1,
                 },
                 totalPages: {
                   type: "integer",
-                  example: 10
+                  example: 10,
                 },
                 totalItems: {
                   type: "integer",
-                  example: 100
+                  example: 100,
                 },
                 itemsPerPage: {
                   type: "integer",
-                  example: 10
+                  example: 10,
                 },
                 hasNextPage: {
                   type: "boolean",
-                  example: true
+                  example: true,
                 },
                 hasPrevPage: {
                   type: "boolean",
-                  example: false
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  ]
+                  example: false,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  ],
 };

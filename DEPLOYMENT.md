@@ -107,13 +107,17 @@ npm run migrate
 ## Configuration Files
 
 ### vercel.json
+
 Configures Vercel deployment settings:
+
 - Routes all requests to `/api/index.js`
 - Sets production environment
 - Configures function timeout
 
 ### api/index.js
+
 Serverless-compatible Express app entry point:
+
 - Exports Express app instead of calling `listen()`
 - Loads environment variables
 - Sets up routes and middleware

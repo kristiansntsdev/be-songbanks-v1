@@ -3,15 +3,15 @@ module.exports = {
   properties: {
     error: {
       type: "string",
-      example: "Forbidden"
+      example: "Forbidden",
     },
     message: {
       type: "string",
-      example: "Access denied"
+      example: "Access denied",
     },
     statusCode: {
       type: "integer",
-      example: 403
-    }
-  }
+      example: 403,
+    },
+  },
 };

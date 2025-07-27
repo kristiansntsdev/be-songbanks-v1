@@ -1,5 +1,5 @@
-const path = require('path');
-const env = require('dotenv');
+const path = require("path");
+const env = require("dotenv");
 env.config();
 
 module.exports = {
@@ -9,12 +9,12 @@ module.exports = {
     database: process.env.DB_DATABASE,
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
-    dialect: 'mysql',
+    dialect: "mysql",
     logging: console.log, // Enable SQL logging for debugging
   },
   test: {
-    dialect: 'sqlite',
-    storage: path.join(__dirname, '..', 'database', 'development.sqlite'),
+    dialect: "sqlite",
+    storage: path.join(__dirname, "..", "database", "development.sqlite"),
     logging: false, // Disable logging for tests
   },
   production: {
@@ -23,13 +23,13 @@ module.exports = {
     database: process.env.PROD_DB_DATABASE,
     host: process.env.PROD_DB_HOST,
     port: process.env.PROD_DB_PORT,
-    dialect: 'postgres',
+    dialect: "postgres",
     dialectOptions: {
       ssl: {
         require: true,
-        rejectUnauthorized: false
-      }
+        rejectUnauthorized: false,
+      },
     },
-    logging: false
-  }
+    logging: false,
+  },
 };

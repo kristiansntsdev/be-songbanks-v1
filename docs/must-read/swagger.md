@@ -14,33 +14,33 @@ This project uses Swagger UI for API documentation. Swagger provides an interact
 ### Main Configuration (`config/swagger.js`)
 
 ```javascript
-const swaggerJSDoc = require('swagger-jsdoc');
+const swaggerJSDoc = require("swagger-jsdoc");
 
 const options = {
   definition: {
-    openapi: '3.0.0',
+    openapi: "3.0.0",
     info: {
-      title: 'Songbanks API',
-      version: '1.0.0',
-      description: 'API documentation for Songbanks application',
+      title: "Songbanks API",
+      version: "1.0.0",
+      description: "API documentation for Songbanks application",
     },
     servers: [
       {
-        url: 'http://localhost:3000',
-        description: 'Development server',
+        url: "http://localhost:3000",
+        description: "Development server",
       },
     ],
     components: {
       securitySchemes: {
         bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
         },
       },
     },
   },
-  apis: ['./routes/*.js', './app/controllers/*.js'],
+  apis: ["./routes/*.js", "./app/controllers/*.js"],
 };
 
 const specs = swaggerJSDoc(options);

@@ -3,15 +3,15 @@ module.exports = {
   properties: {
     error: {
       type: "string",
-      example: "Internal server error"
+      example: "Internal server error",
     },
     message: {
       type: "string",
-      example: "Internal server error"
+      example: "Internal server error",
     },
     statusCode: {
       type: "integer",
-      example: 500
-    }
-  }
+      example: 500,
+    },
+  },
 };

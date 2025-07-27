@@ -85,6 +85,7 @@ erDiagram
 ## Entity Descriptions
 
 ### USER
+
 Represents users in the system who can create playlists and participate in teams.
 
 - **id** (PK): Unique identifier using ULID
@@ -94,6 +95,7 @@ Represents users in the system who can create playlists and participate in teams
 - **vol_id**: Volunteer ID or external reference
 
 ### SONG
+
 Represents individual songs with their musical information.
 
 - **id** (PK): Unique identifier using ULID
@@ -103,6 +105,7 @@ Represents individual songs with their musical information.
 - **lyrics_and_chords**: Full lyrics with chord notations
 
 ### TAG
+
 Represents categorization tags for songs.
 
 - **id** (PK): Unique identifier using ULID
@@ -110,6 +113,7 @@ Represents categorization tags for songs.
 - **description**: Optional description of the tag
 
 ### PLAYLIST
+
 Represents collections of songs that can be shared and managed.
 
 - **id** (PK): Unique identifier using ULID
@@ -118,6 +122,7 @@ Represents collections of songs that can be shared and managed.
 - **playlist_team_id**: Optional reference to associated team
 
 ### PLAYLIST_TEAM
+
 Represents collaborative teams that can manage playlists together.
 
 - **id** (PK): Unique identifier using ULID
@@ -125,6 +130,7 @@ Represents collaborative teams that can manage playlists together.
 - **lead_id**: User ID of the team leader who can share links
 
 ### PLAYLIST_SONGS (Pivot Table)
+
 Manages the many-to-many relationship between playlists and songs.
 
 - **id** (PK): Unique identifier using ULID
@@ -133,6 +139,7 @@ Manages the many-to-many relationship between playlists and songs.
 - **order_index**: Position of song in playlist (for ordering)
 
 ### PLAYLIST_TEAM_MEMBERS (Pivot Table)
+
 Manages the many-to-many relationship between playlist teams and users.
 
 - **id** (PK): Unique identifier using ULID
@@ -141,6 +148,7 @@ Manages the many-to-many relationship between playlist teams and users.
 - **role**: Member role in the team (member, admin)
 
 ### SONG_TAGS (Pivot Table)
+
 Manages the many-to-many relationship between songs and tags.
 
 - **id** (PK): Unique identifier using ULID
@@ -150,47 +158,57 @@ Manages the many-to-many relationship between songs and tags.
 ## Relationships
 
 ### User to Notes
+
 - **One-to-Many**: A user can create multiple notes
 - **Each note belongs to one user and one song**
 
 ### Song to Notes
+
 - **One-to-Many**: A song can have multiple notes from different users
 - **Each note belongs to one user and one song**
 
 ### Playlist to Songs (via PLAYLIST_SONGS)
+
 - **Many-to-Many**: A playlist can contain multiple songs, and a song can be in multiple playlists
 - **Implemented via**: PLAYLIST_SONGS pivot table with order_index for song ordering
 - **Benefits**: Proper referential integrity, indexing, and order management
 
 ### Playlist Team to Users (via PLAYLIST_TEAM_MEMBERS)
+
 - **Many-to-Many**: A team can have multiple members, and a user can be in multiple teams
 - **Implemented via**: PLAYLIST_TEAM_MEMBERS pivot table with role-based permissions
 - **Benefits**: Role-based access control and proper team membership management
 
 ### Song to Tags (via SONG_TAGS)
+
 - **Many-to-Many**: A song can have multiple tags, and a tag can be applied to multiple songs
 - **Implemented via**: SONG_TAGS pivot table for efficient tag management
 - **Benefits**: Normalized tag system, efficient queries, and tag reusability
 
 ### Playlist to Playlist Team
+
 - **Many-to-One**: Multiple playlists can be managed by one team
 - **Optional**: Playlists can exist without a team (individual playlists)
 
 ### User to Playlist Team (Leadership)
+
 - **One-to-Many**: A user can lead multiple playlist teams
 - **Direct relationship**: lead_id in PLAYLIST_TEAM table
 
 ## Data Types
 
 ### Primary Keys
+
 - All primary keys use **ULID** format for better performance and URL safety
 - ULIDs are 26-character strings that are sortable by creation time
 
 ### Text Fields
+
 - **lyrics_and_chords**: Large text field for song content
 - **notes**: Text field for additional information
 
 ### Enums
+
 - **user.role**: Predefined user roles for access control (admin, member, guest)
 - **user.status**: User status (active, pending, request, suspend)
 - **playlist_team_members.role**: Team member roles (member, admin)
@@ -243,12 +261,14 @@ CREATE UNIQUE INDEX unique_song_tag ON song_tags(song_id, tag_id);
 ## Business Rules
 
 ### User Management
+
 - Users must have unique email addresses
 - Users can have different roles with varying permissions (admin, member, guest)
 - Users can participate in multiple teams through the PLAYLIST_TEAM_MEMBERS pivot table
 - User status controls access (active, pending, request, suspend)
 
 ### Song Management
+
 - Songs are standalone entities that can be reused across playlists
 - Tags are managed as separate entities for consistency and reusability
 - Song-to-tag relationships are managed through SONG_TAGS pivot table
@@ -256,6 +276,7 @@ CREATE UNIQUE INDEX unique_song_tag ON song_tags(song_id, tag_id);
 - Each song can have multiple tags, each tag can be applied to multiple songs
 
 ### Playlist Management
+
 - Playlists can be individual or team-managed
 - Shareable links allow external access with unique URLs
 - Song order is maintained through the order_index field in PLAYLIST_SONGS
@@ -263,6 +284,7 @@ CREATE UNIQUE INDEX unique_song_tag ON song_tags(song_id, tag_id);
 - Duplicate songs in the same playlist are prevented by unique constraints
 
 ### Team Collaboration
+
 - Teams have one designated leader (lead_id in PLAYLIST_TEAM)
 - Team membership is managed through PLAYLIST_TEAM_MEMBERS pivot table
 - Team members can have different roles (member, admin) within the team
@@ -271,6 +293,7 @@ CREATE UNIQUE INDEX unique_song_tag ON song_tags(song_id, tag_id);
 - Duplicate team memberships are prevented by unique constraints
 
 ### Tag Management
+
 - Tags have unique names to prevent duplicates
 - Tags can have optional descriptions for clarity
 - Tag relationships with songs are normalized for better query performance
@@ -279,6 +302,7 @@ CREATE UNIQUE INDEX unique_song_tag ON song_tags(song_id, tag_id);
 ## Future Considerations
 
 ### Potential Enhancements
+
 1. **Song Versions**: Multiple arrangements of the same song
 2. **Playlist History**: Track changes and versions
 3. **User Permissions**: Fine-grained access control
@@ -286,6 +310,7 @@ CREATE UNIQUE INDEX unique_song_tag ON song_tags(song_id, tag_id);
 5. **Practice Sessions**: Track team practice activities
 
 ### Scalability
+
 - Pivot tables enable efficient querying and indexing for large datasets
 - Consider partitioning large song collections and pivot tables
 - Implement caching for frequently accessed playlists and tag queries
@@ -293,6 +318,7 @@ CREATE UNIQUE INDEX unique_song_tag ON song_tags(song_id, tag_id);
 - Pivot table indexes optimize join performance for complex queries
 
 ### Performance Benefits of Pivot Tables
+
 - **Better Query Performance**: Proper indexing on foreign keys enables fast lookups
 - **Referential Integrity**: Foreign key constraints ensure data consistency
 - **Flexible Querying**: Easy to query relationships without JSON parsing
