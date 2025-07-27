@@ -4,10 +4,16 @@ const ErrorHandler = require('../middlewares/ErrorHandler');
 class AuthController {
     /**
      * POST /api/auth/login
-     * @summary User login
-     * @description Authenticate user with email and password
-     * @body {email: string, password: string}
-     * @returns {user: object, token: string}
+     * @Summary User login
+     * @Description Authenticate user with email and password
+     * @Tags Auth
+     * @Accept application/json
+     * @Produce application/json
+     * @Body {object} request.LoginRequest "User login credentials"
+     * @Success 200 {object} responses.LoginResponse "Login successful"
+     * @Failure 400 {object} BadRequestError "Bad request - invalid credentials"
+     * @Failure 401 {object} UnauthorizedError "Unauthorized - invalid email or password"
+     * @Router /api/auth/login [post]
      */
     static apiLogin = ErrorHandler.asyncHandler(async (req, res) => {
         const { email, password } = req.body;
@@ -25,9 +31,15 @@ class AuthController {
 
     /**
      * POST /api/auth/logout
-     * @summary User logout
-     * @description Logout authenticated user
-     * @returns {message: string}
+     * @Summary User logout
+     * @Description Logout authenticated user
+     * @Tags Auth
+     * @Accept application/json
+     * @Produce application/json
+     * @auth
+     * @Success 200 {object} responses.LogoutResponse "Logout successful"
+     * @Failure 401 {object} UnauthorizedError "Unauthorized - invalid or missing token"
+     * @Router /api/auth/logout [post]
      */
     static apiLogout = ErrorHandler.asyncHandler(async (req, res) => {
         res.json({
@@ -38,9 +50,16 @@ class AuthController {
 
     /**
      * POST /api/auth/verify
-     * @summary Verify JWT token
-     * @body {token: string}
-     * @returns {user: object}
+     * @Summary Verify JWT token
+     * @Description Verify the validity of a JWT token and return user information
+     * @Tags Auth
+     * @Accept application/json
+     * @Produce application/json
+     * @Body {object} request.VerifyTokenRequest "Token to verify"
+     * @Success 200 {object} responses.VerifyTokenResponse "Token verified successfully"
+     * @Failure 400 {object} BadRequestError "Bad request - invalid token format"
+     * @Failure 401 {object} UnauthorizedError "Unauthorized - invalid or expired token"
+     * @Router /api/auth/verify [post]
      */
     static apiVerifyToken = ErrorHandler.asyncHandler(async (req, res) => {
         const { token } = req.body;
@@ -55,8 +74,15 @@ class AuthController {
 
     /**
      * POST /api/auth/refresh
-     * @summary Refresh JWT token
-     * @returns {token: string}
+     * @Summary Refresh JWT token
+     * @Description Generate a new JWT token for authenticated user
+     * @Tags Auth
+     * @Accept application/json
+     * @Produce application/json
+     * @auth
+     * @Success 200 {object} responses.RefreshTokenResponse "Token refreshed successfully"
+     * @Failure 401 {object} UnauthorizedError "Unauthorized - invalid or missing token"
+     * @Router /api/auth/refresh [post]
      */
     static apiRefreshToken = ErrorHandler.asyncHandler(async (req, res) => {
         const result = await AuthService.refreshToken(req.user.id);

@@ -52,18 +52,6 @@ class AuthService {
         });
     }
 
-    static async changePassword(userId, currentPassword, newPassword) {
-        this.validatePasswordChangeInput(currentPassword, newPassword);
-        
-        const user = await User.scope('withPassword').findByPk(userId);
-        if (!user) throw new ModelNotFoundException('User', userId);
-        
-        this.validatePassword(user.password, currentPassword);
-        await user.update({ password: newPassword });
-        
-        return { message: 'Password changed successfully' };
-    }
-
     static async refreshToken(userId) {
         const user = await User.findByPk(userId);
         if (!user) throw new ModelNotFoundException('User', userId);
@@ -74,24 +62,9 @@ class AuthService {
         return { token, message: 'Token refreshed successfully' };
     }
 
-    static async updateProfile(userId, profileData) {
-        const user = await User.findByPk(userId);
-        if (!user) throw new ModelNotFoundException('User', userId);
-        
-        const allowedUpdates = this.sanitizeProfileData(profileData);
-        await user.update(allowedUpdates);
-        
-        return { user: user.toJSON(), message: 'Profile updated successfully' };
-    }
-
     static validateLoginInput(email, password) {
         if (!email) throw ValidationException.required('email');
         if (!password) throw ValidationException.required('password');
-    }
-
-    static validatePasswordChangeInput(currentPassword, newPassword) {
-        if (!currentPassword) throw ValidationException.required('currentPassword');
-        if (!newPassword) throw ValidationException.required('newPassword');
     }
 
     static validateUserStatus(user) {
@@ -110,11 +83,6 @@ class AuthService {
         const userResponse = user.toJSON();
         delete userResponse.password;
         return userResponse;
-    }
-
-    static sanitizeProfileData(profileData) {
-        const { password, role, status, ...allowedUpdates } = profileData;
-        return allowedUpdates;
     }
 
     static handleTokenError(error) {
