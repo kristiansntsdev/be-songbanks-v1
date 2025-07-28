@@ -191,4 +191,4 @@ class TypeMapper {
   }
 }
 
-module.exports = TypeMapper;
+export default TypeMapper;

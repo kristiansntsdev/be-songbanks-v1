@@ -1,20 +1,19 @@
-const UserService = require("../services/UserService");
-const ErrorHandler = require("../middlewares/ErrorHandler");
-const {
+import UserService from "../services/UserService.js";
+import ErrorHandler from "../middlewares/ErrorHandler.js";
+import {
   NotFoundException,
   BadRequestException,
-} = require("../../package/swagpress");
+} from "../../package/swagpress/index.js";
 
 class UserController {
   /**
-   * GET /api/admin/user-access
    * @Summary Get user access management data
    * @Description Retrieves a list of all users with their access status and permissions for administrative management
    * @Tags User
    * @Accept application/json
    * @Produce application/json
    * @auth
-   * @Success 200 {object} UserAccessResponse "Successfully retrieved user access list"
+   * @Success 200 {object} User.UserAccessResponse "Successfully retrieved user access list"
    * @Failure 401 {object} UnauthorizedError "Unauthorized - invalid or missing token"
    * @Failure 403 {object} ForbiddenError "Forbidden - insufficient permissions"
    * @Router /api/admin/user-access [get]
@@ -30,7 +29,6 @@ class UserController {
   });
 
   /**
-   * PUT /api/admin/user-access/:user_id
    * @Summary Update user access status
    * @Description Updates the access status of a specific user (active/suspend) with admin privileges
    * @Tags User
@@ -38,8 +36,8 @@ class UserController {
    * @Produce application/json
    * @auth
    * @Param user_id path string true "User ID to update access status for"
-   * @Param status query string true "New access status" enum:active,suspend
-   * @Success 200 {object} UpdateUserAccessResponse "Successfully updated user access status"
+   * @Body {object} User.UpdateUserAccessRequest "Request body containing status"
+   * @Success 200 {object} User.UpdateUserAccessResponse "Successfully updated user access status"
    * @Failure 400 {object} BadRequestError "Bad request - invalid status value"
    * @Failure 401 {object} UnauthorizedError "Unauthorized - invalid or missing token"
    * @Failure 403 {object} ForbiddenError "Forbidden - insufficient admin permissions"
@@ -52,16 +50,10 @@ class UserController {
 
     ErrorHandler.validateRequired(["status"], req.query);
 
-    if (!["active", "suspend"].includes(status)) {
-      throw new BadRequestException(
-        'Invalid status. Must be either "active" or "suspend"'
-      );
-    }
-
     const result = await UserService.changeUserStatus(
       user_id,
       status,
-      req.user
+      req.user,
     );
 
     res.json({
@@ -75,14 +67,13 @@ class UserController {
   });
 
   /**
-   * POST /api/users/request-vol-access
    * @Summary Request vol_user access
    * @Description Submits a request for vol_user access privileges that requires admin approval
    * @Tags User
    * @Accept application/json
    * @Produce application/json
-   * @Body {object} request.RequestVolAccessRequest "Request body containing user ID"
-   * @Success 202 {object} responses.RequestVolAccessResponse "Access request submitted successfully"
+   * @Body {object} User.RequestVolAccessRequest "Request body containing user ID"
+   * @Success 202 {object} User.RequestVolAccessResponse "Access request submitted successfully"
    * @Failure 400 {object} BadRequestError "Bad request - user already has access or pending request"
    * @Failure 404 {object} NotFoundError "User not found"
    * @Router /api/users/request-vol-access [post]
@@ -104,4 +95,4 @@ class UserController {
   });
 }
 
-module.exports = UserController;
+export default UserController;

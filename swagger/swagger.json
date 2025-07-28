@@ -188,57 +188,106 @@
           }
         }
       },
-      "PaginatedResponse": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/BaseResponse"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "data": {
-                "type": "object",
-                "properties": {
+      "BaseResponseWithData.allOf": [
+        {
+          "$ref": "#/components/schemas/BaseResponse"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "description": "Response data payload"
+            }
+          }
+        }
+      ],
+      "PaginatedResponse.allOf": [
+        {
+          "$ref": "#/components/schemas/BaseResponse"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "properties": {
+                "items": {
+                  "type": "array",
                   "items": {
-                    "type": "array",
-                    "items": {
-                      "type": "object"
-                    }
-                  },
-                  "pagination": {
-                    "type": "object",
-                    "properties": {
-                      "currentPage": {
-                        "type": "integer",
-                        "example": 1
-                      },
-                      "totalPages": {
-                        "type": "integer",
-                        "example": 10
-                      },
-                      "totalItems": {
-                        "type": "integer",
-                        "example": 100
-                      },
-                      "itemsPerPage": {
-                        "type": "integer",
-                        "example": 10
-                      },
-                      "hasNextPage": {
-                        "type": "boolean",
-                        "example": true
-                      },
-                      "hasPrevPage": {
-                        "type": "boolean",
-                        "example": false
-                      }
+                    "type": "object"
+                  }
+                },
+                "pagination": {
+                  "type": "object",
+                  "properties": {
+                    "currentPage": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "totalPages": {
+                      "type": "integer",
+                      "example": 10
+                    },
+                    "totalItems": {
+                      "type": "integer",
+                      "example": 100
+                    },
+                    "itemsPerPage": {
+                      "type": "integer",
+                      "example": 10
+                    },
+                    "hasNextPage": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "hasPrevPage": {
+                      "type": "boolean",
+                      "example": false
                     }
                   }
                 }
               }
             }
           }
-        ]
+        }
+      ],
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "user123"
+          },
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "admin",
+              "member"
+            ],
+            "example": "member"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "pending",
+              "suspend",
+              "request",
+              "guest"
+            ],
+            "example": "active"
+          },
+          "is_admin": {
+            "type": "boolean",
+            "example": false,
+            "description": "Only present for admin users"
+          }
+        }
       },
       "LoginRequest": {
         "type": "object",
@@ -255,47 +304,6 @@
           "password": {
             "type": "string",
             "example": "password123"
-          }
-        }
-      },
-      "RequestVolAccessRequest": {
-        "type": "object",
-        "required": [
-          "user_id"
-        ],
-        "properties": {
-          "user_id": {
-            "type": "string",
-            "example": "user123",
-            "description": "The ID of the user requesting vol_user access"
-          }
-        }
-      },
-      "UpdateUserAccessRequest": {
-        "type": "object",
-        "required": [
-          "status"
-        ],
-        "properties": {
-          "status": {
-            "type": "string",
-            "enum": [
-              "active",
-              "suspend"
-            ],
-            "example": "active"
-          }
-        }
-      },
-      "VerifyTokenRequest": {
-        "type": "object",
-        "required": [
-          "token"
-        ],
-        "properties": {
-          "token": {
-            "type": "string",
-            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
           }
         }
       },
@@ -338,141 +346,17 @@
           }
         }
       },
-      "RefreshTokenResponse": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/BaseResponseWithData"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "code": {
-                "example": 200
-              },
-              "message": {
-                "example": "Token refreshed successfully"
-              },
-              "data": {
-                "type": "object",
-                "properties": {
-                  "token": {
-                    "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  }
-                }
-              }
-            }
-          }
-        ]
-      },
-      "RequestVolAccessResponse": {
-        "202": {
-          "description": "Vol_user access request sent successfully. Awaiting admin approval.",
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "code": {
-                    "type": "integer",
-                    "example": 202
-                  },
-                  "message": {
-                    "type": "string",
-                    "example": "Vol_user access request sent successfully. Awaiting admin approval."
-                  },
-                  "data": {
-                    "type": "object",
-                    "properties": {
-                      "user_id": {
-                        "type": "string",
-                        "description": "The ID of the user requesting access",
-                        "example": "user123"
-                      },
-                      "status": {
-                        "type": "string",
-                        "description": "The status of the request",
-                        "example": "request"
-                      }
-                    }
-                  }
-                }
-              }
-            }
+      "VerifyTokenRequest": {
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
           }
         }
-      },
-      "UpdateUserAccessResponse": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/BaseResponseWithData"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "code": {
-                "example": 200
-              },
-              "message": {
-                "example": "User access updated successfully"
-              },
-              "data": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "example": "user123"
-                  },
-                  "status": {
-                    "type": "string",
-                    "example": "active"
-                  }
-                }
-              }
-            }
-          }
-        ]
-      },
-      "UserAccessResponse": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/BaseResponseWithData"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "code": {
-                "example": 200
-              },
-              "message": {
-                "example": "User access list retrieved successfully"
-              },
-              "data": {
-                "type": "object",
-                "properties": {
-                  "active_users": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/User"
-                    }
-                  },
-                  "request_users": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/User"
-                    }
-                  },
-                  "suspended_users": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/User"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        ]
       },
       "VerifyTokenResponse": {
         "allOf": [
@@ -500,42 +384,32 @@
           }
         ]
       },
-      "User": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "user123"
+      "RefreshTokenResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseResponseWithData"
           },
-          "email": {
-            "type": "string",
-            "example": "user@example.com"
-          },
-          "role": {
-            "type": "string",
-            "enum": [
-              "admin",
-              "member"
-            ],
-            "example": "member"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "active",
-              "pending",
-              "suspend",
-              "request",
-              "guest"
-            ],
-            "example": "active"
-          },
-          "is_admin": {
-            "type": "boolean",
-            "example": false,
-            "description": "Only present for admin users"
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "example": 200
+              },
+              "message": {
+                "example": "Token refreshed successfully"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  }
+                }
+              }
+            }
           }
-        }
+        ]
       },
       "Song": {
         "type": "object",
@@ -681,6 +555,94 @@
             "$ref": "#/components/schemas/Tag"
           }
         }
+      },
+      "UserAccessResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseResponseWithData"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "example": 200
+              },
+              "message": {
+                "example": "User access list retrieved successfully"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "active_users": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  },
+                  "request_users": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  },
+                  "suspended_users": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "UpdateUserAccessRequest": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "suspend"
+            ],
+            "example": "active"
+          }
+        }
+      },
+      "UpdateUserAccessResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseResponseWithData"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "example": 200
+              },
+              "message": {
+                "example": "User access updated successfully"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "example": "user123"
+                  },
+                  "status": {
+                    "type": "string",
+                    "example": "active"
+                  }
+                }
+              }
+            }
+          }
+        ]
       }
     },
     "securitySchemes": {
@@ -702,18 +664,18 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/request.LoginRequest"
+                "$ref": "#/components/schemas/Auth.LoginRequest"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "Login successful",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/responses.LoginResponse \"Login successful\""
+                  "$ref": "#/components/schemas/Auth.LoginResponse"
                 }
               }
             }
@@ -729,11 +691,11 @@
             }
           },
           "401": {
-            "description": "Error response",
+            "description": "Unauthorized - invalid email or password",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedError \"Unauthorized - invalid email or password\""
+                  "$ref": "#/components/schemas/UnauthorizedError"
                 }
               }
             }
@@ -763,11 +725,11 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "Logout successful",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/responses.LogoutResponse \"Logout successful\""
+                  "$ref": "#/components/schemas/Auth.LogoutResponse"
                 }
               }
             }
@@ -783,11 +745,11 @@
             }
           },
           "401": {
-            "description": "Error response",
+            "description": "Unauthorized - invalid or missing token",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedError \"Unauthorized - invalid or missing token\""
+                  "$ref": "#/components/schemas/UnauthorizedError"
                 }
               }
             }
@@ -815,18 +777,18 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/request.VerifyTokenRequest"
+                "$ref": "#/components/schemas/Auth.VerifyTokenRequest"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "Token verified successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/responses.VerifyTokenResponse \"Token verified successfully\""
+                  "$ref": "#/components/schemas/Auth.VerifyTokenResponse"
                 }
               }
             }
@@ -842,11 +804,11 @@
             }
           },
           "401": {
-            "description": "Error response",
+            "description": "Unauthorized - invalid or expired token",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedError \"Unauthorized - invalid or expired token\""
+                  "$ref": "#/components/schemas/UnauthorizedError"
                 }
               }
             }
@@ -876,11 +838,11 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "Token refreshed successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/responses.RefreshTokenResponse \"Token refreshed successfully\""
+                  "$ref": "#/components/schemas/Auth.RefreshTokenResponse"
                 }
               }
             }
@@ -896,11 +858,11 @@
             }
           },
           "401": {
-            "description": "Error response",
+            "description": "Unauthorized - invalid or missing token",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedError \"Unauthorized - invalid or missing token\""
+                  "$ref": "#/components/schemas/UnauthorizedError"
                 }
               }
             }
@@ -2500,57 +2462,26 @@
     },
     "/tags": {
       "get": {
-        "summary": "Get tag by ID",
-        "description": "Retrieve a specific tag by its ID",
-        "tags": [
-          "Tag"
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TagResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerError"
-                }
-              }
-            }
+        "summary": "Get all tags with optional search",
+        "description": "Retrieve all available tags with optional search filtering",
+        "tags": "Tag",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional search term to filter tags"
           }
-        }
-      },
-      "post": {
-        "summary": "Create new tag (Admin Only)",
-        "description": "Create a new tag with name and description",
-        "tags": [
-          "Tag"
         ],
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "Tags retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TagResponse"
+                  "$ref": "#/components/schemas/Tag.GetTagsResponse"
                 }
               }
             }
@@ -2578,31 +2509,33 @@
         }
       }
     },
-    "/tags/{id}": {
-      "put": {
-        "summary": "Update tag (Admin Only)",
-        "description": "Update an existing tag by ID",
-        "tags": [
-          "Tag"
-        ],
-        "parameters": [
+    "/admin/tags": {
+      "post": {
+        "summary": "Create new tag (Admin only)",
+        "description": "Create a new tag with name and optional description",
+        "tags": "Tag",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Tag.CreateTagRequest"
+              }
+            }
+          }
+        },
+        "security": [
           {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The id parameter"
+            "bearerAuth": []
           }
         ],
         "responses": {
-          "200": {
-            "description": "Successful response",
+          "201": {
+            "description": "Tag created successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TagResponse"
+                  "$ref": "#/components/schemas/Tag.CreateTagResponse"
                 }
               }
             }
@@ -2617,58 +2550,12 @@
               }
             }
           },
-          "500": {
-            "description": "Internal server error",
+          "401": {
+            "description": "Unauthorized - admin access required",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InternalServerError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "summary": "Delete tag (Admin Only)",
-        "description": "Delete a tag by ID",
-        "tags": [
-          "Tag"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The id parameter"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Tag deleted successfully"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestError"
+                  "$ref": "#/components/schemas/UnauthorizedError"
                 }
               }
             }
@@ -2698,11 +2585,11 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "Successfully retrieved user access list",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserAccessResponse \"Successfully retrieved user access list\""
+                  "$ref": "#/components/schemas/User.UserAccessResponse"
                 }
               }
             }
@@ -2718,21 +2605,21 @@
             }
           },
           "401": {
-            "description": "Error response",
+            "description": "Unauthorized - invalid or missing token",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedError \"Unauthorized - invalid or missing token\""
+                  "$ref": "#/components/schemas/UnauthorizedError"
                 }
               }
             }
           },
           "403": {
-            "description": "Error response",
+            "description": "Forbidden - insufficient permissions",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ForbiddenError \"Forbidden - insufficient permissions\""
+                  "$ref": "#/components/schemas/ForbiddenError"
                 }
               }
             }
@@ -2750,7 +2637,7 @@
         }
       }
     },
-    "/users/{id}": {
+    "/admin/user-access/{user_id}": {
       "put": {
         "summary": "Update user access status",
         "description": "Updates the access status of a specific user (active/suspend) with admin privileges",
@@ -2763,25 +2650,18 @@
               "type": "string"
             },
             "description": "User ID to update access status for"
-          },
-          {
-            "name": "status",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "New access status"
-          },
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The id parameter"
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/User.UpdateUserAccessRequest"
+              }
+            }
+          }
+        },
         "security": [
           {
             "bearerAuth": []
@@ -2789,11 +2669,11 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "Successfully updated user access status",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UpdateUserAccessResponse \"Successfully updated user access status\""
+                  "$ref": "#/components/schemas/User.UpdateUserAccessResponse"
                 }
               }
             }
@@ -2809,31 +2689,31 @@
             }
           },
           "401": {
-            "description": "Error response",
+            "description": "Unauthorized - invalid or missing token",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedError \"Unauthorized - invalid or missing token\""
+                  "$ref": "#/components/schemas/UnauthorizedError"
                 }
               }
             }
           },
           "403": {
-            "description": "Error response",
+            "description": "Forbidden - insufficient admin permissions",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ForbiddenError \"Forbidden - insufficient admin permissions\""
+                  "$ref": "#/components/schemas/ForbiddenError"
                 }
               }
             }
           },
           "404": {
-            "description": "Error response",
+            "description": "User not found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotFoundError \"User not found\""
+                  "$ref": "#/components/schemas/NotFoundError"
                 }
               }
             }
@@ -2851,7 +2731,7 @@
         }
       }
     },
-    "/users": {
+    "/users/request-vol-access": {
       "post": {
         "summary": "Request vol_user access",
         "description": "Submits a request for vol_user access privileges that requires admin approval",
@@ -2861,18 +2741,18 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/request.RequestVolAccessRequest"
+                "$ref": "#/components/schemas/User.RequestVolAccessRequest"
               }
             }
           }
         },
         "responses": {
           "202": {
-            "description": "Successful response",
+            "description": "Access request submitted successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/responses.RequestVolAccessResponse \"Access request submitted successfully\""
+                  "$ref": "#/components/schemas/User.RequestVolAccessResponse"
                 }
               }
             }
@@ -2888,11 +2768,11 @@
             }
           },
           "404": {
-            "description": "Error response",
+            "description": "User not found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NotFoundError \"User not found\""
+                  "$ref": "#/components/schemas/NotFoundError"
                 }
               }
             }

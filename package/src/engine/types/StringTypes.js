@@ -119,4 +119,4 @@ class StringTypes {
   }
 }
 
-module.exports = StringTypes;
+export default StringTypes;

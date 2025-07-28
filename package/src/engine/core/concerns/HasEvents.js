@@ -186,4 +186,4 @@ class HasEvents {
   }
 }
 
-module.exports = HasEvents;
+export default HasEvents;

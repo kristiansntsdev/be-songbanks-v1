@@ -1,4 +1,4 @@
-const faker = require("@faker-js/faker").faker;
+import { faker } from "@faker-js/faker";
 
 class Factory {
   constructor(model, attributes = {}) {
@@ -263,4 +263,4 @@ class Factory {
   }
 }
 
-module.exports = Factory;
+export default Factory;

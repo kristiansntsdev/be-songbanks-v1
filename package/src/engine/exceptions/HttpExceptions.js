@@ -1,4 +1,4 @@
-const BaseException = require("./BaseException");
+import BaseException from "./BaseException.js";
 
 // Common HTTP Exception Classes
 class BadRequestException extends BaseException {
@@ -43,7 +43,7 @@ class InternalServerException extends BaseException {
   }
 }
 
-module.exports = {
+export {
   BadRequestException,
   UnauthorizedException,
   ForbiddenException,

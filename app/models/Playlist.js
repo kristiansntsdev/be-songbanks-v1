@@ -1,5 +1,5 @@
-const { BaseModel, ModelFactory } = require("../../package/src/engine");
-const sequelize = require("../../config/database");
+import { BaseModel, ModelFactory } from "../../package/src/engine/index.js";
+import sequelize from "../../config/database.js";
 
 class Playlist extends BaseModel {
   static get fillable() {
@@ -46,6 +46,6 @@ class Playlist extends BaseModel {
   }
 }
 
-module.exports = ModelFactory.register(Playlist, sequelize, {
+export default ModelFactory.register(Playlist, sequelize, {
   tableName: "playlists",
 });

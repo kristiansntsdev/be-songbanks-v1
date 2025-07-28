@@ -1,6 +1,6 @@
-const SeederOperations = require("../operations/SeederOperations");
-const SeederException = require("../exceptions/SeederException");
-const { setTimeout } = require("timers/promises");
+import SeederOperations from "../operations/SeederOperations.js";
+import SeederException from "../exceptions/SeederException.js";
+import { setTimeout } from "timers/promises";
 
 class Seeder {
   constructor(queryInterface, Sequelize) {
@@ -382,4 +382,4 @@ class SeederBuilder {
   }
 }
 
-module.exports = Seeder;
+export default Seeder;
