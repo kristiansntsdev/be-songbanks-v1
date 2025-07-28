@@ -1,27 +1,25 @@
-const bcrypt = require("bcryptjs");
-const User = require("../models/User");
-const Note = require("../models/Note");
-const {
+import User from "../models/User.js";
+import {
   NotFoundException,
   BadRequestException,
-} = require("../../package/swagpress");
+} from "../../package/swagpress/index.js";
 
 class UserService {
   static async changeUserStatus(userId, status, adminUser) {
-    // Validate that the requester is an admin
     await this.validateAdminPermission(adminUser);
 
-    // Validate that the target user exists
     const targetUser = await this.validateUserExists(userId);
 
-    // Validate the status value
     this.validateUserStatus(status);
 
-    // Update the target user's status
-    await User.update({ status }, { where: { id: userId } });
+    if (!["active", "suspend"].includes(status)) {
+      throw new BadRequestException(
+        'Invalid status. Must be either "active" or "suspend"',
+      );
+    }
 
-    // Return the updated user data
-    targetUser.status = status; // Update the local object to reflect the change
+    await User.update({ status }, { where: { id: userId } });
+    targetUser.status = status;
 
     return {
       user: targetUser,
@@ -29,9 +27,7 @@ class UserService {
     };
   }
 
-  // Helper methods
   static async validateAdminPermission(adminUser) {
-    // adminUser should be the authenticated user object from JWT token
     if (!adminUser || adminUser.role !== "admin") {
       throw new Error("Unauthorized: Admin access required");
     }
@@ -62,14 +58,9 @@ class UserService {
     const validStatuses = ["active", "suspend"];
     if (!validStatuses.includes(status)) {
       throw new BadRequestException(
-        'Invalid status. Must be either "active" or "suspend"'
+        'Invalid status. Must be either "active" or "suspend"',
       );
     }
-  }
-
-  static async hashPassword(password) {
-    const saltRounds = 10;
-    return bcrypt.hash(password, saltRounds);
   }
 
   static paginatedResponse(rows, count, page, limit, key = "items") {
@@ -130,17 +121,16 @@ class UserService {
 
     if (user.status === "active" || user.status === "request") {
       throw new BadRequestException(
-        "User already has access or has pending request"
+        "User already has access or has pending request",
       );
     }
 
     if (user.status === "suspend") {
       throw new BadRequestException(
-        "User is suspended and cannot request access"
+        "User is suspended and cannot request access",
       );
     }
 
-    // Update user status to request using direct database update
     await User.update({ status: "request" }, { where: { id: userId } });
 
     return {
@@ -150,4 +140,4 @@ class UserService {
   }
 }
 
-module.exports = UserService;
+export default UserService;

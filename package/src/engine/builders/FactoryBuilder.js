@@ -184,4 +184,4 @@ class FactoryBuilder {
 }
 
 // Export singleton instance
-module.exports = new FactoryBuilder();
+export default new FactoryBuilder();

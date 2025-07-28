@@ -1,47 +1,40 @@
-const TagService = require("../services/TagService");
-const ErrorHandler = require("../middlewares/ErrorHandler");
-const { NotFoundException } = require("../../package/swagpress");
+import TagService from "../services/TagService.js";
+import ErrorHandler from "../middlewares/ErrorHandler.js";
 
 class TagController {
   /**
-   * GET /api/tags/
-   * @summary Get all tags
-   * @resource Tag
-   * @returns {tags: array}
+   * @Summary Get all tags with optional search
+   * @Description Retrieve all available tags with optional search filtering
+   * @Tags Tag
+   * @Accept application/json
+   * @Produce application/json
+   * @Param search query string false "Optional search term to filter tags"
+   * @Success 200 {object} Tag.GetTagsResponse "Tags retrieved successfully"
+   * @Failure 400 {object} BadRequestError "Bad request"
+   * @Router /api/tags [get]
    */
   static GetTags = ErrorHandler.asyncHandler(async (req, res) => {
-    const result = await TagService.getAllTags(req.query);
+    const tags = await TagService.getAllTags(req.query.search);
 
     res.json({
       code: 200,
       message: "Tags retrieved successfully",
-      data: result,
+      data: tags,
     });
   });
 
   /**
-   * GET /api/tags/:id
-   * @summary Get tag by ID
-   * @resource Tag
-   * @param {string} id - Tag ID parameter
-   * @returns {tag: object}
-   */
-  static GetTagById = ErrorHandler.asyncHandler(async (req, res) => {
-    const tag = await TagService.getTagById(req.params.id, req.query);
-
-    res.json({
-      code: 200,
-      message: "Tag retrieved successfully",
-      data: tag,
-    });
-  });
-
-  /**
-   * POST /api/admin/tags
-   * @summary Create new tag (Admin Only)
-   * @resource Tag
-   * @body {name: string, description?: string}
-   * @returns {tag: object}
+   * @Summary Create new tag (Admin only)
+   * @Description Create a new tag with name and optional description
+   * @Tags Tag
+   * @Accept application/json
+   * @Produce application/json
+   * @Body {object} Tag.CreateTagRequest "Tag creation data"
+   * @Success 201 {object} Tag.CreateTagResponse "Tag created successfully"
+   * @Failure 400 {object} BadRequestError "Bad request - missing required fields"
+   * @Failure 401 {object} UnauthorizedError "Unauthorized - admin access required"
+   * @Router /api/admin/tags [post]
+   * @auth
    */
   static CreateTag = ErrorHandler.asyncHandler(async (req, res) => {
     ErrorHandler.validateRequired(["name"], req.body);
@@ -57,46 +50,6 @@ class TagController {
       },
     });
   });
-
-  /**
-   * PUT /api/admin/tags/:id
-   * @summary Update tag (Admin Only)
-   * @resource Tag
-   * @param {string} id - Tag ID parameter
-   * @body {name?: string, description?: string}
-   * @returns {tag: object}
-   */
-  static UpdateTag = ErrorHandler.asyncHandler(async (req, res) => {
-    const tag = await TagService.updateTag(req.params.id, req.body);
-
-    res.json({
-      code: 200,
-      message: "Tag updated successfully",
-      data: {
-        id: tag.id,
-        name: tag.name,
-      },
-    });
-  });
-
-  /**
-   * DELETE /api/admin/tags/:id
-   * @summary Delete tag (Admin Only)
-   * @resource Tag
-   * @param {string} id - Tag ID parameter
-   * @returns {message: string}
-   */
-  static DeleteTag = ErrorHandler.asyncHandler(async (req, res) => {
-    await TagService.deleteTag(req.params.id);
-
-    res.json({
-      code: 200,
-      message: "Tag deleted successfully",
-      data: {
-        id: req.params.id,
-      },
-    });
-  });
 }
 
-module.exports = TagController;
+export default TagController;

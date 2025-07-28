@@ -45,13 +45,13 @@ describe("UserService", () => {
       const nonAdminUser = { id: "user-id", role: "user" };
 
       await expect(
-        UserService.validateAdminPermission(nonAdminUser)
+        UserService.validateAdminPermission(nonAdminUser),
       ).rejects.toThrow("Unauthorized: Admin access required");
     });
 
     it("should throw error for null user", async () => {
       await expect(UserService.validateAdminPermission(null)).rejects.toThrow(
-        "Unauthorized: Admin access required"
+        "Unauthorized: Admin access required",
       );
     });
   });
@@ -81,7 +81,7 @@ describe("UserService", () => {
       const user = { id: "user-id", role: "user" };
 
       await expect(
-        UserService.validateUpdatePermission("user-id", "user-id", user)
+        UserService.validateUpdatePermission("user-id", "user-id", user),
       ).resolves.not.toThrow();
     });
 
@@ -92,8 +92,8 @@ describe("UserService", () => {
         UserService.validateUpdatePermission(
           "other-user-id",
           "admin-id",
-          adminUser
-        )
+          adminUser,
+        ),
       ).resolves.not.toThrow();
     });
 
@@ -101,7 +101,7 @@ describe("UserService", () => {
       const user = { id: "user-id", role: "user" };
 
       await expect(
-        UserService.validateUpdatePermission("other-user-id", "user-id", user)
+        UserService.validateUpdatePermission("other-user-id", "user-id", user),
       ).rejects.toThrow("Unauthorized: Can only update your own profile");
     });
   });

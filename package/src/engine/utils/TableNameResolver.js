@@ -185,4 +185,4 @@ class TableNameResolver {
   }
 }
 
-module.exports = TableNameResolver;
+export default TableNameResolver;

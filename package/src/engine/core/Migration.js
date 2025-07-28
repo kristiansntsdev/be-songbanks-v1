@@ -1,4 +1,4 @@
-const Schema = require("./Schema");
+import Schema from "./Schema.js";
 
 class Migration {
   constructor(queryInterface, Sequelize) {
@@ -37,4 +37,4 @@ class Migration {
   }
 }
 
-module.exports = Migration;
+export default Migration;

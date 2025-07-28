@@ -125,4 +125,4 @@ class DateTypes {
   }
 }
 
-module.exports = DateTypes;
+export default DateTypes;

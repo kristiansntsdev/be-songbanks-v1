@@ -1,4 +1,4 @@
-const faker = require("@faker-js/faker").faker;
+import { faker } from "@faker-js/faker";
 
 class FactoryTypes {
   /**
@@ -323,4 +323,4 @@ class FactoryTypes {
   }
 }
 
-module.exports = FactoryTypes;
+export default FactoryTypes;

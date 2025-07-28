@@ -122,4 +122,4 @@ class HasTimestamps {
   }
 }
 
-module.exports = HasTimestamps;
+export default HasTimestamps;

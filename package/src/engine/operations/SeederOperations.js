@@ -1,4 +1,4 @@
-const SeederException = require("../exceptions/SeederException");
+import SeederException from "../exceptions/SeederException.js";
 
 class SeederOperations {
   constructor(queryInterface, Sequelize) {
@@ -405,4 +405,4 @@ class SeederOperations {
   }
 }
 
-module.exports = SeederOperations;
+export default SeederOperations;

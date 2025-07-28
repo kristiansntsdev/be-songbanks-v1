@@ -1,4 +1,4 @@
-const { BaseException } = require("../../package/swagpress");
+import { BaseException } from "../../package/swagpress/index.js";
 
 class ErrorHandler {
   /**
@@ -191,4 +191,4 @@ class ErrorHandler {
   }
 }
 
-module.exports = ErrorHandler;
+export default ErrorHandler;

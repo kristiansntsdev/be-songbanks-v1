@@ -1,9 +1,8 @@
-const NoteService = require("../services/NoteService");
-const ErrorHandler = require("../middlewares/ErrorHandler");
+import NoteService from "../services/NoteService.js";
+import ErrorHandler from "../middlewares/ErrorHandler.js";
 
 class NoteController {
   /**
-   * POST /api/notes/:user_id/:song_id
    * @summary Add note to song (Vol_User Only)
    * @param {string} user_id - User ID parameter (must match authenticated user)
    * @param {string} song_id - Song ID parameter
@@ -34,7 +33,6 @@ class NoteController {
   });
 
   /**
-   * GET /api/notes/:user_id
    * @summary Get all notes by user (Vol_User Only)
    * @param {string} user_id - User ID parameter (must match authenticated user)
    * @returns {notes: array}
@@ -59,7 +57,6 @@ class NoteController {
   });
 
   /**
-   * GET /api/notes/:user_id/:id
    * @summary Get note by ID (Vol_User Only)
    * @param {string} user_id - User ID parameter (must match authenticated user)
    * @param {string} id - Note ID parameter
@@ -85,7 +82,6 @@ class NoteController {
   });
 
   /**
-   * PUT /api/notes/:user_id/:id
    * @summary Update note (Vol_User Only)
    * @param {string} user_id - User ID parameter (must match authenticated user)
    * @param {string} id - Note ID parameter
@@ -112,7 +108,6 @@ class NoteController {
   });
 
   /**
-   * DELETE /api/notes/:user_id/:id
    * @summary Delete note (Vol_User Only)
    * @param {string} user_id - User ID parameter (must match authenticated user)
    * @param {string} id - Note ID parameter
@@ -140,4 +135,4 @@ class NoteController {
   });
 }
 
-module.exports = NoteController;
+export default NoteController;

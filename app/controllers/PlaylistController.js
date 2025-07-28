@@ -1,5 +1,5 @@
-const PlaylistService = require("../services/PlaylistService");
-const ErrorHandler = require("../middlewares/ErrorHandler");
+import PlaylistService from "../services/PlaylistService.js";
+import ErrorHandler from "../middlewares/ErrorHandler.js";
 
 class PlaylistController {
   /**
@@ -266,4 +266,4 @@ class PlaylistController {
   );
 }
 
-module.exports = PlaylistController;
+export default PlaylistController;

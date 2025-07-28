@@ -1,5 +1,9 @@
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 let swaggerSpec;
 
@@ -8,7 +12,7 @@ try {
   const swaggerPath = path.join(__dirname, "..", "swagger", "swagger.json");
 
   if (fs.existsSync(swaggerPath)) {
-    swaggerSpec = require("../swagger/swagger.json");
+    swaggerSpec = JSON.parse(fs.readFileSync(swaggerPath, 'utf8'));
 
     // Update server URLs for production
     if (process.env.NODE_ENV === "production") {
@@ -93,4 +97,4 @@ try {
   };
 }
 
-module.exports = swaggerSpec;
+export default swaggerSpec;

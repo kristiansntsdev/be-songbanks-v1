@@ -1,26 +1,19 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const AuthController = require('../app/controllers/AuthController');
-const NoteController = require('../app/controllers/NoteController');
-const PlaylistController = require('../app/controllers/PlaylistController');
-const PlaylistTeamController = require('../app/controllers/PlaylistTeamController');
-const SongController = require('../app/controllers/SongController');
-const TagController = require('../app/controllers/TagController');
-const UserController = require('../app/controllers/UserController');
-const { authenticateToken } = require('../app/middlewares/auth');
-
-// Tag Resource Routes (RESTful CRUD)
-router.get('/tags/', TagController.GetTags);
-router.get('/tags/:id', TagController.GetTagById);
-router.post('/admin/tags', TagController.CreateTag);
-router.put('/admin/tags/:id', TagController.UpdateTag);
-router.delete('/admin/tags/:id', TagController.DeleteTag);
+import AuthController from '../app/controllers/AuthController.js';
+import NoteController from '../app/controllers/NoteController.js';
+import PlaylistController from '../app/controllers/PlaylistController.js';
+import PlaylistTeamController from '../app/controllers/PlaylistTeamController.js';
+import SongController from '../app/controllers/SongController.js';
+import TagController from '../app/controllers/TagController.js';
+import UserController from '../app/controllers/UserController.js';
+import { authenticateToken } from '../app/middlewares/auth.js';
 
 // AuthController Routes
-router.post('undefined', AuthController.apiLogin);
-router.post('undefined', authenticateToken, AuthController.apiLogout);
-router.post('undefined', AuthController.apiVerifyToken);
-router.post('undefined', authenticateToken, AuthController.apiRefreshToken);
+router.post('/auth/login', AuthController.apiLogin);
+router.post('/auth/logout', authenticateToken, AuthController.apiLogout);
+router.post('/auth/verify', AuthController.apiVerifyToken);
+router.post('/auth/refresh', authenticateToken, AuthController.apiRefreshToken);
 
 // NoteController Routes
 router.post('/notes/:user_id/:song_id', NoteController.createNoteForSong);
@@ -65,10 +58,14 @@ router.delete('/admin/songs/:id', SongController.deleteSong);
 router.post('/admin/songs/:song_id/tags/:tag_id', SongController.addTagToSong);
 router.delete('/admin/songs/:song_id/tags/:tag_id', SongController.removeTagFromSong);
 
+// TagController Routes
+router.get('/tags', TagController.GetTags);
+router.post('/admin/tags', authenticateToken, TagController.CreateTag);
+
 // UserController Routes
-router.get('undefined', authenticateToken, UserController.getUserAccess);
-router.put('undefined', authenticateToken, UserController.updateUserAccess);
-router.post('undefined', UserController.requestVolAccess);
+router.get('/admin/user-access', authenticateToken, UserController.getUserAccess);
+router.put('/admin/user-access/:user_id', authenticateToken, UserController.updateUserAccess);
+router.post('/users/request-vol-access', UserController.requestVolAccess);
 
 
-module.exports = router;
+export default router;

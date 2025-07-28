@@ -1,5 +1,5 @@
-const SongService = require("../services/SongService");
-const ErrorHandler = require("../middlewares/ErrorHandler");
+import SongService from "../services/SongService.js";
+import ErrorHandler from "../middlewares/ErrorHandler.js";
 
 class SongController {
   /**
@@ -131,4 +131,4 @@ class SongController {
   });
 }
 
-module.exports = SongController;
+export default SongController;

@@ -1,5 +1,5 @@
-const Song = require("../models/Song");
-const Tag = require("../models/Tag");
+import Song from "../models/Song.js";
+import Tag from "../models/Tag.js";
 
 class SongService {
   static async getAllSongs() {
@@ -99,4 +99,4 @@ class SongService {
   }
 }
 
-module.exports = SongService;
+export default SongService;

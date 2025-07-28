@@ -162,4 +162,4 @@ class NumericTypes {
   }
 }
 
-module.exports = NumericTypes;
+export default NumericTypes;

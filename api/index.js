@@ -1,8 +1,8 @@
-const env = require("dotenv");
-const express = require("express");
-const swaggerUi = require("swagger-ui-express");
-const swaggerSpecs = require("../config/swagger");
-const cors = require("cors");
+import env from "dotenv";
+import express from "express";
+import swaggerUi from "swagger-ui-express";
+import swaggerSpecs from "../config/swagger.js";
+import cors from "cors";
 
 const app = express();
 
@@ -12,16 +12,16 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Loading Routes
-const apiRoutes = require("../routes/api");
-const ErrorHandler = require("../app/middlewares/ErrorHandler");
+//Loading Routes
+import apiRoutes from "../routes/api.js";
+import ErrorHandler from "../app/middlewares/ErrorHandler.js";
 
 // Serve swagger.json directly
 app.get("/swagger.json", (_, res) => {
   res.json(swaggerSpecs);
 });
 
-// Swagger documentation
+// Enhanced Swagger documentation
 app.use(
   "/api-docs",
   swaggerUi.serve,
@@ -48,9 +48,8 @@ app.get("/", (_, res) => {
 });
 
 // Debug route to check swagger spec
-app.get("/swagger-debug", (_, res) => {
+app.get("/swagger-debug", async (_, res) => {
   try {
-    const swaggerSpecs = require("../config/swagger");
     res.json({
       message: "Swagger spec loaded successfully",
       hasSpecs: !!swaggerSpecs,
@@ -73,5 +72,41 @@ app.use("/api", apiRoutes);
 app.use(ErrorHandler.notFound);
 app.use(ErrorHandler.handle);
 
+// For shared hosting compatibility
+const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || "127.0.0.1";
+
+// Only start server if not in Vercel environment
+if (process.env.VERCEL !== "1") {
+  // Start server for local development
+  app.listen(PORT, HOST, async () => {
+    console.log(`🚀 SongBanks API Server started successfully`);
+    console.log(`📍 Running on: ${HOST}:${PORT}`);
+    console.log(`📚 API Documentation: ${HOST}:${PORT}/api-docs`);
+    console.log(`🌐 Environment: ${process.env.NODE_ENV || "development"}`);
+
+    // Only show network info in development
+    if (process.env.NODE_ENV !== "production") {
+      try {
+        const os = await import("os");
+        const networkInterfaces = os.networkInterfaces();
+        console.log("\n🔗 Network Access:");
+
+        Object.keys(networkInterfaces).forEach((interfaceName) => {
+          networkInterfaces[interfaceName].forEach((network) => {
+            if (network.family === "IPv4" && !network.internal) {
+              console.log(
+                `  • ${interfaceName}: http://${network.address}:${PORT}`
+              );
+            }
+          });
+        });
+      } catch {
+        // Silently handle any network interface errors in shared hosting
+      }
+    }
+  });
+}
+
 // Export the Express app for Vercel
-module.exports = app;
+export default app;

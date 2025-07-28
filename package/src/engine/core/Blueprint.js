@@ -1,13 +1,13 @@
-const { ulid } = require("ulid");
-const ColumnBuilder = require("../builders/ColumnBuilder");
-const IndexBuilder = require("../builders/IndexBuilder");
-const ForeignKeyBuilder = require("../builders/ForeignKeyBuilder");
-const ForeignIdBuilder = require("../builders/ForeignIdBuilder");
-const StringTypes = require("../types/StringTypes");
-const NumericTypes = require("../types/NumericTypes");
-const DateTypes = require("../types/DateTypes");
-const SpecialTypes = require("../types/SpecialTypes");
-const TableOperations = require("../operations/TableOperations");
+import { ulid } from "ulid";
+import ColumnBuilder from "../builders/ColumnBuilder.js";
+import IndexBuilder from "../builders/IndexBuilder.js";
+import ForeignKeyBuilder from "../builders/ForeignKeyBuilder.js";
+import ForeignIdBuilder from "../builders/ForeignIdBuilder.js";
+import StringTypes from "../types/StringTypes.js";
+import NumericTypes from "../types/NumericTypes.js";
+import DateTypes from "../types/DateTypes.js";
+import SpecialTypes from "../types/SpecialTypes.js";
+import TableOperations from "../operations/TableOperations.js";
 
 class Blueprint {
   constructor(tableName, queryInterface, Sequelize) {
@@ -367,4 +367,4 @@ class Blueprint {
   }
 }
 
-module.exports = Blueprint;
+export default Blueprint;

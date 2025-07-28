@@ -1,5 +1,5 @@
-const ColumnBuilder = require("./ColumnBuilder");
-const ForeignKeyBuilder = require("./ForeignKeyBuilder");
+import ColumnBuilder from "./ColumnBuilder.js";
+import ForeignKeyBuilder from "./ForeignKeyBuilder.js";
 
 class ForeignIdBuilder extends ColumnBuilder {
   constructor(columnName, blueprint) {
@@ -105,4 +105,4 @@ class ForeignIdBuilder extends ColumnBuilder {
   }
 }
 
-module.exports = ForeignIdBuilder;
+export default ForeignIdBuilder;
