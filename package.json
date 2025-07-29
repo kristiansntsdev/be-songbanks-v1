@@ -1,6 +1,7 @@
 {
   "name": "swagpress",
   "version": "1.0.0",
+  "type": "module",
   "description": "A boilerplate for Node.js web applications with express and MySQL",
   "main": "index.js",
   "scripts": {
