@@ -1,7 +1,12 @@
 #!/usr/bin/env node
 
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 class SwaggerCommand {
   constructor() {
@@ -15,7 +20,7 @@ class SwaggerCommand {
     this.loadedSchemas = null;
   }
 
-  loadSchemas() {
+  async loadSchemas() {
     if (this.loadedSchemas) {
       return this.loadedSchemas;
     }
@@ -37,18 +42,19 @@ class SwaggerCommand {
           const errorFiles = fs
             .readdirSync(packageErrorsPath)
             .filter((f) => f.endsWith(".js") && f !== "index.js");
-          errorFiles.forEach((file) => {
+          for (const file of errorFiles) {
             const schemaName = path.basename(file, ".js");
             try {
-              schemas.errors[schemaName] = require(
-                path.join(packageErrorsPath, file)
+              const module = await import(
+                `file://${path.join(packageErrorsPath, file)}`
               );
+              schemas.errors[schemaName] = module.default;
             } catch (error) {
               console.warn(
                 `Warning: Could not load package error schema ${schemaName}: ${error.message}`
               );
             }
-          });
+          }
         }
 
         // Load package common schemas
@@ -57,18 +63,19 @@ class SwaggerCommand {
           const commonFiles = fs
             .readdirSync(packageCommonPath)
             .filter((f) => f.endsWith(".js") && f !== "index.js");
-          commonFiles.forEach((file) => {
+          for (const file of commonFiles) {
             const schemaName = path.basename(file, ".js");
             try {
-              schemas.common[schemaName] = require(
-                path.join(packageCommonPath, file)
+              const module = await import(
+                `file://${path.join(packageCommonPath, file)}`
               );
+              schemas.common[schemaName] = module.default;
             } catch (error) {
               console.warn(
                 `Warning: Could not load package common schema ${schemaName}: ${error.message}`
               );
             }
-          });
+          }
         }
       }
     } catch (error) {
@@ -84,18 +91,19 @@ class SwaggerCommand {
           const errorFiles = fs
             .readdirSync(userErrorsPath)
             .filter((f) => f.endsWith(".js") && f !== "index.js");
-          errorFiles.forEach((file) => {
+          for (const file of errorFiles) {
             const schemaName = path.basename(file, ".js");
             try {
-              schemas.errors[schemaName] = require(
-                path.join(userErrorsPath, file)
+              const module = await import(
+                `file://${path.join(userErrorsPath, file)}`
               );
+              schemas.errors[schemaName] = module.default;
             } catch (error) {
               console.warn(
                 `Warning: Could not load user error schema ${schemaName}: ${error.message}`
               );
             }
-          });
+          }
         }
 
         // Load user response schemas
@@ -104,18 +112,19 @@ class SwaggerCommand {
           const responseFiles = fs
             .readdirSync(userResponsesPath)
             .filter((f) => f.endsWith(".js") && f !== "index.js");
-          responseFiles.forEach((file) => {
+          for (const file of responseFiles) {
             const schemaName = path.basename(file, ".js");
             try {
-              schemas.responses[schemaName] = require(
-                path.join(userResponsesPath, file)
+              const module = await import(
+                `file://${path.join(userResponsesPath, file)}`
               );
+              schemas.responses[schemaName] = module.default;
             } catch (error) {
               console.warn(
                 `Warning: Could not load user response schema ${schemaName}: ${error.message}`
               );
             }
-          });
+          }
         }
 
         // Load user request schemas
@@ -124,18 +133,19 @@ class SwaggerCommand {
           const requestFiles = fs
             .readdirSync(userRequestsPath)
             .filter((f) => f.endsWith(".js") && f !== "index.js");
-          requestFiles.forEach((file) => {
+          for (const file of requestFiles) {
             const schemaName = path.basename(file, ".js");
             try {
-              schemas.requests[schemaName] = require(
-                path.join(userRequestsPath, file)
+              const module = await import(
+                `file://${path.join(userRequestsPath, file)}`
               );
+              schemas.requests[schemaName] = module.default;
             } catch (error) {
               console.warn(
                 `Warning: Could not load user request schema ${schemaName}: ${error.message}`
               );
             }
-          });
+          }
         }
 
         // Load user model schemas (new Go-style models)
@@ -144,20 +154,21 @@ class SwaggerCommand {
           const modelFiles = fs
             .readdirSync(userModelsPath)
             .filter((f) => f.endsWith(".js") && f !== "index.js");
-          modelFiles.forEach((file) => {
+          for (const file of modelFiles) {
             const schemaName = path.basename(file, ".js");
             try {
               // Store models in a separate namespace
               if (!schemas.models) schemas.models = {};
-              schemas.models[schemaName] = require(
-                path.join(userModelsPath, file)
+              const module = await import(
+                `file://${path.join(userModelsPath, file)}`
               );
+              schemas.models[schemaName] = module.default;
             } catch (error) {
               console.warn(
                 `Warning: Could not load user model schema ${schemaName}: ${error.message}`
               );
             }
-          });
+          }
         }
       }
     } catch (error) {
@@ -168,8 +179,8 @@ class SwaggerCommand {
     return schemas;
   }
 
-  getSchema(schemaName) {
-    const schemas = this.loadSchemas();
+  async getSchema(schemaName) {
+    const schemas = await this.loadSchemas();
 
     // Try to find in responses first
     if (schemas.responses[schemaName]) {
@@ -209,52 +220,62 @@ class SwaggerCommand {
 
   parseSchemaPath(schema) {
     // Handle different schema formats
-    if (typeof schema === 'string') {
+    if (typeof schema === "string") {
       // Simple schema name like "LoginRequest"
       return { schemaName: schema };
     }
-    
+
     if (schema && schema.type) {
       // Object schema with type property
       return { schemaName: schema.type };
     }
-    
+
     // Default fallback
-    return { schemaName: 'object' };
+    return { schemaName: "object" };
   }
 
   convertSchemasForSwagger(loadedSchemas) {
     const flatSchemas = {};
 
     // Flatten error schemas
-    Object.keys(loadedSchemas.errors).forEach((errorName) => {
-      flatSchemas[errorName] = loadedSchemas.errors[errorName];
-    });
+    if (loadedSchemas && loadedSchemas.errors) {
+      Object.keys(loadedSchemas.errors).forEach((errorName) => {
+        flatSchemas[errorName] = loadedSchemas.errors[errorName];
+      });
+    }
 
     // Flatten common schemas
-    Object.keys(loadedSchemas.common).forEach((commonName) => {
-      flatSchemas[commonName] = loadedSchemas.common[commonName];
-    });
+    if (loadedSchemas && loadedSchemas.common) {
+      Object.keys(loadedSchemas.common).forEach((commonName) => {
+        flatSchemas[commonName] = loadedSchemas.common[commonName];
+      });
+    }
 
     // Flatten model schemas
-    Object.keys(loadedSchemas.models).forEach((modelName) => {
-      flatSchemas[modelName] = loadedSchemas.models[modelName];
-    });
+    if (loadedSchemas && loadedSchemas.models) {
+      Object.keys(loadedSchemas.models).forEach((modelName) => {
+        flatSchemas[modelName] = loadedSchemas.models[modelName];
+      });
+    }
 
     // Flatten request schemas
-    Object.keys(loadedSchemas.requests).forEach((requestName) => {
-      flatSchemas[requestName] = loadedSchemas.requests[requestName];
-    });
+    if (loadedSchemas && loadedSchemas.requests) {
+      Object.keys(loadedSchemas.requests).forEach((requestName) => {
+        flatSchemas[requestName] = loadedSchemas.requests[requestName];
+      });
+    }
 
     // Flatten response schemas
-    Object.keys(loadedSchemas.responses).forEach((responseName) => {
-      flatSchemas[responseName] = loadedSchemas.responses[responseName];
-    });
+    if (loadedSchemas && loadedSchemas.responses) {
+      Object.keys(loadedSchemas.responses).forEach((responseName) => {
+        flatSchemas[responseName] = loadedSchemas.responses[responseName];
+      });
+    }
 
     return flatSchemas;
   }
 
-  execute() {
+  async execute() {
     if (this.args.length === 0) {
       this.showUsage();
       return;
@@ -266,9 +287,9 @@ class SwaggerCommand {
     switch (command) {
       case "generate":
         if (controllerName === "all") {
-          this.generateAll();
+          await this.generateAll();
         } else {
-          this.generateByController(controllerName);
+          await this.generateByController(controllerName);
         }
         break;
       case "list":
@@ -364,9 +385,11 @@ Available controllers:`);
       // Use @Router annotation if available
       let routePath = method.endpointPath;
       if (method.annotations && method.annotations.Router) {
-        // Extract path from "@Router /api/vol_user/request-vol-access [post]"
         const routerAnnotation = method.annotations.Router;
-        if (typeof routerAnnotation === 'string') {
+        if (typeof routerAnnotation === "object" && routerAnnotation.path) {
+          routePath = routerAnnotation.path;
+        } else if (typeof routerAnnotation === "string") {
+          // Legacy string format support
           const routerMatch = routerAnnotation.match(/([^[\s]+)/);
           if (routerMatch) {
             routePath = routerMatch[1];
@@ -465,9 +488,11 @@ Available controllers:`);
         // Use @Router annotation if available
         let routePath = method.endpointPath;
         if (method.annotations && method.annotations.Router) {
-          // Extract path from "@Router /api/vol_user/request-vol-access [post]"
           const routerAnnotation = method.annotations.Router;
-          if (typeof routerAnnotation === 'string') {
+          if (typeof routerAnnotation === "object" && routerAnnotation.path) {
+            routePath = routerAnnotation.path;
+          } else if (typeof routerAnnotation === "string") {
+            // Legacy string format support
             const routerMatch = routerAnnotation.match(/([^[\s]+)/);
             if (routerMatch) {
               routePath = routerMatch[1];
@@ -611,7 +636,7 @@ Available controllers:`);
     });
 
     // Add footer
-    routesContent += "\nmodule.exports = router;\n";
+    routesContent += "\nexport default router;\n";
 
     // Write the complete routes file
     fs.writeFileSync(this.routesPath, routesContent);
@@ -620,17 +645,17 @@ Available controllers:`);
   }
 
   generateRoutesFileHeader(controllerNames) {
-    let header = `const express = require('express');
+    let header = `import express from 'express';
 const router = express.Router();
 `;
 
     // Add controller imports
     controllerNames.forEach((controllerName) => {
-      header += `const ${controllerName} = require('../app/controllers/${controllerName}');\n`;
+      header += `import ${controllerName} from '../app/controllers/${controllerName}.js';\n`;
     });
 
     // Add middleware imports
-    header += `const { authenticateToken } = require('../app/middlewares/auth');\n\n`;
+    header += `import { authenticateToken } from '../app/middlewares/auth.js';\n\n`;
 
     return header;
   }
@@ -739,9 +764,14 @@ const router = express.Router();
 
     // Check for @Router annotation first
     if (method.annotations && method.annotations.Router) {
-      // Extract path from "@Router /api/vol_user/request-vol-access [post]"
       const routerAnnotation = method.annotations.Router;
-      if (typeof routerAnnotation === 'string') {
+      if (typeof routerAnnotation === "object" && routerAnnotation.path) {
+        // Convert {param} to :param for Express.js
+        routePath = routerAnnotation.path
+          .replace("/api", "")
+          .replace(/\{(\w+)\}/g, ":$1");
+      } else if (typeof routerAnnotation === "string") {
+        // Legacy string format support
         const routerMatch = routerAnnotation.match(/([^[\s]+)/);
         if (routerMatch) {
           // Convert {param} to :param for Express.js
@@ -851,7 +881,8 @@ const router = express.Router();
     const operation = {
       summary: annotations.Summary || annotations.summary || summary,
       description: annotations.Description || description,
-      tags: annotations.Tags || [tag],
+      tags: Array.isArray(annotations.Tags) ? annotations.Tags : 
+            annotations.Tags ? [annotations.Tags] : [tag],
     };
 
     // Handle parameters from Go-style @Param annotations
@@ -2230,28 +2261,30 @@ const router = express.Router();
       }
 
       // Extract @Success annotation
-      // Format: @Success code {object} model.ResponseType
+      // Format: @Success code {object} model.ResponseType "description"
       const SuccessMatch = trimmed.match(
-        /@Success\s+(\d+)\s+\{([^}]+)\}\s+(.+)/
+        /@Success\s+(\d+)\s+\{([^}]+)\}\s+([^\s"]+)(?:\s+"([^"]*)")?/
       );
       if (SuccessMatch) {
         annotations.Success.push({
           code: SuccessMatch[1],
           type: SuccessMatch[2],
           model: SuccessMatch[3],
+          description: SuccessMatch[4] || "",
         });
       }
 
       // Extract @Failure annotation
-      // Format: @Failure code {object} model.ErrorType
+      // Format: @Failure code {object} model.ErrorType "description"
       const FailureMatch = trimmed.match(
-        /@Failure\s+(\d+)\s+\{([^}]+)\}\s+(.+)/
+        /@Failure\s+(\d+)\s+\{([^}]+)\}\s+([^\s"]+)(?:\s+"([^"]*)")?/
       );
       if (FailureMatch) {
         annotations.Failure.push({
           code: FailureMatch[1],
           type: FailureMatch[2],
           model: FailureMatch[3],
+          description: FailureMatch[4] || "",
         });
       }
 
@@ -2550,9 +2583,9 @@ const router = express.Router();
 }
 
 // Run the command if this file is executed directly
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const generator = new SwaggerCommand();
-  generator.execute();
+  await generator.execute();
 }
 
-module.exports = SwaggerCommand;
+export default SwaggerCommand;

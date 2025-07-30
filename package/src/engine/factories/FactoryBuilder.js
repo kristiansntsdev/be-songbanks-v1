@@ -1,5 +1,7 @@
-const Factory = require("./Factory");
-const FactoryTypes = require("./FactoryTypes");
+import Factory from "./Factory.js";
+import FactoryTypes from "./FactoryTypes.js";
+import fs from "fs";
+import path from "path";
 
 /**
  * FactoryBuilder - Registry and builder for model factories
@@ -119,8 +121,7 @@ class FactoryBuilder {
    * @param {string} directory - Directory containing factory files
    */
   loadFactories(directory) {
-    const fs = require("fs");
-    const path = require("path");
+    // Use imported fs and path
 
     if (!fs.existsSync(directory)) {
       return;
@@ -192,7 +193,7 @@ class FactoryBuilder {
 const factoryBuilder = new FactoryBuilder();
 
 // Export both the class and singleton instance
-module.exports = {
+export default {
   FactoryBuilder,
   factoryBuilder,
 

@@ -94,4 +94,4 @@ class SeederException extends Error {
   }
 }
 
-module.exports = SeederException;
+export default SeederException;

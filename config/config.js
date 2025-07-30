@@ -1,8 +1,12 @@
-const path = require("path");
-const env = require("dotenv");
-env.config();
+import path from "path";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
+import dotenv from "dotenv";
 
-module.exports = {
+const __dirname = dirname(fileURLToPath(import.meta.url));
+dotenv.config();
+
+export default {
   development: {
     username: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
@@ -14,7 +18,7 @@ module.exports = {
   },
   test: {
     dialect: "sqlite",
-    storage: path.join(__dirname, "..", "database", "development.sqlite"),
+    storage: join(__dirname, "..", "database", "development.sqlite"),
     logging: false, // Disable logging for tests
   },
   production: {

@@ -5,9 +5,9 @@
  * including state management, relationships, and realistic test data generation.
  */
 
-const Factory = require("./Factory");
-const FactoryTypes = require("./FactoryTypes");
-const {
+import Factory from "./Factory.js";
+import FactoryTypes from "./FactoryTypes.js";
+import {
   FactoryBuilder,
   factoryBuilder,
   define,
@@ -15,8 +15,8 @@ const {
   state,
   reset,
   loadFactories,
-} = require("./FactoryBuilder");
-const {
+} from "./FactoryBuilder.js";
+import {
   Relationship,
   HasOneRelationship,
   HasManyRelationship,
@@ -25,14 +25,14 @@ const {
   MorphToRelationship,
   Sequence,
   CrossJoinSequence,
-} = require("./Relationships");
+} from "./Relationships.js";
+import path from "path";
 
 /**
  * Auto-load factories from the project's database/factories directory
  */
 function autoLoadFactories() {
-  const path = require("path");
-  const projectRoot = path.resolve(__dirname, "../../../..");
+  const projectRoot = path.resolve(process.cwd());
   const factoriesDir = path.join(projectRoot, "database", "factories");
 
   try {
@@ -46,7 +46,7 @@ function autoLoadFactories() {
 // Auto-load on module import
 autoLoadFactories();
 
-module.exports = {
+const exportObject = {
   // Core classes
   Factory,
   FactoryTypes,
@@ -97,4 +97,6 @@ module.exports = {
 };
 
 // Re-export FactoryTypes methods for convenience
-Object.assign(module.exports, FactoryTypes);
+Object.assign(exportObject, FactoryTypes);
+
+export default exportObject;

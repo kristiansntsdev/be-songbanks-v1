@@ -4,7 +4,7 @@
 
 This document describes the database schema for the Songbanks API, showing the relationships between different entities in the system.
 
-## ERD Diagram
+## ER Diagram
 
 ```mermaid
 erDiagram
@@ -212,51 +212,6 @@ Manages the many-to-many relationship between songs and tags.
 - **user.role**: Predefined user roles for access control (admin, member, guest)
 - **user.status**: User status (active, pending, request, suspend)
 - **playlist_team_members.role**: Team member roles (member, admin)
-
-## Indexes
-
-Comprehensive indexes for optimal performance:
-
-```sql
--- User indexes
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_role ON users(role);
-CREATE INDEX idx_users_status ON users(status);
-
--- Song indexes
-CREATE INDEX idx_songs_title ON songs(title);
-CREATE INDEX idx_songs_artist ON songs(artist);
-CREATE INDEX idx_songs_base_chord ON songs(base_chord);
-
--- Tag indexes
-CREATE INDEX idx_tags_name ON tags(name);
-
--- Notes indexes
-CREATE INDEX idx_notes_user_id ON notes(user_id);
-CREATE INDEX idx_notes_song_id ON notes(song_id);
-
--- Playlist indexes
-CREATE INDEX idx_playlists_name ON playlists(playlist_name);
-CREATE INDEX idx_playlists_team_id ON playlists(playlist_team_id);
-CREATE INDEX idx_playlists_sharable_link ON playlists(sharable_link);
-
--- Playlist Team indexes
-CREATE INDEX idx_playlist_teams_playlist_id ON playlist_teams(playlist_id);
-CREATE INDEX idx_playlist_teams_lead_id ON playlist_teams(lead_id);
-
--- Pivot table indexes for performance
-CREATE INDEX idx_playlist_songs_playlist_id ON playlist_songs(playlist_id);
-CREATE INDEX idx_playlist_songs_song_id ON playlist_songs(song_id);
-CREATE UNIQUE INDEX unique_playlist_song ON playlist_songs(playlist_id, song_id);
-
-CREATE INDEX idx_playlist_team_members_team_id ON playlist_team_members(playlist_team_id);
-CREATE INDEX idx_playlist_team_members_user_id ON playlist_team_members(user_id);
-CREATE UNIQUE INDEX unique_team_member ON playlist_team_members(playlist_team_id, user_id);
-
-CREATE INDEX idx_song_tags_song_id ON song_tags(song_id);
-CREATE INDEX idx_song_tags_tag_id ON song_tags(tag_id);
-CREATE UNIQUE INDEX unique_song_tag ON song_tags(song_id, tag_id);
-```
 
 ## Business Rules
 

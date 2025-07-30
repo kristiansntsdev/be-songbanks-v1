@@ -1,5 +1,5 @@
-const { faker } = require("@faker-js/faker");
-const { ulid } = require("ulid");
+import { faker } from "@faker-js/faker";
+import { ulid } from "ulid";
 
 /**
  * Abstract Factory class - Laravel-inspired model factory for Node.js
@@ -621,4 +621,4 @@ class Factory {
   }
 }
 
-module.exports = Factory;
+export default Factory;

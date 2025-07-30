@@ -1,4 +1,4 @@
-const { BaseException } = require("../../package/swagpress");
+import { BaseException } from "../../package/swagpress.js";
 
 class ErrorHandler {
   /**
@@ -131,8 +131,8 @@ class ErrorHandler {
    * @param {Object} data - Data object to validate
    * @throws {ValidationException} If validation fails
    */
-  static validateRequired(requiredFields, data) {
-    const { ValidationException } = require("../../package/swagpress");
+  static async validateRequired(requiredFields, data) {
+    const { ValidationException } = await import("../../package/swagpress.js");
     const validation = new ValidationException();
     let hasErrors = false;
 
@@ -154,8 +154,8 @@ class ErrorHandler {
    * @param {string} message - Error message
    * @throws {ValidationException}
    */
-  static throwValidation(field, message) {
-    const { ValidationException } = require("../../package/swagpress");
+  static async throwValidation(field, message) {
+    const { ValidationException } = await import("../../package/swagpress.js");
     throw ValidationException.field(field, message);
   }
 
@@ -165,8 +165,10 @@ class ErrorHandler {
    * @param {string} id - Resource ID (optional)
    * @throws {ModelNotFoundException}
    */
-  static throwNotFound(resource, id = null) {
-    const { ModelNotFoundException } = require("../../package/swagpress");
+  static async throwNotFound(resource, id = null) {
+    const { ModelNotFoundException } = await import(
+      "../../package/swagpress.js"
+    );
     throw new ModelNotFoundException(resource, id);
   }
 
@@ -175,8 +177,10 @@ class ErrorHandler {
    * @param {string} message - Error message
    * @throws {UnauthorizedException}
    */
-  static throwUnauthorized(message = "Unauthorized") {
-    const { UnauthorizedException } = require("../../package/swagpress");
+  static async throwUnauthorized(message = "Unauthorized") {
+    const { UnauthorizedException } = await import(
+      "../../package/swagpress.js"
+    );
     throw new UnauthorizedException(message);
   }
 
@@ -185,10 +189,10 @@ class ErrorHandler {
    * @param {string} message - Error message
    * @throws {ForbiddenException}
    */
-  static throwForbidden(message = "Forbidden") {
-    const { ForbiddenException } = require("../../package/swagpress");
+  static async throwForbidden(message = "Forbidden") {
+    const { ForbiddenException } = await import("../../package/swagpress.js");
     throw new ForbiddenException(message);
   }
 }
 
-module.exports = ErrorHandler;
+export default ErrorHandler;

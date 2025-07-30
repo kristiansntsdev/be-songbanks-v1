@@ -1,3 +1,5 @@
+import { randomUUID } from "crypto";
+
 class TypeMapper {
   /**
    * Map Laravel column types to Sequelize types
@@ -85,7 +87,7 @@ class TypeMapper {
       [sequelizeType.DATEONLY]: () => new Date().toISOString().split("T")[0],
       [sequelizeType.JSON]: {},
       [sequelizeType.JSONB]: {},
-      [sequelizeType.UUID]: () => require("crypto").randomUUID(),
+      [sequelizeType.UUID]: () => randomUUID(),
     };
 
     return defaults[sequelizeType] || null;
@@ -191,4 +193,4 @@ class TypeMapper {
   }
 }
 
-module.exports = TypeMapper;
+export default TypeMapper;

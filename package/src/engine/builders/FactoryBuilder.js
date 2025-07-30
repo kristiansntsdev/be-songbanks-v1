@@ -50,8 +50,8 @@ class FactoryBuilder {
   /**
    * Create a factory instance
    */
-  create(modelName) {
-    const Factory = require("../core/Factory");
+  async create(modelName) {
+    const { default: Factory } = await import("../core/Factory.js");
     const definition = this.definitions.get(modelName);
 
     if (!definition) {
@@ -184,4 +184,4 @@ class FactoryBuilder {
 }
 
 // Export singleton instance
-module.exports = new FactoryBuilder();
+export default new FactoryBuilder();

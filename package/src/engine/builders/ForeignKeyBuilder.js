@@ -84,4 +84,4 @@ class ForeignKeyBuilder {
   }
 }
 
-module.exports = ForeignKeyBuilder;
+export default ForeignKeyBuilder;

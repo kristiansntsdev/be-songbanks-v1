@@ -1,6 +1,6 @@
-const PlaylistTeam = require("../models/PlaylistTeam");
-const Playlist = require("../models/Playlist");
-const User = require("../models/User");
+import PlaylistTeam from "../models/PlaylistTeam.js";
+import Playlist from "../models/Playlist.js";
+import User from "../models/User.js";
 
 class PlaylistTeamService {
   static async getAllPlaylistTeams() {
@@ -304,4 +304,4 @@ class PlaylistTeamService {
   }
 }
 
-module.exports = PlaylistTeamService;
+export default PlaylistTeamService;

@@ -157,4 +157,4 @@ class TableOperations {
   }
 }
 
-module.exports = TableOperations;
+export default TableOperations;

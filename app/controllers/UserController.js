@@ -1,9 +1,9 @@
-const UserService = require("../services/UserService");
-const ErrorHandler = require("../middlewares/ErrorHandler");
-const {
+import UserService from "../services/UserService.js";
+import ErrorHandler from "../middlewares/ErrorHandler.js";
+import {
   NotFoundException,
   BadRequestException,
-} = require("../../package/swagpress");
+} from "../../package/swagpress.js";
 
 class UserController {
   /**
@@ -81,8 +81,8 @@ class UserController {
    * @Tags User
    * @Accept application/json
    * @Produce application/json
-   * @Body {object} request.RequestVolAccessRequest "Request body containing user ID"
-   * @Success 202 {object} responses.RequestVolAccessResponse "Access request submitted successfully"
+   * @Body {object} RequestVolAccessRequest "Request body containing user ID"
+   * @Success 202 {object} RequestVolAccessResponse "Access request submitted successfully"
    * @Failure 400 {object} BadRequestError "Bad request - user already has access or pending request"
    * @Failure 404 {object} NotFoundError "User not found"
    * @Router /api/users/request-vol-access [post]
@@ -104,4 +104,4 @@ class UserController {
   });
 }
 
-module.exports = UserController;
+export default UserController;

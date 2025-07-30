@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
 
 class DocsCommand {
   constructor() {
@@ -690,9 +690,9 @@ Features:
 }
 
 // Run the command if this file is executed directly
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const command = new DocsCommand();
   command.execute();
 }
 
-module.exports = DocsCommand;
+export default DocsCommand;

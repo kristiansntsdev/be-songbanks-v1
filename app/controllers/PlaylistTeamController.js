@@ -1,5 +1,5 @@
-const PlaylistTeamService = require("../services/PlaylistTeamService");
-const ErrorHandler = require("../middlewares/ErrorHandler");
+import PlaylistTeamService from "../services/PlaylistTeamService.js";
+import ErrorHandler from "../middlewares/ErrorHandler.js";
 
 class PlaylistTeamController {
   /**
@@ -259,4 +259,4 @@ class PlaylistTeamController {
   });
 }
 
-module.exports = PlaylistTeamController;
+export default PlaylistTeamController;

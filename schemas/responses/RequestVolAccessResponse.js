@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   202: {
     description:
       "Vol_user access request sent successfully. Awaiting admin approval.",

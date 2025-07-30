@@ -1,6 +1,7 @@
-const SeederOperations = require("../operations/SeederOperations");
-const SeederException = require("../exceptions/SeederException");
-const { setTimeout } = require("timers/promises");
+import SeederOperations from "../operations/SeederOperations.js";
+import SeederException from "../exceptions/SeederException.js";
+import { setTimeout } from "timers/promises";
+import { ulid } from "ulid";
 
 class Seeder {
   constructor(queryInterface, Sequelize) {
@@ -55,8 +56,8 @@ class Seeder {
   /**
    * Get a factory instance for a model
    */
-  getFactory(modelName) {
-    const Factory = require("./Factory");
+  async getFactory(modelName) {
+    const { default: Factory } = await import("./Factory.js");
     const definition = this.factories.get(modelName);
 
     if (!definition) {
@@ -68,9 +69,7 @@ class Seeder {
 
     // Override saveModelInstance to work with Sequelize and auto-handle duplicates
     factory.saveModelInstance = async (instance) => {
-      const tableName = this.getTableName(modelName);
-      const { ulid } = require("ulid");
-
+      const tableName = await this.getTableName(modelName);
       // Add ID if not present
       if (!instance.id) {
         instance.id = ulid();
@@ -236,12 +235,12 @@ class Seeder {
     return {
       name: modelName,
       create: async (attributes) => {
-        const tableName = this.getTableName(modelName);
+        const tableName = await this.getTableName(modelName);
         const records = await this.insert(tableName, attributes);
         return Array.isArray(records) ? records[0] : records;
       },
       bulkCreate: async (attributesArray) => {
-        const tableName = this.getTableName(modelName);
+        const tableName = await this.getTableName(modelName);
         return await this.insert(tableName, attributesArray);
       },
     };
@@ -250,16 +249,18 @@ class Seeder {
   /**
    * Convert model name to table name
    */
-  getTableName(modelName) {
-    const TableNameResolver = require("../utils/TableNameResolver");
+  async getTableName(modelName) {
+    const { default: TableNameResolver } = await import(
+      "../utils/TableNameResolver.js"
+    );
     return TableNameResolver.modelToTable(modelName);
   }
 
   /**
    * Generate fake data using faker
    */
-  fake() {
-    const Factory = require("./Factory");
+  async fake() {
+    const { default: Factory } = await import("./Factory.js");
     return Factory.fake();
   }
 
@@ -346,7 +347,7 @@ class SeederBuilder {
    */
   async create(overrides = {}) {
     try {
-      const factory = this.seeder.getFactory(this.modelName);
+      const factory = await this.seeder.getFactory(this.modelName);
 
       let factoryInstance = factory.count(this.factoryCount);
 
@@ -382,4 +383,4 @@ class SeederBuilder {
   }
 }
 
-module.exports = Seeder;
+export default Seeder;

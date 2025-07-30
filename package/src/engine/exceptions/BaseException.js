@@ -34,4 +34,4 @@ class BaseException extends Error {
   }
 }
 
-module.exports = BaseException;
+export default BaseException;

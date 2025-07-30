@@ -1,8 +1,8 @@
-const Playlist = require("../models/Playlist");
-const Song = require("../models/Song");
-const User = require("../models/User");
-const PlaylistTeam = require("../models/PlaylistTeam");
-const crypto = require("crypto");
+import Playlist from "../models/Playlist.js";
+import Song from "../models/Song.js";
+import User from "../models/User.js";
+import PlaylistTeam from "../models/PlaylistTeam.js";
+import crypto from "crypto";
 
 class PlaylistService {
   static async getAllPlaylists() {
@@ -335,4 +335,4 @@ class PlaylistService {
   }
 }
 
-module.exports = PlaylistService;
+export default PlaylistService;

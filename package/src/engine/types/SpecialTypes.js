@@ -176,4 +176,4 @@ class SpecialTypes {
   }
 }
 
-module.exports = SpecialTypes;
+export default SpecialTypes;

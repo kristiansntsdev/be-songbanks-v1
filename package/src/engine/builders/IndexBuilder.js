@@ -80,4 +80,4 @@ class IndexBuilder {
   }
 }
 
-module.exports = IndexBuilder;
+export default IndexBuilder;

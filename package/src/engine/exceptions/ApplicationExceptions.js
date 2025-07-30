@@ -1,9 +1,9 @@
-const {
+import {
   UnauthorizedException,
   ForbiddenException,
   NotFoundException,
   ConflictException,
-} = require("./HttpExceptions");
+} from "./HttpExceptions.js";
 
 // Application-specific Exceptions
 class AuthenticationException extends UnauthorizedException {
@@ -50,7 +50,7 @@ class DuplicateResourceException extends ConflictException {
   }
 }
 
-module.exports = {
+export {
   AuthenticationException,
   AccountAccessDeniedException,
   ModelNotFoundException,

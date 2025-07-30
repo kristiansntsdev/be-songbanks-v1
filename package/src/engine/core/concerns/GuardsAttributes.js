@@ -98,4 +98,4 @@ class GuardsAttributes {
   }
 }
 
-module.exports = GuardsAttributes;
+export default GuardsAttributes;

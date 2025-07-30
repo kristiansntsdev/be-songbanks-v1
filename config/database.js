@@ -1,14 +1,11 @@
-const Sequelize = require("sequelize");
-const config = require("./config.js");
+import Sequelize from "sequelize";
+import config from "./config.js";
+import pg from "pg";
+import pgHstore from "pg-hstore";
 
-// Explicitly require pg package for Vercel deployment
+// Explicitly import pg packages for Vercel deployment
 if (process.env.NODE_ENV === "production") {
-  try {
-    require("pg");
-    require("pg-hstore");
-  } catch (error) {
-    console.error("PostgreSQL packages not found:", error.message);
-  }
+  console.log("✅ PostgreSQL packages loaded for production:", !!pg, !!pgHstore);
 }
 
 const env = process.env.NODE_ENV || "production";
@@ -24,8 +21,6 @@ if (dbConfig.dialect === "sqlite") {
   });
 } else if (dbConfig.dialect === "postgres") {
   // For PostgreSQL (production) - explicitly specify dialectModule
-  const dialectModule = require("pg");
-
   sequelize = new Sequelize(
     dbConfig.database,
     dbConfig.username,
@@ -34,7 +29,7 @@ if (dbConfig.dialect === "sqlite") {
       host: dbConfig.host,
       port: dbConfig.port,
       dialect: "postgres",
-      dialectModule: dialectModule,
+      dialectModule: pg,
       dialectOptions: dbConfig.dialectOptions,
       logging: dbConfig.logging,
       pool: {
@@ -66,4 +61,4 @@ if (dbConfig.dialect === "sqlite") {
   );
 }
 
-module.exports = sequelize;
+export default sequelize;

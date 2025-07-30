@@ -1,10 +1,10 @@
-const bcrypt = require("bcryptjs");
-const User = require("../models/User");
-const Note = require("../models/Note");
-const {
+import bcrypt from "bcryptjs";
+import User from "../models/User.js";
+import Note from "../models/Note.js";
+import {
   NotFoundException,
   BadRequestException,
-} = require("../../package/swagpress");
+} from "../../package/swagpress.js";
 
 class UserService {
   static async changeUserStatus(userId, status, adminUser) {
@@ -150,4 +150,4 @@ class UserService {
   }
 }
 
-module.exports = UserService;
+export default UserService;

@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   200: {
     description: "User access status updated successfully",
     content: {

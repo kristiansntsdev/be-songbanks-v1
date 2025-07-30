@@ -1,7 +1,12 @@
 #!/usr/bin/env node
 
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 class MakeCommand {
   constructor() {
@@ -558,9 +563,9 @@ module.exports = ModelFactory.register(${modelName}, sequelize, {
 }
 
 // Run the command if this file is executed directly
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const command = new MakeCommand();
   command.execute();
 }
 
-module.exports = MakeCommand;
+export default MakeCommand;

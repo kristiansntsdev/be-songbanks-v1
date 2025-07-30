@@ -161,4 +161,4 @@ class MigrationException extends Error {
   }
 }
 
-module.exports = MigrationException;
+export default MigrationException;

@@ -5,9 +5,11 @@ This documentation describes the API endpoints for managing USER, SONG, TAG, NOT
 Each endpoint will follow the general format: [HTTP_METHOD] /api/[role]/[resource]/[:optional-id].
 [role] will be adjusted based on the authenticated user's role:
 
-admin: Has limited access to users (viewing, managing status), and full access to managing songs and tags. Admins do not directly interact with playlists or playlist teams.
+**admin**: Has limited access to users (viewing, managing status), and full access to managing songs and tags. Admins do not directly interact with playlists or playlist teams.
 
-vol_user: Has access to view songs and tags, and manage their own notes. Has full access to manage playlists and playlist teams. A vol_user can request vol_user access if they don't already have it and can update their own profile data.
+**member**: Users with member role (previously vol_user) have access to view songs and tags, and manage their own notes. Has full access to manage playlists and playlist teams. A member can request member access if they don't already have it and can update their own profile data.
+
+**guest**: Users with guest role have limited access - they can view songs and tags but cannot create playlists, notes, or teams.
 
 ## 0. Authentication
 
@@ -30,27 +32,8 @@ req.body:
 }
 ```
 
-Response (If Admin):
-
-```json
-{
-  "code": 200,
-  "message": "Login successful",
-  "data": {
-    "token": "your_jwt_token_here",
-    "user": {
-      "id": "admin001",
-      "email": "admin@example.com",
-      "role": "admin",
-      "is_admin": true,
-      "status": "active"
-    }
-  }
-}
-```
-
-Response (If Vol_User or Regular User):
-
+Response:
+admin
 ```json
 {
   "code": 200,
@@ -59,11 +42,86 @@ Response (If Vol_User or Regular User):
     "token": "your_jwt_token_here",
     "user": {
       "id": "user123",
-      "email": "user1@example.com",
-      "role": "member",
-      "is_admin": false,
+      "email": "user@example.com",
+      "role": "admin",
       "status": "active"
     }
+  }
+}
+```
+
+### 0.2. User Logout
+
+POST /api/auth/logout
+
+Description: Logs out the authenticated user.
+
+Request:
+
+Bearer token (required)
+
+Response:
+
+```json
+{
+  "code": 200,
+  "message": "Logout successful"
+}
+```
+
+### 0.3. Verify Token
+
+POST /api/auth/verify
+
+Description: Verifies the validity of a JWT token and returns user information.
+
+Request:
+
+No Bearer token for this endpoint.
+
+req.body:
+
+```json
+{
+  "token": "your_jwt_token_here"
+}
+```
+
+Response:
+
+```json
+{
+  "code": 200,
+  "message": "Token verified successfully",
+  "data": {
+    "user": {
+      "id": "user123",
+      "email": "user@example.com",
+      "role": "admin",
+      "status": "active"
+    }
+  }
+}
+```
+
+### 0.4. Refresh Token
+
+POST /api/auth/refresh
+
+Description: Generates a new JWT token for the authenticated user.
+
+Request:
+
+Bearer token (required)
+
+Response:
+
+```json
+{
+  "code": 200,
+  "message": "Token refreshed successfully",
+  "data": {
+    "token": "new_jwt_token_here"
   }
 }
 ```
@@ -78,7 +136,7 @@ Description: Retrieves a list of all users who have vol_user status or request s
 
 Request:
 
-Bearer token (Admin)
+Bearer token
 
 Response:
 
@@ -86,22 +144,33 @@ Response:
 {
   "code": 200,
   "message": "User access list retrieved successfully",
-  "data": [
-    {
-      "id": "user123",
-      "email": "user1@example.com",
-      "role": "member",
-      "is_admin": false,
-      "status": "active"
-    },
-    {
-      "id": "user789",
-      "email": "pendinguser@example.com",
-      "role": "member",
-      "is_admin": false,
-      "status": "request"
-    }
-  ]
+  "data": {
+    "active_users": [
+      {
+        "id": "user123",
+        "email": "user1@example.com",
+        "role": "member",
+        "status": "active"
+      }
+    ],
+    "request_users": [
+      {
+        "id": "user789",
+        "email": "pendinguser@example.com",
+        "role": "member",
+        "status": "request"
+      }
+    ],
+    "suspended_users": [
+      {
+        "id": "user456",
+        "email": "suspended@example.com",
+        "role": "member",
+        "status": "suspend"
+      }
+    ]
+    
+  }
 }
 ```
 
@@ -115,21 +184,10 @@ Request:
 
 Bearer token (Admin)
 
-req.body:
+Query Parameters:
+- status: "active" or "suspend"
 
-```json
-{
-  "status": "active" // Change status to active
-}
-```
-
-OR
-
-```json
-{
-  "status": "suspend" // Change status to suspend
-}
-```
+Example: `PUT /api/admin/user-access/user123?status=active`
 
 Response:
 
@@ -139,26 +197,26 @@ Response:
   "message": "User access updated successfully",
   "data": {
     "id": "user123",
-    "status": "active" // Or the updated status
+    "status": "active"
   }
 }
 ```
 
-### 1.3. Request Vol_User Access (Vol_User Only)
+### 1.3. Request Vol_User Access
 
-POST /api/vol_user/request-vol-access
+POST /api/users/request-vol-access
 
-Description: Allows users who do not have vol_user status to send a request to an admin to change their status to vol_user. This will change the user's status to request.
+Description: Allows users to send a request to an admin to change their status to request and update their role from guest to member.
 
 Request:
 
-Bearer token (User who does not have vol_user status)
+Bearer token (required)
 
 req.body:
 
 ```json
 {
-  "message": "I would like to get access as a vol_user."
+  "user_id": "user123"
 }
 ```
 
@@ -169,7 +227,8 @@ Response:
   "code": 202,
   "message": "Vol_user access request sent successfully. Awaiting admin approval.",
   "data": {
-    "user_id": "user_requesting_id",
+    "user_id": "user123",
+    "role": "member",
     "status": "request"
   }
 }
@@ -183,7 +242,7 @@ GET /api/songs
 
 Request:
 
-Bearer token (Admin or Vol_User)
+Bearer token
 
 Response:
 
@@ -221,7 +280,7 @@ GET /api/songs/:id
 
 Request:
 
-Bearer token (Admin or Vol_User)
+Bearer token
 
 Response:
 
@@ -296,8 +355,8 @@ req.body:
 
 ```json
 {
-  "title": "Updated Song Title",
-  "tag_ids": ["tag003", "tag004"]
+  "title": "New Song Title", 
+  "artist": "Artist B",
 }
 ```
 
@@ -307,10 +366,6 @@ Response:
 {
   "code": 200,
   "message": "Song updated successfully",
-  "data": {
-    "id": "song001",
-    "title": "Updated Song Title"
-  }
 }
 ```
 
@@ -336,7 +391,7 @@ Response:
 
 ## 3. Tag Endpoints
 
-### 3.1. Retrieve All Tags (Public Access)
+### 3.1. Retrieve All Tags
 
 GET /api/tags
 
@@ -344,14 +399,14 @@ Description: Retrieves a list of all available tags for song categorization.
 
 Request:
 
-Bearer token (Admin or Vol_User)
+Bearer token
 
 Response:
 
 ```json
 {
   "code": 200,
-  "message": "List of tags retrieved successfully",
+  "message": "Tags retrieved successfully",
   "data": [
     {
       "id": "tag001",
@@ -367,7 +422,7 @@ Response:
 }
 ```
 
-### 3.2. Retrieve Tag By ID (Public Access)
+### 3.2. Retrieve Tag By ID
 
 GET /api/tags/:id
 
@@ -380,7 +435,7 @@ Response:
 ```json
 {
   "code": 200,
-  "message": "Tag details retrieved successfully",
+  "message": "Tag retrieved successfully",
   "data": {
     "id": "tag001",
     "name": "rock",
@@ -419,104 +474,6 @@ Response:
 }
 ```
 
-### 3.4. Update Tag (Admin Only)
-
-PUT /api/admin/tags/:id
-
-Request:
-
-Bearer token (Admin)
-
-req.body:
-
-```json
-{
-  "name": "blues-rock",
-  "description": "Blues rock fusion genre"
-}
-```
-
-Response:
-
-```json
-{
-  "code": 200,
-  "message": "Tag updated successfully",
-  "data": {
-    "id": "tag003",
-    "name": "blues-rock"
-  }
-}
-```
-
-### 3.5. Delete Tag (Admin Only)
-
-DELETE /api/admin/tags/:id
-
-Description: Deletes a tag and removes all song-tag relationships.
-
-Request:
-
-Bearer token (Admin)
-
-Response:
-
-```json
-{
-  "code": 200,
-  "message": "Tag deleted successfully",
-  "data": {
-    "id": "tag003"
-  }
-}
-```
-
-### 3.6. Add Tag to Song (Admin Only)
-
-POST /api/admin/songs/:song_id/tags/:tag_id
-
-Description: Associates a tag with a song using the pivot table.
-
-Request:
-
-Bearer token (Admin)
-
-Response:
-
-```json
-{
-  "code": 201,
-  "message": "Tag added to song successfully",
-  "data": {
-    "song_id": "song001",
-    "tag_id": "tag001"
-  }
-}
-```
-
-### 3.7. Remove Tag from Song (Admin Only)
-
-DELETE /api/admin/songs/:song_id/tags/:tag_id
-
-Description: Removes a tag association from a song.
-
-Request:
-
-Bearer token (Admin)
-
-Response:
-
-```json
-{
-  "code": 200,
-  "message": "Tag removed from song successfully",
-  "data": {
-    "song_id": "song001",
-    "tag_id": "tag001"
-  }
-}
-```
-
 ## 4. Notes Endpoints
 
 ### 4.1. Add Note to Song (Vol_User Only)
@@ -527,7 +484,7 @@ Description: A vol_user can add a new note to a song. The user_id in the path mu
 
 Request:
 
-Bearer token (Vol_User)
+Bearer token
 
 req.body:
 
@@ -560,7 +517,7 @@ Description: Retrieves all notes created by the logged-in vol_user. The user_id 
 
 Request:
 
-Bearer token (Vol_User)
+Bearer token
 
 Response:
 
@@ -593,7 +550,7 @@ Description: Retrieves details of a specific note created by the logged-in vol_u
 
 Request:
 
-Bearer token (Vol_User)
+Bearer token
 
 Response:
 
@@ -618,7 +575,7 @@ Description: A vol_user can update their existing note on a song. The user_id in
 
 Request:
 
-Bearer token (Vol_User)
+Bearer token
 
 req.body:
 
@@ -636,6 +593,8 @@ Response:
   "message": "Note updated successfully",
   "data": {
     "id": "note_id_xyz",
+    "user_id": "user123",
+    "song_id": "song001",
     "notes": "Updated note by vol_user."
   }
 }
@@ -649,7 +608,7 @@ Description: Deletes a note created by the logged-in vol_user. The user_id in th
 
 Request:
 
-Bearer token (Vol_User)
+Bearer token
 
 Response:
 
@@ -671,7 +630,7 @@ GET /api/playlists
 
 Request:
 
-Bearer token (Vol_User)
+Bearer token 
 
 Note: A vol_user can only retrieve playlists they own or are a member of the team for.
 
@@ -684,24 +643,12 @@ Response:
   "data": [
     {
       "id": "playlist_abc",
-      "playlist_name": "Favorite Playlist",
-      "songs": [
-        {
-          "id": "song001",
-          "title": "Song Title 1",
-          "artist": "Artist A",
-          "order_index": 0
-        },
-        {
-          "id": "song003",
-          "title": "Song Title 3",
-          "artist": "Artist C",
-          "order_index": 1
-        }
-      ],
-      "sharable_link": "http://example.com/share/playlist_abc",
-      "playlist_team_id": "team_xyz"
-    }
+      "playlist_name": "Favorite Playlist"
+    },
+    {
+      "id": "playlist_def",
+      "playlist_name": "Favorite Playlist 2"
+    },
   ]
 }
 ```
@@ -712,7 +659,7 @@ GET /api/playlists/:id
 
 Request:
 
-Bearer token (Vol_User)
+Bearer token 
 
 Note: A vol_user can only retrieve details of playlists they own or are a member of the team for.
 
@@ -739,8 +686,8 @@ Response:
         "order_index": 1
       }
     ],
-    "sharable_link": "http://example.com/share/playlist_abc",
-    "playlist_team_id": "team_xyz"
+    "sharable_link": "http://example.com/share/playlist_abc - will generate from other endpoint",
+    "playlist_team_id": "team_xyz - will generate after shareable_link generate"
   }
 }
 ```
@@ -788,7 +735,7 @@ PUT /api/playlists/:id
 
 Request:
 
-Bearer token (Vol_User)
+Bearer token 
 
 Note: A vol_user can only update playlists they own.
 
@@ -835,7 +782,7 @@ DELETE /api/playlists/:id
 
 Request:
 
-Bearer token (Vol_User)
+Bearer token 
 
 Note: A vol_user can only delete playlists they own.
 
@@ -879,13 +826,13 @@ Response:
 
 ### 5.7. Join Playlist via Shareable Link (Vol_User Only)
 
-POST /api/playlists/join/:share_token
+POST /api/playlists/join/:user_id/:playlist_id
 
 Description: Join a playlist using a shareable link token. This adds the user to the playlist team and locks the playlist from further joins unless invited by the team leader.
 
 Request:
 
-Bearer token (Vol_User)
+Bearer token
 
 Response:
 
@@ -904,7 +851,7 @@ Response:
 
 ### 5.8. Get Shared Playlist Details (Public Access via Link)
 
-GET /api/playlists/shared/:share_token
+GET /api/playlists/shared/:playlist_id
 
 Description: Get playlist details using shareable link without authentication (for preview). Shows basic playlist info and songs.
 
@@ -1019,7 +966,7 @@ POST /api/playlist-teams
 
 Request:
 
-Bearer token (Vol_User)
+Bearer token
 
 req.body:
 

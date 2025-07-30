@@ -264,7 +264,7 @@ class CrossJoinSequence {
   }
 }
 
-module.exports = {
+export default {
   Relationship,
   HasOneRelationship,
   HasManyRelationship,

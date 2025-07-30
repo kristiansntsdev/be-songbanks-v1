@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const ResourceGenerator = require("../generators/ResourceGenerator");
+import ResourceGenerator from "../generators/ResourceGenerator.js";
 
 class ResourceCommand {
   constructor() {
@@ -63,9 +63,9 @@ Based on TagController pattern with Sequelize ORM integration.
 }
 
 // Run the command if this file is executed directly
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const command = new ResourceCommand();
   command.execute();
 }
 
-module.exports = ResourceCommand;
+export default ResourceCommand;
