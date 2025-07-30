@@ -3,6 +3,7 @@ import express from "express";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpecs from "../config/swagger.js";
 import cors from "cors";
+import sequelize from "../config/database.js";
 
 const app = express();
 
@@ -45,6 +46,46 @@ app.get("/", (_, res) => {
     version: "1.0.0",
     environment: process.env.NODE_ENV || "development",
   });
+});
+
+// Health check route with database status
+app.get("/health", async (_, res) => {
+  try {
+    await sequelize.authenticate();
+    res.json({
+      status: "healthy",
+      database: "connected",
+      dialect: sequelize.getDialect(),
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "unhealthy",
+      database: "disconnected",
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
+// Health check route with database status
+app.get("/health", async (_, res) => {
+  try {
+    await sequelize.authenticate();
+    res.json({
+      status: "healthy",
+      database: "connected",
+      dialect: sequelize.getDialect(),
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "unhealthy",
+      database: "disconnected",
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    });
+  }
 });
 
 // Debug route to check swagger spec
