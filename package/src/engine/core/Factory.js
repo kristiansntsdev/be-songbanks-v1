@@ -1,4 +1,5 @@
-const faker = require("@faker-js/faker").faker;
+import { faker } from "@faker-js/faker";
+import { ulid } from "ulid";
 
 class Factory {
   constructor(model, attributes = {}) {
@@ -243,7 +244,6 @@ class Factory {
    * Generate ID (override for specific ID types)
    */
   generateId() {
-    const { ulid } = require("ulid");
     return ulid();
   }
 
@@ -263,4 +263,4 @@ class Factory {
   }
 }
 
-module.exports = Factory;
+export default Factory;

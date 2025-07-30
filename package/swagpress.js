@@ -6,34 +6,12 @@
  */
 
 // Re-export everything from the engine
-module.exports = require("./src/engine");
+export * from "./src/engine/index.js";
 
 // Export schemas for swagger documentation
-const schemas = require("./src/schemas");
-module.exports.schemas = schemas;
+import * as schemas from "./src/schemas/index.js";
+export { schemas };
 
-// Add convenient aliases for the most commonly used exceptions
-const {
-  ValidationException,
-  AuthenticationException,
-  BadRequestException,
-  UnauthorizedException,
-  ForbiddenException,
-  NotFoundException,
-  ModelNotFoundException,
-  AccountAccessDeniedException,
-  DuplicateResourceException,
-  ConflictException,
-} = require("./src/engine");
-
-// Export the most commonly used exceptions as named exports for convenience
-module.exports.ValidationException = ValidationException;
-module.exports.AuthenticationException = AuthenticationException;
-module.exports.BadRequestException = BadRequestException;
-module.exports.UnauthorizedException = UnauthorizedException;
-module.exports.ForbiddenException = ForbiddenException;
-module.exports.NotFoundException = NotFoundException;
-module.exports.ModelNotFoundException = ModelNotFoundException;
-module.exports.AccountAccessDeniedException = AccountAccessDeniedException;
-module.exports.DuplicateResourceException = DuplicateResourceException;
-module.exports.ConflictException = ConflictException;
+// Export engine as default for compatibility
+import engine from "./src/engine/index.js";
+export default engine;

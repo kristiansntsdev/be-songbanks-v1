@@ -1,4 +1,4 @@
-const Blueprint = require("./Blueprint");
+import Blueprint from "./Blueprint.js";
 
 class Schema {
   constructor(queryInterface, Sequelize) {
@@ -96,4 +96,4 @@ class Schema {
   }
 }
 
-module.exports = Schema;
+export default Schema;

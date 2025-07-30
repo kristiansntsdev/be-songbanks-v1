@@ -61,4 +61,4 @@ class HasAttributes {
   }
 }
 
-module.exports = HasAttributes;
+export default HasAttributes;

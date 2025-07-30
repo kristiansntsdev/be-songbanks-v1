@@ -1,9 +1,9 @@
 // Base Exception
-const BaseException = require("./BaseException");
-const ValidationException = require("./ValidationException");
+import BaseException from "./BaseException.js";
+import ValidationException from "./ValidationException.js";
 
 // HTTP Exceptions
-const {
+import {
   BadRequestException,
   UnauthorizedException,
   ForbiddenException,
@@ -11,22 +11,22 @@ const {
   ConflictException,
   TooManyRequestsException,
   InternalServerException,
-} = require("./HttpExceptions");
+} from "./HttpExceptions.js";
 
 // Application Exceptions
-const {
+import {
   AuthenticationException,
   AccountAccessDeniedException,
   ModelNotFoundException,
   DuplicateResourceException,
-} = require("./ApplicationExceptions");
+} from "./ApplicationExceptions.js";
 
 // Framework Exceptions (existing ones)
-const MigrationException = require("./MigrationException");
-const SchemaException = require("./SchemaException");
-const SeederException = require("./SeederException");
+import MigrationException from "./MigrationException.js";
+import SchemaException from "./SchemaException.js";
+import SeederException from "./SeederException.js";
 
-module.exports = {
+export {
   // Base
   BaseException,
   ValidationException,

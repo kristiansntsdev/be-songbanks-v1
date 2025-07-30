@@ -1,11 +1,11 @@
-const jwt = require("jsonwebtoken");
-const User = require("../models/User");
-const {
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
+import {
   AuthenticationException,
   AccountAccessDeniedException,
   ModelNotFoundException,
   ValidationException,
-} = require("../../package/swagpress");
+} from "../../package/swagpress.js";
 
 class AuthService {
   static async login(email, password) {
@@ -94,4 +94,4 @@ class AuthService {
   }
 }
 
-module.exports = AuthService;
+export default AuthService;

@@ -1,4 +1,5 @@
-const faker = require("@faker-js/faker").faker;
+import { faker } from "@faker-js/faker";
+import { ulid } from "ulid";
 
 class FactoryTypes {
   /**
@@ -192,7 +193,7 @@ class FactoryTypes {
    */
   static ulid() {
     return () => {
-      const { ulid } = require("ulid");
+      // Use imported ulid
       return ulid();
     };
   }
@@ -323,4 +324,4 @@ class FactoryTypes {
   }
 }
 
-module.exports = FactoryTypes;
+export default FactoryTypes;

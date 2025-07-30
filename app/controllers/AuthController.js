@@ -1,5 +1,5 @@
-const AuthService = require("../services/AuthService");
-const ErrorHandler = require("../middlewares/ErrorHandler");
+import AuthService from "../services/AuthService.js";
+import ErrorHandler from "../middlewares/ErrorHandler.js";
 
 class AuthController {
   /**
@@ -9,8 +9,8 @@ class AuthController {
    * @Tags Auth
    * @Accept application/json
    * @Produce application/json
-   * @Body {object} request.LoginRequest "User login credentials"
-   * @Success 200 {object} responses.LoginResponse "Login successful"
+   * @Body {object} LoginRequest "User login credentials"
+   * @Success 200 {object} LoginResponse "Login successful"
    * @Failure 400 {object} BadRequestError "Bad request - invalid credentials"
    * @Failure 401 {object} UnauthorizedError "Unauthorized - invalid email or password"
    * @Router /api/auth/login [post]
@@ -37,7 +37,7 @@ class AuthController {
    * @Accept application/json
    * @Produce application/json
    * @auth
-   * @Success 200 {object} responses.LogoutResponse "Logout successful"
+   * @Success 200 {object} LogoutResponse "Logout successful"
    * @Failure 401 {object} UnauthorizedError "Unauthorized - invalid or missing token"
    * @Router /api/auth/logout [post]
    */
@@ -55,8 +55,8 @@ class AuthController {
    * @Tags Auth
    * @Accept application/json
    * @Produce application/json
-   * @Body {object} request.VerifyTokenRequest "Token to verify"
-   * @Success 200 {object} responses.VerifyTokenResponse "Token verified successfully"
+   * @Body {object} VerifyTokenRequest "Token to verify"
+   * @Success 200 {object} VerifyTokenResponse "Token verified successfully"
    * @Failure 400 {object} BadRequestError "Bad request - invalid token format"
    * @Failure 401 {object} UnauthorizedError "Unauthorized - invalid or expired token"
    * @Router /api/auth/verify [post]
@@ -80,7 +80,7 @@ class AuthController {
    * @Accept application/json
    * @Produce application/json
    * @auth
-   * @Success 200 {object} responses.RefreshTokenResponse "Token refreshed successfully"
+   * @Success 200 {object} RefreshTokenResponse "Token refreshed successfully"
    * @Failure 401 {object} UnauthorizedError "Unauthorized - invalid or missing token"
    * @Router /api/auth/refresh [post]
    */
@@ -95,4 +95,4 @@ class AuthController {
   });
 }
 
-module.exports = AuthController;
+export default AuthController;

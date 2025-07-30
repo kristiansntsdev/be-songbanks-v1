@@ -1,12 +1,12 @@
-const { Sequelize, Model, DataTypes } = require("sequelize");
-const { ulid } = require("ulid");
+import { Sequelize, Model, DataTypes } from "sequelize";
+import { ulid } from "ulid";
 
 // Import concerns/traits
-const HasAttributes = require("./concerns/HasAttributes");
-const GuardsAttributes = require("./concerns/GuardsAttributes");
-const HidesAttributes = require("./concerns/HidesAttributes");
-const HasTimestamps = require("./concerns/HasTimestamps");
-const HasEvents = require("./concerns/HasEvents");
+import HasAttributes from "./concerns/HasAttributes.js";
+import GuardsAttributes from "./concerns/GuardsAttributes.js";
+import HidesAttributes from "./concerns/HidesAttributes.js";
+import HasTimestamps from "./concerns/HasTimestamps.js";
+import HasEvents from "./concerns/HasEvents.js";
 
 /**
  * Laravel Eloquent-inspired Sequelize Model abstraction
@@ -479,7 +479,7 @@ class BaseModel extends Model {
       return this.findAll(options);
     }
 
-    const { Op } = require("sequelize");
+    const { Op } = Sequelize;
     const sequelize = this.sequelize;
 
     // Use appropriate LIKE operator based on dialect
@@ -727,7 +727,7 @@ class QueryBuilder {
       if (typeof operator === "object") {
         this.whereConditions[field] = operator;
       } else {
-        const { Op } = require("sequelize");
+        const { Op } = Sequelize;
         switch (operator.toLowerCase()) {
           case "like":
             this.whereConditions[field] = { [Op.like]: value };
@@ -771,7 +771,7 @@ class QueryBuilder {
    * Add OR where conditions
    */
   orWhere(field, operator = null, value = null) {
-    const { Op } = require("sequelize");
+    const { Op } = Sequelize;
     const condition = {};
 
     if (typeof field === "object") {
@@ -815,7 +815,7 @@ class QueryBuilder {
       return this;
     }
 
-    const { Op } = require("sequelize");
+    const { Op } = Sequelize;
     const sequelize = this.model.sequelize;
     const likeOp = sequelize.getDialect() === "postgres" ? Op.iLike : Op.like;
 
@@ -975,7 +975,7 @@ class QueryBuilder {
     const options = this.buildOptions();
 
     // Use Sequelize Model methods directly
-    const { Model } = require("sequelize");
+    const { Model } = Sequelize;
 
     switch (this.method) {
       case "findAll":
@@ -1039,7 +1039,7 @@ class QueryBuilder {
    */
   async countDistinct(field) {
     const options = this.buildOptions();
-    const { fn, col } = require("sequelize");
+    const { fn, col } = Sequelize;
     return await this.model.count({
       ...options,
       distinct: true,
@@ -1078,4 +1078,4 @@ class QueryBuilder {
   }
 }
 
-module.exports = BaseModel;
+export default BaseModel;

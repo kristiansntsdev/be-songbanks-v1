@@ -1,5 +1,5 @@
-const jwt = require("jsonwebtoken");
-const { UnauthorizedException } = require("../../package/swagpress");
+import jwt from "jsonwebtoken";
+import { UnauthorizedException } from "../../package/swagpress.js";
 
 const JWT_SECRET = process.env.SESSION_SECRET || "your-secret-key";
 
@@ -24,4 +24,4 @@ const authenticateToken = (req, res, next) => {
   }
 };
 
-module.exports = { authenticateToken };
+export { authenticateToken };

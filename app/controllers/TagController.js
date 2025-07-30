@@ -1,6 +1,6 @@
-const TagService = require("../services/TagService");
-const ErrorHandler = require("../middlewares/ErrorHandler");
-const { NotFoundException } = require("../../package/swagpress");
+import TagService from "../services/TagService.js";
+import ErrorHandler from "../middlewares/ErrorHandler.js";
+import { NotFoundException } from "../../package/swagpress.js";
 
 class TagController {
   /**
@@ -99,4 +99,4 @@ class TagController {
   });
 }
 
-module.exports = TagController;
+export default TagController;

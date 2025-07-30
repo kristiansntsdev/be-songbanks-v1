@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   allOf: [
     {
       $ref: "#/components/schemas/BaseResponse",

@@ -186,4 +186,4 @@ class SchemaException extends Error {
   }
 }
 
-module.exports = SchemaException;
+export default SchemaException;

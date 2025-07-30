@@ -1,8 +1,8 @@
-const env = require("dotenv");
-const express = require("express");
-const swaggerUi = require("swagger-ui-express");
-const swaggerSpecs = require("../config/swagger");
-const cors = require("cors");
+import env from "dotenv";
+import express from "express";
+import swaggerUi from "swagger-ui-express";
+import swaggerSpecs from "../config/swagger.js";
+import cors from "cors";
 
 const app = express();
 
@@ -13,8 +13,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Loading Routes
-const apiRoutes = require("../routes/api");
-const ErrorHandler = require("../app/middlewares/ErrorHandler");
+import apiRoutes from "../routes/api.js";
+import ErrorHandler from "../app/middlewares/ErrorHandler.js";
 
 // Serve swagger.json directly
 app.get("/swagger.json", (_, res) => {
@@ -48,15 +48,15 @@ app.get("/", (_, res) => {
 });
 
 // Debug route to check swagger spec
-app.get("/swagger-debug", (_, res) => {
+app.get("/swagger-debug", async (_, res) => {
   try {
-    const swaggerSpecs = require("../config/swagger");
+    const { default: swaggerSpecsDebug } = await import("../config/swagger.js");
     res.json({
       message: "Swagger spec loaded successfully",
-      hasSpecs: !!swaggerSpecs,
-      pathCount: Object.keys(swaggerSpecs.paths || {}).length,
-      serverCount: (swaggerSpecs.servers || []).length,
-      title: swaggerSpecs.info?.title || "Unknown",
+      hasSpecs: !!swaggerSpecsDebug,
+      pathCount: Object.keys(swaggerSpecsDebug.paths || {}).length,
+      serverCount: (swaggerSpecsDebug.servers || []).length,
+      title: swaggerSpecsDebug.info?.title || "Unknown",
     });
   } catch (error) {
     res.status(500).json({
@@ -74,4 +74,4 @@ app.use(ErrorHandler.notFound);
 app.use(ErrorHandler.handle);
 
 // Export the Express app for Vercel
-module.exports = app;
+export default app;

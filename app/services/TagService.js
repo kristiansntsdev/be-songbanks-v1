@@ -1,6 +1,6 @@
-const { fn, col, literal } = require("sequelize");
-const Tag = require("../models/Tag");
-const Song = require("../models/Song");
+import { fn, col, literal } from "sequelize";
+import Tag from "../models/Tag.js";
+import Song from "../models/Song.js";
 
 class TagService {
   static async getAllTags(options = {}) {
@@ -128,4 +128,4 @@ class TagService {
   }
 }
 
-module.exports = TagService;
+export default TagService;

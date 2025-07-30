@@ -1,6 +1,6 @@
-const Note = require("../models/Note");
-const Song = require("../models/Song");
-const User = require("../models/User");
+import Note from "../models/Note.js";
+import Song from "../models/Song.js";
+import User from "../models/User.js";
 
 class NoteService {
   static async getAllNotes(options = {}) {
@@ -326,4 +326,4 @@ class NoteService {
   }
 }
 
-module.exports = NoteService;
+export default NoteService;

@@ -69,4 +69,4 @@ class ColumnBuilder {
   }
 }
 
-module.exports = ColumnBuilder;
+export default ColumnBuilder;

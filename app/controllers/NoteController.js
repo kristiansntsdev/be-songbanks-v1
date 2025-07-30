@@ -1,5 +1,5 @@
-const NoteService = require("../services/NoteService");
-const ErrorHandler = require("../middlewares/ErrorHandler");
+import NoteService from "../services/NoteService.js";
+import ErrorHandler from "../middlewares/ErrorHandler.js";
 
 class NoteController {
   /**
@@ -140,4 +140,4 @@ class NoteController {
   });
 }
 
-module.exports = NoteController;
+export default NoteController;

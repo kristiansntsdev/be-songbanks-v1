@@ -1,36 +1,36 @@
 // Core classes
-const Migration = require("./core/Migration");
-const Schema = require("./core/Schema");
-const Blueprint = require("./core/Blueprint");
-const Factory = require("./core/Factory");
-const Seeder = require("./core/Seeder");
-const BaseModel = require("./core/BaseModel");
-const ModelFactory = require("./core/ModelFactory");
+import Migration from "./core/Migration.js";
+import Schema from "./core/Schema.js";
+import Blueprint from "./core/Blueprint.js";
+import Factory from "./core/Factory.js";
+import Seeder from "./core/Seeder.js";
+import BaseModel from "./core/BaseModel.js";
+import ModelFactory from "./core/ModelFactory.js";
 
 // Builders
-const ColumnBuilder = require("./builders/ColumnBuilder");
-const IndexBuilder = require("./builders/IndexBuilder");
-const ForeignKeyBuilder = require("./builders/ForeignKeyBuilder");
-const ForeignIdBuilder = require("./builders/ForeignIdBuilder");
-const FactoryBuilder = require("./builders/FactoryBuilder");
+import ColumnBuilder from "./builders/ColumnBuilder.js";
+import IndexBuilder from "./builders/IndexBuilder.js";
+import ForeignKeyBuilder from "./builders/ForeignKeyBuilder.js";
+import ForeignIdBuilder from "./builders/ForeignIdBuilder.js";
+import FactoryBuilder from "./builders/FactoryBuilder.js";
 
 // Types
-const StringTypes = require("./types/StringTypes");
-const NumericTypes = require("./types/NumericTypes");
-const DateTypes = require("./types/DateTypes");
-const SpecialTypes = require("./types/SpecialTypes");
-const FactoryTypes = require("./types/FactoryTypes");
+import StringTypes from "./types/StringTypes.js";
+import NumericTypes from "./types/NumericTypes.js";
+import DateTypes from "./types/DateTypes.js";
+import SpecialTypes from "./types/SpecialTypes.js";
+import FactoryTypes from "./types/FactoryTypes.js";
 
 // Operations
-const TableOperations = require("./operations/TableOperations");
-const SeederOperations = require("./operations/SeederOperations");
+import TableOperations from "./operations/TableOperations.js";
+import SeederOperations from "./operations/SeederOperations.js";
 
 // Utils
-const TableNameResolver = require("./utils/TableNameResolver");
-const TypeMapper = require("./utils/TypeMapper");
+import TableNameResolver from "./utils/TableNameResolver.js";
+import TypeMapper from "./utils/TypeMapper.js";
 
 // Exceptions
-const {
+import {
   BaseException,
   ValidationException,
   BadRequestException,
@@ -47,9 +47,30 @@ const {
   MigrationException,
   SchemaException,
   SeederException,
-} = require("./exceptions");
+} from "./exceptions/index.js";
 
-module.exports = {
+// Convenience factory methods
+export const createMigration = (queryInterface, Sequelize) => {
+  return new Migration(queryInterface, Sequelize);
+};
+
+export const createSchema = (queryInterface, Sequelize) => {
+  return new Schema(queryInterface, Sequelize);
+};
+
+export const createBlueprint = (tableName, queryInterface, Sequelize) => {
+  return new Blueprint(tableName, queryInterface, Sequelize);
+};
+
+export const createFactory = (modelName, definition) => {
+  return Factory.define(modelName, definition);
+};
+
+export const createSeeder = (queryInterface, Sequelize) => {
+  return new Seeder(queryInterface, Sequelize);
+};
+
+export {
   // Core exports
   Migration,
   Schema,
@@ -98,25 +119,52 @@ module.exports = {
   MigrationException,
   SchemaException,
   SeederException,
+};
+
+export default {
+  // All exports combined for default export
+  Migration,
+  Schema,
+  Blueprint,
+  Factory,
+  Seeder,
+  BaseModel,
+  ModelFactory,
+  ColumnBuilder,
+  IndexBuilder,
+  ForeignKeyBuilder,
+  ForeignIdBuilder,
+  FactoryBuilder,
+  StringTypes,
+  NumericTypes,
+  DateTypes,
+  SpecialTypes,
+  FactoryTypes,
+  TableOperations,
+  SeederOperations,
+  TableNameResolver,
+  TypeMapper,
+  BaseException,
+  ValidationException,
+  BadRequestException,
+  UnauthorizedException,
+  ForbiddenException,
+  NotFoundException,
+  ConflictException,
+  TooManyRequestsException,
+  InternalServerException,
+  AuthenticationException,
+  AccountAccessDeniedException,
+  ModelNotFoundException,
+  DuplicateResourceException,
+  MigrationException,
+  SchemaException,
+  SeederException,
 
   // Convenience factory methods
-  createMigration: (queryInterface, Sequelize) => {
-    return new Migration(queryInterface, Sequelize);
-  },
-
-  createSchema: (queryInterface, Sequelize) => {
-    return new Schema(queryInterface, Sequelize);
-  },
-
-  createBlueprint: (tableName, queryInterface, Sequelize) => {
-    return new Blueprint(tableName, queryInterface, Sequelize);
-  },
-
-  createFactory: (modelName, definition) => {
-    return Factory.define(modelName, definition);
-  },
-
-  createSeeder: (queryInterface, Sequelize) => {
-    return new Seeder(queryInterface, Sequelize);
-  },
+  createMigration,
+  createSchema,
+  createBlueprint,
+  createFactory,
+  createSeeder,
 };

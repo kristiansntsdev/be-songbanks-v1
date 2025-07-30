@@ -114,4 +114,4 @@ class HidesAttributes {
   }
 }
 
-module.exports = HidesAttributes;
+export default HidesAttributes;

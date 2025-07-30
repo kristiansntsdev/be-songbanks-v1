@@ -1,5 +1,5 @@
-const { DataTypes } = require("sequelize");
-const { ulid } = require("ulid");
+import { DataTypes } from "sequelize";
+import { ulid } from "ulid";
 
 /**
  * ModelFactory - Automatic model initialization
@@ -162,4 +162,4 @@ class ModelFactory {
   }
 }
 
-module.exports = ModelFactory;
+export default ModelFactory;

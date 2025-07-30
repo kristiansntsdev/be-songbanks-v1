@@ -1,5 +1,5 @@
-const { faker } = require("@faker-js/faker");
-const { ulid } = require("ulid");
+import { faker } from "@faker-js/faker";
+import { ulid } from "ulid";
 
 /**
  * FactoryTypes - Laravel-inspired factory data generators
@@ -373,4 +373,4 @@ class FactoryTypes {
   }
 }
 
-module.exports = FactoryTypes;
+export default FactoryTypes;

@@ -1,4 +1,5 @@
-const SeederException = require("../exceptions/SeederException");
+import SeederException from "../exceptions/SeederException.js";
+import { ulid } from "ulid";
 
 class SeederOperations {
   constructor(queryInterface, Sequelize) {
@@ -197,7 +198,7 @@ class SeederOperations {
    */
   async insertRecord(tableName, record) {
     // Add ID if not present (using ULID)
-    const { ulid } = require("ulid");
+    // Use imported ulid
 
     // Add timestamps if not present
     const timestamp = new Date();
@@ -405,4 +406,4 @@ class SeederOperations {
   }
 }
 
-module.exports = SeederOperations;
+export default SeederOperations;
