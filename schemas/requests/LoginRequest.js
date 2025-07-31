@@ -1,12 +1,11 @@
 export default {
   type: "object",
-  required: ["email", "password"],
+  required: ["username", "password"],
   properties: {
-    email: {
+    username: {
       type: "string",
-      format: "email",
-      example: "user@example.com",
-      description: "User's email address",
+      example: "brimnasional@gmail.com",
+      description: "Username for admin or email for user",
     },
     password: {
       type: "string",

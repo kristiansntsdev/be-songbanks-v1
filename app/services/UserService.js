@@ -7,45 +7,50 @@ import {
 } from "../../package/swagpress.js";
 
 class UserService {
-  static async changeUserStatus(userId, status, adminUser) {
+  static async changeUserStatus(userId, status, adminUser, userType) {
     // Validate that the requester is an admin
     await this.validateAdminPermission(adminUser);
 
     // Validate that the target user exists
-    const targetUser = await this.validateUserExists(userId);
+    const targetUser = await this.validateUserExists(userId, userType);
 
     // Validate the status value
     this.validateUserStatus(status);
 
-    // Update the target user's status
-    await User.update({ status }, { where: { id: userId } });
-
-    // Return the updated user data
-    targetUser.status = status; // Update the local object to reflect the change
-
-    return {
-      user: targetUser,
-      message: `User status changed to ${status}`,
-    };
+    // Note: Status updates would need to be implemented with raw SQL queries
+    // This is a placeholder that would need specific implementation based on your table structure
+    throw new Error(
+      "Status updates not implemented for external database tables"
+    );
   }
 
   // Helper methods
   static async validateAdminPermission(adminUser) {
     // adminUser should be the authenticated user object from JWT token
-    if (!adminUser || adminUser.role !== "admin") {
+    if (!adminUser || !adminUser.isAdmin) {
       throw new Error("Unauthorized: Admin access required");
     }
     return adminUser;
   }
 
-  static async validateUserExists(userId) {
-    const user = await User.findByPk(userId);
+  static async validateUserExists(userId, userType = null) {
+    if (!userType) {
+      // Try to find user in both tables if userType not specified
+      let user = await User.findById(userId, "pengurus");
+      if (!user) {
+        user = await User.findById(userId, "peserta");
+      }
+      if (!user) throw new NotFoundException("User not found");
+      return user;
+    }
+
+    const user = await User.findById(userId, userType);
     if (!user) throw new NotFoundException("User not found");
     return user;
   }
 
   static async ensureUserEmailUnique(email) {
-    const existing = await User.query().where("email", email).first();
+    const existing = await User.findByEmail(email);
 
     if (existing) {
       throw new Error("User already exists with this email");
@@ -53,7 +58,7 @@ class UserService {
   }
 
   static async validateUpdatePermission(userId, requesterId, requester) {
-    if (userId !== requesterId && requester.role !== "admin") {
+    if (userId !== requesterId && !requester.isAdmin) {
       throw new Error("Unauthorized: Can only update your own profile");
     }
   }
@@ -91,62 +96,27 @@ class UserService {
   }
 
   static async getUserAccess() {
-    const [activeUsers, requestUsers, suspendedUsers] = await Promise.all([
-      User.query().where("status", "active").get(),
-      User.query().where("status", "request").get(),
-      User.query().where("status", "suspend").get(),
-    ]);
-
-    return {
-      active_users: activeUsers
-        .filter((user) => user.role !== "admin")
-        .map((user) => ({
-          id: user.id,
-          email: user.email,
-          role: user.role,
-          status: user.status,
-        })),
-      request_users: requestUsers.map((user) => ({
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        status: user.status,
-      })),
-      suspended_users: suspendedUsers.map((user) => ({
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        status: user.status,
-      })),
-    };
+    // Note: This method would need to be implemented with raw SQL queries
+    // for the external database tables since they don't have status fields
+    // This is a placeholder that would need specific implementation
+    throw new Error(
+      "User access management not implemented for external database tables"
+    );
   }
 
-  static async requestVolAccess(userId) {
-    const user = await this.validateUserExists(userId);
+  static async requestVolAccess(userId, userType) {
+    const user = await this.validateUserExists(userId, userType);
 
     if (!user) {
       throw new NotFoundException("User not found");
     }
 
-    if (user.status === "active" || user.status === "request") {
-      throw new BadRequestException(
-        "User already has access or has pending request"
-      );
-    }
-
-    if (user.status === "suspend") {
-      throw new BadRequestException(
-        "User is suspended and cannot request access"
-      );
-    }
-
-    // Update user status to request using direct database update
-    await User.update({ status: "request" }, { where: { id: userId } });
-
-    return {
-      status: "request",
-      message: "Access request submitted successfully",
-    };
+    // Note: Access request functionality would need to be implemented with raw SQL queries
+    // for the external database tables since they don't have status fields
+    // This is a placeholder that would need specific implementation
+    throw new Error(
+      "Access request functionality not implemented for external database tables"
+    );
   }
 }
 

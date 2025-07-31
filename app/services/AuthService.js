@@ -8,15 +8,14 @@ import {
 } from "../../package/swagpress.js";
 
 class AuthService {
-  static async login(email, password) {
-    this.validateLoginInput(email, password);
+  static async login(username, password) {
+    this.validateLoginInput(username, password);
 
-    const user = await User.scope("withPassword").where("email", email).first();
+    const user = await User.findByCredentials(username, password);
 
     if (!user) throw new AuthenticationException("Invalid credentials");
 
-    this.validateUserStatus(user);
-    this.validatePassword(user.password, password);
+    this.validateUserAccess(user);
 
     const token = this.generateToken(user);
     const userResponse = this.sanitizeUser(user);
@@ -27,10 +26,10 @@ class AuthService {
   static async verifyToken(token) {
     try {
       const decoded = jwt.verify(token, process.env.SESSION_SECRET);
-      const user = await User.findByPk(decoded.userId);
+      const user = await User.findById(decoded.userId, decoded.userType);
 
       if (!user) throw new ModelNotFoundException("User", decoded.userId);
-      this.validateUserStatus(user);
+      this.validateUserAccess(user);
 
       return user;
     } catch (error) {
@@ -41,8 +40,9 @@ class AuthService {
   static generateToken(user) {
     const payload = {
       userId: user.id,
-      email: user.email,
-      role: user.role,
+      username: user.username,
+      userType: user.userType,
+      nama: user.nama,
     };
 
     return jwt.sign(payload, process.env.SESSION_SECRET, {
@@ -50,19 +50,38 @@ class AuthService {
     });
   }
 
-  static async refreshToken(userId) {
-    const user = await User.findByPk(userId);
+  static async refreshToken(userId, userType) {
+    const user = await User.findById(userId, userType);
     if (!user) throw new ModelNotFoundException("User", userId);
 
-    this.validateUserStatus(user);
+    this.validateUserAccess(user);
     const token = this.generateToken(user);
 
     return { token, message: "Token refreshed successfully" };
   }
 
-  static validateLoginInput(email, password) {
-    if (!email) throw ValidationException.required("email");
+  static validateLoginInput(username, password) {
+    if (!username) throw ValidationException.required("username");
     if (!password) throw ValidationException.required("password");
+  }
+
+  static validateUserAccess(user) {
+    if (user.userType === "pengurus") {
+      if (parseInt(user.leveladmin) <= 1) {
+        throw new AccountAccessDeniedException(
+          "Insufficient admin level access"
+        );
+      }
+    } else if (user.userType === "peserta") {
+      if (parseInt(user.userlevel) <= 2) {
+        throw new AccountAccessDeniedException(
+          "Insufficient user level access"
+        );
+      }
+      if (user.verifikasi !== "1") {
+        throw new AccountAccessDeniedException("Account not verified");
+      }
+    }
   }
 
   static validateUserStatus(user) {
@@ -78,7 +97,7 @@ class AuthService {
   }
 
   static sanitizeUser(user) {
-    const userResponse = user.toJSON();
+    const userResponse = { ...user };
     delete userResponse.password;
     return userResponse;
   }

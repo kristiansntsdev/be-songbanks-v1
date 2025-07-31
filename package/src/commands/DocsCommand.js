@@ -398,7 +398,7 @@ Features:
     const lowerMethod = methodName.toLowerCase();
 
     if (lowerMethod.includes("login"))
-      return "Authenticate user with email and password";
+      return "Authenticate admin (pengurus) with username/password or user (peserta) with email/password";
     if (lowerMethod.includes("logout")) return "Logout authenticated user";
     if (lowerMethod.includes("index"))
       return `Retrieve paginated list of ${entity}s`;
@@ -592,12 +592,12 @@ Features:
       },
       LoginRequest: {
         type: "object",
-        required: ["email", "password"],
+        required: ["username", "password"],
         properties: {
-          email: {
+          username: {
             type: "string",
-            format: "email",
-            example: "user@example.com",
+            description: "Username for admin or email for user",
+            example: "brimnasional@gmail.com",
           },
           password: { type: "string", example: "password123" },
         },

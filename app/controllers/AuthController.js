@@ -5,19 +5,19 @@ class AuthController {
   /**
    * POST /api/auth/login
    * @Summary User login
-   * @Description Authenticate user with email and password
+   * @Description Authenticate admin (pengurus) with username/password or user (peserta) with email/password
    * @Tags Auth
    * @Accept application/json
    * @Produce application/json
-   * @Body {object} LoginRequest "User login credentials"
+   * @Body {object} LoginRequest "User login credentials (username for admin, email for user)"
    * @Success 200 {object} LoginResponse "Login successful"
    * @Failure 400 {object} BadRequestError "Bad request - invalid credentials"
-   * @Failure 401 {object} UnauthorizedError "Unauthorized - invalid email or password"
+   * @Failure 401 {object} UnauthorizedError "Unauthorized - invalid credentials or insufficient access level"
    * @Router /api/auth/login [post]
    */
   static apiLogin = ErrorHandler.asyncHandler(async (req, res) => {
-    const { email, password } = req.body;
-    const result = await AuthService.login(email, password);
+    const { username, password } = req.body;
+    const result = await AuthService.login(username, password);
 
     res.json({
       code: 200,
@@ -85,7 +85,10 @@ class AuthController {
    * @Router /api/auth/refresh [post]
    */
   static apiRefreshToken = ErrorHandler.asyncHandler(async (req, res) => {
-    const result = await AuthService.refreshToken(req.user.id);
+    const result = await AuthService.refreshToken(
+      req.user.userId,
+      req.user.userType
+    );
 
     res.json({
       code: 200,

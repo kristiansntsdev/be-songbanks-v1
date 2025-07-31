@@ -127,58 +127,176 @@
           }
         }
       },
-      "User": {
+      "ForbiddenError": {
         "type": "object",
         "properties": {
-          "id": {
+          "error": {
             "type": "string",
-            "example": "user123"
+            "example": "Forbidden"
           },
-          "email": {
+          "message": {
             "type": "string",
-            "example": "user@example.com"
+            "example": "Access denied"
           },
-          "role": {
-            "type": "string",
-            "enum": [
-              "admin",
-              "member"
-            ],
-            "example": "member"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "active",
-              "pending",
-              "suspend",
-              "request",
-              "guest"
-            ],
-            "example": "active"
-          },
-          "is_admin": {
-            "type": "boolean",
-            "example": false,
-            "description": "Only present for admin users"
+          "statusCode": {
+            "type": "integer",
+            "example": 403
           }
         }
+      },
+      "NotFoundError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Not Found"
+          },
+          "message": {
+            "type": "string",
+            "example": "Resource not found"
+          },
+          "statusCode": {
+            "type": "integer",
+            "example": 404
+          }
+        }
+      },
+      "ValidationError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Validation Error"
+          },
+          "message": {
+            "type": "string",
+            "example": "Validation failed"
+          },
+          "statusCode": {
+            "type": "integer",
+            "example": 422
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "Field 'name' is required",
+              "Field 'email' must be valid"
+            ]
+          }
+        }
+      },
+      "PaginatedResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseResponse"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  },
+                  "pagination": {
+                    "type": "object",
+                    "properties": {
+                      "currentPage": {
+                        "type": "integer",
+                        "example": 1
+                      },
+                      "totalPages": {
+                        "type": "integer",
+                        "example": 10
+                      },
+                      "totalItems": {
+                        "type": "integer",
+                        "example": 100
+                      },
+                      "itemsPerPage": {
+                        "type": "integer",
+                        "example": 10
+                      },
+                      "hasNextPage": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "hasPrevPage": {
+                        "type": "boolean",
+                        "example": false
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
       },
       "LoginRequest": {
         "type": "object",
         "required": [
-          "email",
+          "username",
           "password"
         ],
         "properties": {
-          "email": {
+          "username": {
             "type": "string",
-            "format": "email",
-            "example": "user@example.com"
+            "example": "brimnasional@gmail.com",
+            "description": "Username for admin or email for user"
           },
           "password": {
             "type": "string",
-            "example": "password123"
+            "example": "password123",
+            "description": "User's password"
+          }
+        }
+      },
+      "RequestVolAccessRequest": {
+        "type": "object",
+        "required": [
+          "user_id"
+        ],
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "example": "user123",
+            "description": "The ID of the user requesting vol_user access"
+          }
+        }
+      },
+      "UpdateUserAccessRequest": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "suspend"
+            ],
+            "example": "active"
+          }
+        }
+      },
+      "VerifyTokenRequest": {
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
           }
         }
       },
@@ -221,17 +339,141 @@
           }
         }
       },
-      "VerifyTokenRequest": {
-        "type": "object",
-        "required": [
-          "token"
-        ],
-        "properties": {
-          "token": {
-            "type": "string",
-            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      "RefreshTokenResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseResponseWithData"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "example": 200
+              },
+              "message": {
+                "example": "Token refreshed successfully"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "RequestVolAccessResponse": {
+        "202": {
+          "description": "Vol_user access request sent successfully. Awaiting admin approval.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "integer",
+                    "example": 202
+                  },
+                  "message": {
+                    "type": "string",
+                    "example": "Vol_user access request sent successfully. Awaiting admin approval."
+                  },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "user_id": {
+                        "type": "string",
+                        "description": "The ID of the user requesting access",
+                        "example": "user123"
+                      },
+                      "status": {
+                        "type": "string",
+                        "description": "The status of the request",
+                        "example": "request"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
+      },
+      "UpdateUserAccessResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseResponseWithData"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "example": 200
+              },
+              "message": {
+                "example": "User access updated successfully"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "example": "user123"
+                  },
+                  "status": {
+                    "type": "string",
+                    "example": "active"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "UserAccessResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseResponseWithData"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "example": 200
+              },
+              "message": {
+                "example": "User access list retrieved successfully"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "active_users": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  },
+                  "request_users": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  },
+                  "suspended_users": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
       },
       "VerifyTokenResponse": {
         "allOf": [
@@ -259,32 +501,42 @@
           }
         ]
       },
-      "RefreshTokenResponse": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/BaseResponseWithData"
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "user123"
           },
-          {
-            "type": "object",
-            "properties": {
-              "code": {
-                "example": 200
-              },
-              "message": {
-                "example": "Token refreshed successfully"
-              },
-              "data": {
-                "type": "object",
-                "properties": {
-                  "token": {
-                    "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  }
-                }
-              }
-            }
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "admin",
+              "member"
+            ],
+            "example": "member"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "pending",
+              "suspend",
+              "request",
+              "guest"
+            ],
+            "example": "active"
+          },
+          "is_admin": {
+            "type": "boolean",
+            "example": false,
+            "description": "Only present for admin users"
           }
-        ]
+        }
       },
       "Song": {
         "type": "object",
@@ -430,94 +682,6 @@
             "$ref": "#/components/schemas/Tag"
           }
         }
-      },
-      "UserAccessResponse": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/BaseResponseWithData"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "code": {
-                "example": 200
-              },
-              "message": {
-                "example": "User access list retrieved successfully"
-              },
-              "data": {
-                "type": "object",
-                "properties": {
-                  "active_users": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/User"
-                    }
-                  },
-                  "request_users": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/User"
-                    }
-                  },
-                  "suspended_users": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/User"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        ]
-      },
-      "UpdateUserAccessRequest": {
-        "type": "object",
-        "required": [
-          "status"
-        ],
-        "properties": {
-          "status": {
-            "type": "string",
-            "enum": [
-              "active",
-              "suspend"
-            ],
-            "example": "active"
-          }
-        }
-      },
-      "UpdateUserAccessResponse": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/BaseResponseWithData"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "code": {
-                "example": 200
-              },
-              "message": {
-                "example": "User access updated successfully"
-              },
-              "data": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "example": "user123"
-                  },
-                  "status": {
-                    "type": "string",
-                    "example": "active"
-                  }
-                }
-              }
-            }
-          }
-        ]
       }
     },
     "securitySchemes": {
@@ -532,7 +696,7 @@
     "/auth/login": {
       "post": {
         "summary": "User login",
-        "description": "Authenticate user with email and password",
+        "description": "Authenticate admin (pengurus) with username/password or user (peserta) with email/password",
         "tags": [
           "Auth"
         ],
@@ -568,7 +732,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized - invalid email or password",
+            "description": "Unauthorized - invalid credentials or insufficient access level",
             "content": {
               "application/json": {
                 "schema": {
