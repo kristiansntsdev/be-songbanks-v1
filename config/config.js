@@ -22,18 +22,12 @@ export default {
     logging: false, // Disable logging for tests
   },
   production: {
-    username: process.env.PROD_DB_USERNAME,
-    password: process.env.PROD_DB_PASSWORD,
-    database: process.env.PROD_DB_DATABASE,
-    host: process.env.PROD_DB_HOST,
-    port: process.env.PROD_DB_PORT,
-    dialect: "postgres",
-    dialectOptions: {
-      ssl: {
-        require: true,
-        rejectUnauthorized: false,
-      },
-    },
+    username: process.env.PROD_DB_USERNAME?.trim(),
+    password: process.env.PROD_DB_PASSWORD?.trim(),
+    database: process.env.PROD_DB_DATABASE?.trim(),
+    host: process.env.PROD_DB_HOST?.trim(),
+    port: process.env.PROD_DB_PORT?.trim(),
+    dialect: "mysql",
     logging: false,
   },
 };

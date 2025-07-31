@@ -34,6 +34,7 @@ req.body:
 
 Response:
 admin
+
 ```json
 {
   "code": 200,
@@ -169,7 +170,6 @@ Response:
         "status": "suspend"
       }
     ]
-    
   }
 }
 ```
@@ -185,6 +185,7 @@ Request:
 Bearer token (Admin)
 
 Query Parameters:
+
 - status: "active" or "suspend"
 
 Example: `PUT /api/admin/user-access/user123?status=active`
@@ -355,8 +356,8 @@ req.body:
 
 ```json
 {
-  "title": "New Song Title", 
-  "artist": "Artist B",
+  "title": "New Song Title",
+  "artist": "Artist B"
 }
 ```
 
@@ -365,7 +366,7 @@ Response:
 ```json
 {
   "code": 200,
-  "message": "Song updated successfully",
+  "message": "Song updated successfully"
 }
 ```
 
@@ -630,7 +631,7 @@ GET /api/playlists
 
 Request:
 
-Bearer token 
+Bearer token
 
 Note: A vol_user can only retrieve playlists they own or are a member of the team for.
 
@@ -648,7 +649,7 @@ Response:
     {
       "id": "playlist_def",
       "playlist_name": "Favorite Playlist 2"
-    },
+    }
   ]
 }
 ```
@@ -659,7 +660,7 @@ GET /api/playlists/:id
 
 Request:
 
-Bearer token 
+Bearer token
 
 Note: A vol_user can only retrieve details of playlists they own or are a member of the team for.
 
@@ -735,7 +736,7 @@ PUT /api/playlists/:id
 
 Request:
 
-Bearer token 
+Bearer token
 
 Note: A vol_user can only update playlists they own.
 
@@ -782,7 +783,7 @@ DELETE /api/playlists/:id
 
 Request:
 
-Bearer token 
+Bearer token
 
 Note: A vol_user can only delete playlists they own.
 

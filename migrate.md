@@ -2,58 +2,65 @@
 
 **Status**: Phase 1 Complete - Ready for Phase 2  
 **Progress**: 16/83 tasks completed  
-**Last Updated**: Phase 1 fully completed and tested - ES modules working, server starts successfully  
+**Last Updated**: Phase 1 fully completed and tested - ES modules working, server starts successfully
 
 ## Phase 1: Package Configuration & Core Infrastructure (13/13) ✅
+
 - [x] Add `"type": "module"` to package.json
 - [x] Update package.json scripts and main entry for ES modules
-- [x] Update `vitest.config.js` for ES modules  
+- [x] Update `vitest.config.js` for ES modules
 - [x] Update `eslint.config.js` for ES modules
 - [x] Update Sequelize config files in `config/`
 - [x] Verify package.json dependencies support ES modules
 - [x] Package engine core conversion (BaseModel, ModelFactory, concerns, exceptions)
 - [x] Package engine dependencies conversion (Schema, Blueprint, types, builders, operations, utils, schemas)
 - [x] Convert `routes/api.js` to ES modules
-- [x] Convert `index.js` to ES modules  
+- [x] Convert `index.js` to ES modules
 - [x] Convert `api/index.js` to ES modules
 - [x] Test Phase 1 completion (server starts successfully)
 
 ### Phase 1 Status:
+
 ✅ **COMPLETE**: All package configuration files converted to ES modules
 
 **Package.json Changes:**
+
 - ✅ Added `"type": "module"` to enable ES modules project-wide
 - ✅ Updated main entry point to `"main": "api/index.js"` (temporary)
 - ✅ Updated scripts for ES modules compatibility:
   - `"start"` - disabled with helpful message (awaits Phase 5)
-  - `"dev"` - disabled with helpful message (awaits Phase 5)  
+  - `"dev"` - disabled with helpful message (awaits Phase 5)
   - `"build"` - disabled with helpful message (awaits Phase 2)
   - `"swagpress:*"` - disabled with helpful messages (awaits Phase 2)
   - `"migrate"` scripts - left unchanged (sequelize-cli handles ES modules)
 - ✅ Verified dependencies (express, sequelize, vitest, etc.) support ES modules
 
 **Configuration Files:**
+
 - ✅ vitest.config.js (ES modules with import/export)
-- ✅ eslint.config.js (ES modules with import/export)  
+- ✅ eslint.config.js (ES modules with import/export)
 - ✅ config/config.js (converted require() → import, module.exports → export default)
 - ✅ config/database.js (converted require() → import, module.exports → export default)
 
 **Core Infrastructure:**
-- ✅ Package engine core (BaseModel, ModelFactory, concerns, exceptions) 
+
+- ✅ Package engine core (BaseModel, ModelFactory, concerns, exceptions)
 - ✅ Package engine dependencies (Schema, Blueprint, types, builders, operations, utils, schemas)
 - ✅ routes/api.js (Express router with all controller imports)
 - ✅ index.js (Main app entry point)
 - ✅ api/index.js (Vercel deployment entry point)
 
 **Related Effects:**
+
 - ✅ All .js files now treated as ES modules (require Node.js ≥14)
 - ✅ Must use .mjs for mixed CommonJS or rename to .cjs
 - ✅ All imports must include file extensions (.js)
-- ✅ __dirname/__filename require manual definition in ES modules
+- ✅ **dirname/**filename require manual definition in ES modules
 
 **Script Status:**
+
 - ✅ `npm start` - disabled gracefully with helpful message
-- ✅ `npm run dev` - disabled gracefully with helpful message  
+- ✅ `npm run dev` - disabled gracefully with helpful message
 - ✅ `npm run build` - disabled gracefully with helpful message
 - ✅ `npm run migrate` - works (sequelize-cli handles ES modules)
 - ✅ `npm test` - works (vitest configured for ES modules)
@@ -63,9 +70,10 @@
 ✅ **Testing**: Application starts successfully and serves requests. ES module imports working correctly.
 
 ## Phase 2: Database Layer (0/8)
+
 - [ ] `app/models/User.js` - Convert to ES modules
 - [ ] `app/models/Tag.js` - Convert to ES modules
-- [ ] `app/models/Song.js` - Convert to ES modules  
+- [ ] `app/models/Song.js` - Convert to ES modules
 - [ ] `app/models/Note.js` - Convert to ES modules
 - [ ] `app/models/Playlist.js` - Convert to ES modules
 - [ ] `app/models/PlaylistTeam.js` - Convert to ES modules
@@ -73,6 +81,7 @@
 - [ ] Test database connections (all tests passing)
 
 ## Phase 3: Service Layer (0/7)
+
 - [ ] `app/services/AuthService.js` - Convert to ES modules
 - [ ] `app/services/UserService.js` - Convert to ES modules
 - [ ] `app/services/TagService.js` - Convert to ES modules
@@ -82,6 +91,7 @@
 - [ ] `app/services/PlaylistTeamService.js` - Convert to ES modules
 
 ## Phase 4: Controller Layer (0/7)
+
 - [ ] `app/controllers/AuthController.js` - Convert to ES modules
 - [ ] `app/controllers/UserController.js` - Convert to ES modules
 - [ ] `app/controllers/TagController.js` - Convert to ES modules
@@ -91,23 +101,28 @@
 - [ ] `app/controllers/PlaylistTeamController.js` - Convert to ES modules
 
 ## Phase 5: Middleware (0/2)
+
 - [ ] `app/middlewares/auth.js` - Convert to ES modules
 - [ ] `app/middlewares/ErrorHandler.js` - Convert to ES modules
 
 ## Phase 6: Testing (3/4)
+
 - [x] Update `test/auth/auth.service.test.js`
 - [x] Update `test/user/user.service.test.js`
 - [ ] Fix `test/tag/tag.service.test.js` with proper ES module mocking
 - [x] Update Vitest configuration
 
 ### Phase 6 Status:
+
 ⚠️ **Partially Complete**: Test files already use ES modules but are designed to test CommonJS modules
+
 - test/auth/auth.service.test.js (✅ ES modules but tests CommonJS services)
 - test/user/user.service.test.js (✅ ES modules but tests CommonJS services)
 - vitest.config.js (✅ already configured for ES modules)
 - tag service test doesn't exist
 
 ## Phase 7: Schema Files (0/20)
+
 - [ ] `schemas/requests/Auth/LoginRequest.js`
 - [ ] `schemas/requests/Auth/VerifyTokenRequest.js`
 - [ ] `schemas/requests/Tag/CreateTagRequest.js`
@@ -130,8 +145,9 @@
 - [ ] Verify Swagger generation works
 
 ## Phase 8: Database Files (0/15)
+
 - [ ] `database/migrations/*.js` files
-- [ ] `database/seeders/*.js` files  
+- [ ] `database/seeders/*.js` files
 - [ ] `database/factories/UserFactory.js`
 - [ ] `database/factories/SongFactory.js`
 - [ ] `database/factories/TagFactory.js`
@@ -147,6 +163,7 @@
 - [ ] Test query operations
 
 ## Phase 9: Validation & Testing (0/13)
+
 - [ ] Run full test suite (target: 23+ tests passing)
 - [ ] Test API endpoints manually
 - [ ] Verify authentication flows
@@ -166,30 +183,32 @@
 ## Conversion Reference
 
 ### Basic Patterns:
+
 ```javascript
 // OLD: CommonJS
-const express = require('express');
-const UserService = require('./UserService');
+const express = require("express");
+const UserService = require("./UserService");
 module.exports = UserController;
 
 // NEW: ES Modules
-import express from 'express';
-import UserService from './UserService.js';
+import express from "express";
+import UserService from "./UserService.js";
 export default UserController;
 ```
 
 ### Special Cases:
+
 ```javascript
 // __dirname/__filename
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { dirname } from "path";
+import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// JSON imports  
-import config from './config.json' assert { type: 'json' };
+// JSON imports
+import config from "./config.json" assert { type: "json" };
 
 // Dynamic imports
-const module = await import('./dynamic-module.js');
+const module = await import("./dynamic-module.js");
 ```
 
 ---
@@ -197,16 +216,18 @@ const module = await import('./dynamic-module.js');
 ## Instructions for Claude Sessions
 
 **IMPORTANT**: When working on migration tasks:
+
 1. ✅ Complete the actual task
 2. ✅ Mark the task as done in this file (change `[ ]` to `[x]`)
-3. ✅ Update progress counter at top 
+3. ✅ Update progress counter at top
 4. ✅ Update "Last Updated" with current date/task
 5. ✅ Test that the change works before marking complete
 
 **Example Update**:
+
 ```diff
 - **Progress**: 5/85 tasks completed
-+ **Progress**: 6/85 tasks completed  
++ **Progress**: 6/85 tasks completed
 - **Last Updated**: Completed UserService migration
 + **Last Updated**: Completed TagService migration
 

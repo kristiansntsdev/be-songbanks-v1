@@ -24,15 +24,39 @@ export default {
           properties: {
             id: {
               type: "string",
-              example: "01K0HRB1K30FG2B0K9476V3JN8",
+              example: "10",
             },
-            email: {
+            nama: {
               type: "string",
-              example: "user@example.com",
+              example: "BRIM Nasional",
             },
-            role: {
+            username: {
               type: "string",
-              example: "user",
+              example: "brimnasional@gmail.com",
+            },
+            userType: {
+              type: "string",
+              enum: ["pengurus", "peserta"],
+              example: "pengurus",
+            },
+            isAdmin: {
+              type: "boolean",
+              example: true,
+            },
+            leveladmin: {
+              type: "string",
+              example: "2",
+              description: "Only present for pengurus (admin) users",
+            },
+            userlevel: {
+              type: "string",
+              example: "4",
+              description: "Only present for peserta (regular) users",
+            },
+            verifikasi: {
+              type: "string",
+              example: "1",
+              description: "Only present for peserta (regular) users",
             },
           },
         },

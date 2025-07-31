@@ -341,7 +341,7 @@ Available controllers:`);
     });
   }
 
-  generateAll() {
+  async generateAll() {
     console.log("🚀 Generating routes and swagger for all controllers...");
 
     // Scan all controllers
@@ -350,11 +350,11 @@ Available controllers:`);
     // Generate swagger and routes for the first controller to trigger full generation
     const firstController = Object.keys(allControllers)[0];
     if (firstController) {
-      this.generateByController(firstController);
+      await this.generateByController(firstController);
     }
   }
 
-  generateByController(controllerName) {
+  async generateByController(controllerName) {
     if (!controllerName) {
       console.error("❌ Controller name is required");
       this.showUsage();
@@ -423,13 +423,13 @@ Available controllers:`);
     );
 
     // Update swagger.json with controller documentation
-    this.addControllerToSwagger(controllerName, controllerRoutes);
+    await this.addControllerToSwagger(controllerName, controllerRoutes);
 
     // Update routes/api.js with simple route definitions
     this.updateRoutesFile(controllerName, controllerRoutes);
   }
 
-  addControllerToSwagger(controllerName, controllerRoutes) {
+  async addControllerToSwagger(controllerName, controllerRoutes) {
     // Always create fresh swagger.json - scan all controllers and regenerate completely
     const allControllers = this.scanControllers();
 
@@ -466,7 +466,7 @@ Available controllers:`);
     };
 
     // Add schemas from the new schema loader system
-    const loadedSchemas = this.loadSchemas();
+    const loadedSchemas = await this.loadSchemas();
     swaggerSpec.components.schemas = {
       ...swaggerSpec.components.schemas,
       ...this.getBaseSchemas(),
@@ -881,8 +881,11 @@ const router = express.Router();
     const operation = {
       summary: annotations.Summary || annotations.summary || summary,
       description: annotations.Description || description,
-      tags: Array.isArray(annotations.Tags) ? annotations.Tags : 
-            annotations.Tags ? [annotations.Tags] : [tag],
+      tags: Array.isArray(annotations.Tags)
+        ? annotations.Tags
+        : annotations.Tags
+          ? [annotations.Tags]
+          : [tag],
     };
 
     // Handle parameters from Go-style @Param annotations
@@ -1673,21 +1676,6 @@ const router = express.Router();
             type: "boolean",
             example: false,
             description: "Only present for admin users",
-          },
-        },
-      },
-      LoginRequest: {
-        type: "object",
-        required: ["email", "password"],
-        properties: {
-          email: {
-            type: "string",
-            format: "email",
-            example: "user@example.com",
-          },
-          password: {
-            type: "string",
-            example: "password123",
           },
         },
       },

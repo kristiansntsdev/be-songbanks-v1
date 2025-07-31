@@ -48,11 +48,15 @@ app.listen(PORT, HOST, async () => {
   // Test database connection
   try {
     await sequelize.authenticate();
-    console.log(`✅ Database connected successfully (${sequelize.getDialect()})`);
+    console.log(
+      `✅ Database connected successfully (${sequelize.getDialect()})`
+    );
   } catch (error) {
     console.error("❌ Database connection failed:", error.message);
     if (error.message.includes("pg")) {
-      console.error("💡 Tip: Make sure PostgreSQL driver 'pg' is installed: npm install pg");
+      console.error(
+        "💡 Tip: Make sure PostgreSQL driver 'pg' is installed: npm install pg"
+      );
     }
   }
 
