@@ -15,83 +15,91 @@ export default {
               example: "User access list retrieved successfully",
             },
             data: {
-              type: "object",
-              properties: {
-                active_users: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      id: {
-                        type: "string",
-                        example: "user123",
-                      },
-                      email: {
-                        type: "string",
-                        example: "user@example.com",
-                      },
-                      role: {
-                        type: "string",
-                        example: "member",
-                      },
-                      status: {
-                        type: "string",
-                        example: "active",
-                      },
-                    },
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  id: {
+                    type: "integer",
+                    example: 1,
+                  },
+                  nama: {
+                    type: "string",
+                    example: "Sintikhe Damayanti",
+                  },
+                  username: {
+                    type: "string",
+                    example: "sintikhed@gmail.com",
+                  },
+                  userType: {
+                    type: "string",
+                    example: "peserta",
+                  },
+                  isAdmin: {
+                    type: "boolean",
+                    example: false,
+                  },
+                  status: {
+                    type: "string",
+                    example: "pending",
+                    enum: ["active", "request", "suspend", "pending"],
+                  },
+                  role: {
+                    type: "string",
+                    example: "member",
+                    enum: ["member", "guest"],
                   },
                 },
-                request_users: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      id: {
-                        type: "string",
-                        example: "user456",
-                      },
-                      email: {
-                        type: "string",
-                        example: "request@example.com",
-                      },
-                      role: {
-                        type: "string",
-                        example: "member",
-                      },
-                      status: {
-                        type: "string",
-                        example: "request",
-                      },
-                    },
-                  },
-                },
-                suspended_users: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      id: {
-                        type: "string",
-                        example: "user789",
-                      },
-                      email: {
-                        type: "string",
-                        example: "suspended@example.com",
-                      },
-                      role: {
-                        type: "string",
-                        example: "member",
-                      },
-                      status: {
-                        type: "string",
-                        example: "suspend",
-                      },
-                    },
-                  },
-                },
+                required: [
+                  "id",
+                  "nama",
+                  "username",
+                  "userType",
+                  "isAdmin",
+                  "status",
+                  "role",
+                ],
               },
             },
+            pagination: {
+              type: "object",
+              properties: {
+                currentPage: {
+                  type: "integer",
+                  example: 1,
+                },
+                totalPages: {
+                  type: "integer",
+                  example: 400,
+                },
+                totalItems: {
+                  type: "integer",
+                  example: 4000,
+                },
+                itemsPerPage: {
+                  type: "integer",
+                  example: 10,
+                },
+                hasNextPage: {
+                  type: "boolean",
+                  example: true,
+                },
+                hasPrevPage: {
+                  type: "boolean",
+                  example: false,
+                },
+              },
+              required: [
+                "currentPage",
+                "totalPages",
+                "totalItems",
+                "itemsPerPage",
+                "hasNextPage",
+                "hasPrevPage",
+              ],
+            },
           },
+          required: ["code", "message", "data", "pagination"],
         },
       },
     },

@@ -240,6 +240,19 @@
           }
         ]
       },
+      "ApproveVolAccessRequest": {
+        "type": "object",
+        "required": [
+          "user_id"
+        ],
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "example": "1",
+            "description": "The ID of the user to approve vol_user access for"
+          }
+        }
+      },
       "LoginRequest": {
         "type": "object",
         "required": [
@@ -2698,9 +2711,29 @@
     "/admin/user-access": {
       "get": {
         "summary": "Get user access management data",
-        "description": "Retrieves a list of all users with their access status and permissions for administrative management",
+        "description": "Retrieves a paginated list of all users with their access status and permissions for administrative management",
         "tags": [
           "User"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Page number for pagination (default: 1)"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Number of items per page (default: 10)"
+          }
         ],
         "security": [
           {
@@ -2764,12 +2797,13 @@
     "/admin/user-access/{user_id}": {
       "put": {
         "summary": "Update user access status",
-        "description": "Updates the access status of a specific user (active/suspend) with admin privileges",
+        "description": "Updates the access status of a specific user with admin privileges",
         "tags": [
           "User"
         ],
         "parameters": [
           {
+            "in": "path",
             "name": "user_id",
             "required": true,
             "schema": {
@@ -2778,12 +2812,19 @@
             "description": "User ID to update access status for"
           },
           {
+            "in": "query",
             "name": "status",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "active",
+                "suspend",
+                "request",
+                "pending"
+              ]
             },
-            "description": "New access status"
+            "description": "User Status"
           }
         ],
         "security": [
@@ -2794,6 +2835,107 @@
         "responses": {
           "200": {
             "description": "Successfully updated user access status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateUserAccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - insufficient admin permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/user-role/{user_id}": {
+      "put": {
+        "summary": "Update user role",
+        "description": "Updates the role of a specific user with admin privileges",
+        "tags": [
+          "User"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "User ID to update role for"
+          },
+          {
+            "in": "query",
+            "name": "role",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "guest",
+                "member",
+                "admin"
+              ]
+            },
+            "description": "User Role (guest, member, admin)"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully updated user role",
             "content": {
               "application/json": {
                 "schema": {
@@ -2889,6 +3031,92 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/approve-vol-access": {
+      "post": {
+        "summary": "Approve user vol access request",
+        "description": "Approves a user's vol_user access request, setting status to active and role to member",
+        "tags": [
+          "User"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveVolAccessRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully approved user access request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateUserAccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - insufficient admin permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
                 }
               }
             }

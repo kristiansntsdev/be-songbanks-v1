@@ -757,7 +757,7 @@ const router = express.Router();
   }
 
   generateRouteFromMethod(controllerName, methodName, method) {
-    const httpMethod = method.httpMethod || this.inferHttpMethod(methodName);
+    let httpMethod = method.httpMethod || this.inferHttpMethod(methodName);
 
     // Use explicit endpoint path if available, otherwise generate
     let routePath;
@@ -766,6 +766,10 @@ const router = express.Router();
     if (method.annotations && method.annotations.Router) {
       const routerAnnotation = method.annotations.Router;
       if (typeof routerAnnotation === "object" && routerAnnotation.path) {
+        // Use HTTP method from Router annotation if available
+        if (routerAnnotation.method) {
+          httpMethod = routerAnnotation.method;
+        }
         // Convert {param} to :param for Express.js
         routePath = routerAnnotation.path
           .replace("/api", "")
@@ -2074,10 +2078,20 @@ const router = express.Router();
         const methodName = asyncMethodMatch[1];
         const annotations = this.parseJSDocAnnotations(currentJSDoc);
 
+        // Use HTTP method from Router annotation if available, otherwise infer
+        let httpMethod = this.inferHttpMethod(methodName);
+        if (
+          annotations.Router &&
+          typeof annotations.Router === "object" &&
+          annotations.Router.method
+        ) {
+          httpMethod = annotations.Router.method;
+        }
+
         methods[methodName] = {
           name: methodName,
           isAsync: true,
-          httpMethod: this.inferHttpMethod(methodName),
+          httpMethod: httpMethod,
           lineNumber: i + 1,
           jsDoc: currentJSDoc.join("\n"),
           annotations: annotations,
@@ -2094,10 +2108,20 @@ const router = express.Router();
         const methodName = arrowMethodMatch[1];
         const annotations = this.parseJSDocAnnotations(currentJSDoc);
 
+        // Use HTTP method from Router annotation if available, otherwise infer
+        let httpMethod = this.inferHttpMethod(methodName);
+        if (
+          annotations.Router &&
+          typeof annotations.Router === "object" &&
+          annotations.Router.method
+        ) {
+          httpMethod = annotations.Router.method;
+        }
+
         methods[methodName] = {
           name: methodName,
           isAsync: true,
-          httpMethod: this.inferHttpMethod(methodName),
+          httpMethod: httpMethod,
           lineNumber: i + 1,
           jsDoc: currentJSDoc.join("\n"),
           annotations: annotations,
@@ -2112,10 +2136,20 @@ const router = express.Router();
         const methodName = staticMethodMatch[1];
         const annotations = this.parseJSDocAnnotations(currentJSDoc);
 
+        // Use HTTP method from Router annotation if available, otherwise infer
+        let httpMethod = this.inferHttpMethod(methodName);
+        if (
+          annotations.Router &&
+          typeof annotations.Router === "object" &&
+          annotations.Router.method
+        ) {
+          httpMethod = annotations.Router.method;
+        }
+
         methods[methodName] = {
           name: methodName,
           isAsync: false,
-          httpMethod: this.inferHttpMethod(methodName),
+          httpMethod: httpMethod,
           lineNumber: i + 1,
           jsDoc: currentJSDoc.join("\n"),
           annotations: annotations,
@@ -2351,7 +2385,7 @@ const router = express.Router();
     if (parts.length >= 4) {
       const param = {
         name: parts[0],
-        location: parts[1], // header, path, query, body
+        in: parts[1], // header, path, query, body
         type: parts[2],
         required: parts[3] === "true",
         description: parts[4] || "",
@@ -2362,6 +2396,25 @@ const router = express.Router();
         const defaultMatch = parts[5].match(/default\((.+)\)/);
         if (defaultMatch) {
           param.default = defaultMatch[1];
+        }
+      }
+
+      // Handle enum values like enum:["value1","value2"]
+      for (let i = 5; i < parts.length; i++) {
+        if (parts[i].startsWith("enum:[")) {
+          const enumMatch = parts[i].match(/enum:\[(.*)\]/);
+          if (enumMatch) {
+            try {
+              // Parse enum values, handling quoted strings
+              const enumStr = enumMatch[1];
+              param.enum = enumStr
+                .split(",")
+                .map((val) => val.trim().replace(/^"|"$/g, ""));
+            } catch (error) {
+              console.warn(`Warning: Could not parse enum values: ${parts[i]}`);
+            }
+          }
+          break;
         }
       }
 
