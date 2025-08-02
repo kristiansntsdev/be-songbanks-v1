@@ -2746,6 +2746,21 @@
               "type": "integer"
             },
             "description": "Number of items per page (default: 10)"
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "suspend",
+                "request",
+                "pending"
+              ]
+            },
+            "description": "Filter by user status"
           }
         ],
         "security": [

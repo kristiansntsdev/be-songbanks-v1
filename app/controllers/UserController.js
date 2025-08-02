@@ -16,17 +16,19 @@ class UserController {
    * @auth
    * @Param page query integer false "Page number for pagination (default: 1)"
    * @Param limit query integer false "Number of items per page (default: 10)"
+   * @Param status query string false "Filter by user status" enum:["active","suspend","request","pending"]
    * @Success 200 {object} UserAccessResponse "Successfully retrieved user access list"
    * @Failure 401 {object} UnauthorizedError "Unauthorized - invalid or missing token"
    * @Failure 403 {object} ForbiddenError "Forbidden - insufficient permissions"
    * @Router /api/admin/user-access [get]
    */
   static getUserAccess = ErrorHandler.asyncHandler(async (req, res) => {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, status } = req.query;
 
     const result = await UserService.getUserAccess(
       parseInt(page),
-      parseInt(limit)
+      parseInt(limit),
+      status
     );
 
     res.json({
