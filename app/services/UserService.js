@@ -168,28 +168,36 @@ class UserService {
     };
   }
 
-  static async getUserAccess(page = 1, limit = 10) {
+  static async getUserAccess(page = 1, limit = 10, status = null) {
     const offset = (page - 1) * limit;
 
-    // Get total count
-    const countResult = await sequelize.query(
-      "SELECT COUNT(*) as total FROM peserta",
-      {
-        type: sequelize.QueryTypes.SELECT,
-        raw: true,
-      }
-    );
+    // Build WHERE clause for status filtering
+    let whereClause = "";
+    let replacements = [];
+
+    if (status) {
+      whereClause = "WHERE status = ?";
+      replacements.push(status);
+    }
+
+    // Get total count with status filter
+    const countQuery = `SELECT COUNT(*) as total FROM peserta ${whereClause}`;
+    const countResult = await sequelize.query(countQuery, {
+      replacements: replacements,
+      type: sequelize.QueryTypes.SELECT,
+      raw: true,
+    });
     const totalCount = countResult[0].total;
 
-    // Get paginated users
-    const pesertaUsers = await sequelize.query(
-      'SELECT *, "peserta" as userType FROM peserta LIMIT ? OFFSET ?',
-      {
-        replacements: [limit, offset],
-        type: sequelize.QueryTypes.SELECT,
-        raw: true,
-      }
-    );
+    // Get paginated users with status filter
+    const dataQuery = `SELECT *, "peserta" as userType FROM peserta ${whereClause} LIMIT ? OFFSET ?`;
+    const dataReplacements = [...replacements, limit, offset];
+
+    const pesertaUsers = await sequelize.query(dataQuery, {
+      replacements: dataReplacements,
+      type: sequelize.QueryTypes.SELECT,
+      raw: true,
+    });
 
     const allUsers = pesertaUsers.map((user) => ({
       id: user.id_peserta,
@@ -291,11 +299,11 @@ class UserService {
       );
     }
 
-    // Update user status to "pending"
+    // Update user status to "pending" and role to "guest"
     await sequelize.query(
-      "UPDATE peserta SET status = ? WHERE id_peserta = ?",
+      "UPDATE peserta SET status = ?, role = ? WHERE id_peserta = ?",
       {
-        replacements: ["pending", userId],
+        replacements: ["pending", "guest", userId],
         type: sequelize.QueryTypes.UPDATE,
       }
     );
@@ -310,7 +318,7 @@ class UserService {
         nama: updatedUser.nama,
         username: updatedUser.username,
         status: "pending",
-        role: updatedUser.role,
+        role: "guest",
       },
     };
   }

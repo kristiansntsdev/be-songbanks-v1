@@ -272,6 +272,19 @@
           }
         }
       },
+      "RejectVolAccessRequest": {
+        "type": "object",
+        "required": [
+          "user_id"
+        ],
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "example": "1",
+            "description": "The ID of the user to reject vol_user access for"
+          }
+        }
+      },
       "RequestVolAccessRequest": {
         "type": "object",
         "required": [
@@ -2733,6 +2746,21 @@
               "type": "integer"
             },
             "description": "Number of items per page (default: 10)"
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "suspend",
+                "request",
+                "pending"
+              ]
+            },
+            "description": "Filter by user status"
           }
         ],
         "security": [
@@ -3083,6 +3111,92 @@
         "responses": {
           "200": {
             "description": "Successfully approved user access request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateUserAccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - insufficient admin permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/reject-vol-access": {
+      "post": {
+        "summary": "Reject user vol access request",
+        "description": "Rejects a user's vol_user access request, setting status to pending and role to guest",
+        "tags": [
+          "User"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectVolAccessRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully rejected user access request",
             "content": {
               "application/json": {
                 "schema": {
