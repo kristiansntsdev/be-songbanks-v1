@@ -43,6 +43,8 @@ class AuthService {
       username: user.username,
       userType: user.userType,
       nama: user.nama,
+      isAdmin: user.userType === "pengurus",
+      iat: Math.floor(Date.now() / 1000),
     };
 
     return jwt.sign(payload, process.env.SESSION_SECRET, {

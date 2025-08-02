@@ -49,51 +49,59 @@ class AuthController {
   });
 
   /**
-   * POST /api/auth/verify
-   * @Summary Verify JWT token
-   * @Description Verify the validity of a JWT token and return user information
-   * @Tags Auth
-   * @Accept application/json
-   * @Produce application/json
-   * @Body {object} VerifyTokenRequest "Token to verify"
-   * @Success 200 {object} VerifyTokenResponse "Token verified successfully"
-   * @Failure 400 {object} BadRequestError "Bad request - invalid token format"
-   * @Failure 401 {object} UnauthorizedError "Unauthorized - invalid or expired token"
-   * @Router /api/auth/verify [post]
-   */
-  static apiVerifyToken = ErrorHandler.asyncHandler(async (req, res) => {
-    const { token } = req.body;
-    const user = await AuthService.verifyToken(token);
-
-    res.json({
-      code: 200,
-      message: "Token verified successfully",
-      data: { user },
-    });
-  });
-
-  /**
-   * POST /api/auth/refresh
-   * @Summary Refresh JWT token
-   * @Description Generate a new JWT token for authenticated user
+   * GET /api/auth/me
+   * @Summary Get current user
+   * @Description Get current authenticated user data
    * @Tags Auth
    * @Accept application/json
    * @Produce application/json
    * @auth
-   * @Success 200 {object} RefreshTokenResponse "Token refreshed successfully"
-   * @Failure 401 {object} UnauthorizedError "Unauthorized - invalid or missing token"
-   * @Router /api/auth/refresh [post]
+   * @Success 200 {object} UserResponse "Current user data"
+   * @Failure 401 {object} UnauthorizedError "Unauthorized"
+   * @Router /api/auth/me [get]
    */
-  static apiRefreshToken = ErrorHandler.asyncHandler(async (req, res) => {
-    const result = await AuthService.refreshToken(
-      req.user.userId,
-      req.user.userType
-    );
+  static apiGetCurrentUser = ErrorHandler.asyncHandler(async (req, res) => {
+    res.json({
+      code: 200,
+      message: "Current user retrieved successfully",
+      data: {
+        user: req.currentUser,
+      },
+    });
+  });
+
+  /**
+   * GET /api/auth/check-permission
+   * @Summary Check user permission
+   * @Description Check if current user has required role permission
+   * @Tags Auth
+   * @Accept application/json
+   * @Produce application/json
+   * @auth
+   * @Query {string} role "Required role (pengurus or peserta)"
+   * @Success 200 {object} PermissionResponse "Permission check result"
+   * @Failure 401 {object} UnauthorizedError "Unauthorized"
+   * @Failure 403 {object} ForbiddenError "Access denied"
+   * @Router /api/auth/check-permission [get]
+   */
+  static apiCheckPermission = ErrorHandler.asyncHandler(async (req, res) => {
+    const { role } = req.query;
+
+    if (role && req.currentUser.userType !== role) {
+      return res.status(403).json({
+        code: 403,
+        message: "Access denied",
+      });
+    }
 
     res.json({
       code: 200,
-      message: result.message,
-      data: { token: result.token },
+      message: "Permission granted",
+      data: {
+        hasPermission: true,
+        userType: req.currentUser.userType,
+        isAdmin: req.currentUser.userType === "pengurus",
+      },
     });
   });
 }

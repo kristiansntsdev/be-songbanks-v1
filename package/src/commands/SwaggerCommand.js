@@ -655,7 +655,7 @@ const router = express.Router();
     });
 
     // Add middleware imports
-    header += `import { authenticateToken } from '../app/middlewares/auth.js';\n\n`;
+    header += `import { authenticateToken, requireRole } from '../app/middlewares/auth.js';\n\n`;
 
     return header;
   }
@@ -802,6 +802,11 @@ const router = express.Router();
     const middlewares = [];
     if (method.annotations && method.annotations.auth) {
       middlewares.push("authenticateToken");
+      
+      // Add role-based middleware for specific auth endpoints
+      if (methodName === 'apiGetCurrentUser' || methodName === 'apiCheckPermission') {
+        middlewares.push("requireRole(null)");
+      }
     }
 
     const middlewareStr =
