@@ -176,6 +176,36 @@ class UserController {
       data: result.user,
     });
   });
+
+  /**
+   * POST /api/admin/reject-vol-access
+   * @Summary Reject user vol access request
+   * @Description Rejects a user's vol_user access request, setting status to pending and role to guest
+   * @Tags User
+   * @Accept application/json
+   * @Produce application/json
+   * @auth
+   * @Body {object} RejectVolAccessRequest "Request body containing user ID"
+   * @Success 200 {object} UpdateUserAccessResponse "Successfully rejected user access request"
+   * @Failure 400 {object} BadRequestError "Bad request - user does not have pending request"
+   * @Failure 401 {object} UnauthorizedError "Unauthorized - invalid or missing token"
+   * @Failure 403 {object} ForbiddenError "Forbidden - insufficient admin permissions"
+   * @Failure 404 {object} NotFoundError "User not found"
+   * @Router /api/admin/reject-vol-access [post]
+   */
+  static rejectVolAccess = ErrorHandler.asyncHandler(async (req, res) => {
+    const { user_id } = req.body;
+
+    ErrorHandler.validateRequired(["user_id"], req.body);
+
+    const result = await UserService.rejectUserRequest(user_id, req.user);
+
+    res.json({
+      code: 200,
+      message: result.message,
+      data: result.user,
+    });
+  });
 }
 
 export default UserController;

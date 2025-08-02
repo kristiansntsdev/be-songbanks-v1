@@ -291,11 +291,11 @@ class UserService {
       );
     }
 
-    // Update user status to "pending"
+    // Update user status to "pending" and role to "guest"
     await sequelize.query(
-      "UPDATE peserta SET status = ? WHERE id_peserta = ?",
+      "UPDATE peserta SET status = ?, role = ? WHERE id_peserta = ?",
       {
-        replacements: ["pending", userId],
+        replacements: ["pending", "guest", userId],
         type: sequelize.QueryTypes.UPDATE,
       }
     );
@@ -310,7 +310,7 @@ class UserService {
         nama: updatedUser.nama,
         username: updatedUser.username,
         status: "pending",
-        role: updatedUser.role,
+        role: "guest",
       },
     };
   }

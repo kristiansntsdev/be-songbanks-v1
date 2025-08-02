@@ -117,5 +117,10 @@ router.post(
   authenticateToken,
   UserController.approveVolAccess
 );
+router.post(
+  "/admin/reject-vol-access",
+  authenticateToken,
+  UserController.rejectVolAccess
+);
 
 export default router;
