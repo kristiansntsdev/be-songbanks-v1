@@ -23,11 +23,21 @@ class UserService {
     // Validate the status value
     this.validateUserStatus(status);
 
-    // Update user status in peserta table
+    // Determine role based on status
+    let role;
+    if (status === "active") {
+      role = "member";
+    } else if (status === "pending" || status === "suspend") {
+      role = "guest";
+    } else {
+      role = targetUser.role; // Keep existing role for other statuses
+    }
+
+    // Update user status and role in peserta table
     await sequelize.query(
-      "UPDATE peserta SET status = ? WHERE id_peserta = ?",
+      "UPDATE peserta SET status = ?, role = ? WHERE id_peserta = ?",
       {
-        replacements: [status, userId],
+        replacements: [status, role, userId],
         type: sequelize.QueryTypes.UPDATE,
       }
     );
@@ -42,7 +52,7 @@ class UserService {
         nama: updatedUser.nama,
         username: updatedUser.username,
         status: status,
-        role: updatedUser.role,
+        role: role,
       },
     };
   }
