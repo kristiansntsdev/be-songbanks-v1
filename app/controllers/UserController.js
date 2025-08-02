@@ -30,7 +30,7 @@ class UserController {
     const { page = 1, limit = 10, search } = req.query;
 
     const result = await UserService.getUsers(
-      parseInt(page), 
+      parseInt(page),
       parseInt(limit),
       search
     );

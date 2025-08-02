@@ -7,7 +7,7 @@ import PlaylistTeamController from '../app/controllers/PlaylistTeamController.js
 import SongController from '../app/controllers/SongController.js';
 import TagController from '../app/controllers/TagController.js';
 import UserController from '../app/controllers/UserController.js';
-import { authenticateToken } from '../app/middlewares/auth.js';
+import { authenticateToken, requireRole } from '../app/middlewares/auth.js';
 
 // Tag Resource Routes (RESTful CRUD)
 router.get('/tags/', TagController.GetTags);
@@ -19,6 +19,8 @@ router.delete('/admin/tags/:id', TagController.DeleteTag);
 // AuthController Routes
 router.post('/auth/login', AuthController.apiLogin);
 router.post('/auth/logout', authenticateToken, AuthController.apiLogout);
+router.get('/auth/me', authenticateToken, requireRole(null), AuthController.apiGetCurrentUser);
+router.get('/auth/check-permission', authenticateToken, requireRole(null), AuthController.apiCheckPermission);
 
 // NoteController Routes
 router.post('/notes/:user_id/:song_id', NoteController.createNoteForSong);

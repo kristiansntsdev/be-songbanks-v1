@@ -298,6 +298,45 @@
           }
         }
       },
+      "PermissionResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 200,
+            "description": "HTTP status code"
+          },
+          "message": {
+            "type": "string",
+            "example": "Permission granted",
+            "description": "Response message"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "hasPermission": {
+                "type": "boolean",
+                "example": true,
+                "description": "Whether user has the required permission"
+              },
+              "userType": {
+                "type": "string",
+                "enum": [
+                  "pengurus",
+                  "peserta"
+                ],
+                "example": "pengurus",
+                "description": "Current user type"
+              },
+              "isAdmin": {
+                "type": "boolean",
+                "example": true,
+                "description": "Whether user is admin"
+              }
+            }
+          }
+        }
+      },
       "UserListResponse": {
         "type": "object",
         "properties": {
@@ -402,6 +441,80 @@
             "type": "string",
             "example": "sintikhe",
             "description": "Search term used for filtering (null if no search applied)"
+          }
+        }
+      },
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 200,
+            "description": "HTTP status code"
+          },
+          "message": {
+            "type": "string",
+            "example": "Current user retrieved successfully",
+            "description": "Response message"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "example": "10"
+                  },
+                  "nama": {
+                    "type": "string",
+                    "example": "BRIM Nasional"
+                  },
+                  "username": {
+                    "type": "string",
+                    "example": "brimnasional@gmail.com"
+                  },
+                  "userType": {
+                    "type": "string",
+                    "enum": [
+                      "pengurus",
+                      "peserta"
+                    ],
+                    "example": "pengurus"
+                  },
+                  "isAdmin": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "leveladmin": {
+                    "type": "string",
+                    "example": "2",
+                    "description": "Only present for pengurus (admin) users"
+                  },
+                  "userlevel": {
+                    "type": "string",
+                    "example": "4",
+                    "description": "Only present for peserta (regular) users"
+                  },
+                  "verifikasi": {
+                    "type": "string",
+                    "example": "1",
+                    "description": "Only present for peserta (regular) users"
+                  },
+                  "nowa": {
+                    "type": "string",
+                    "example": "08123456789",
+                    "description": "Phone number"
+                  },
+                  "kotalevelup": {
+                    "type": "string",
+                    "example": "Jakarta",
+                    "description": "City level up"
+                  }
+                }
+              }
+            }
           }
         }
       },
@@ -850,6 +963,128 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "summary": "Get current user",
+        "description": "Get current authenticated user data",
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current user data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/check-permission": {
+      "get": {
+        "summary": "Check user permission",
+        "description": "Check if current user has required role permission",
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Permission check result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermissionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
                 }
               }
             }
