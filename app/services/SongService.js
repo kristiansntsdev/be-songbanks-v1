@@ -249,14 +249,14 @@ class SongService {
     const result = {
       id: parseInt(songId),
       title: songAttributes.title || "Unknown Title",
-      artist: songAttributes.artist || "Unknown Artist", 
+      artist: songAttributes.artist || "Unknown Artist",
       base_chord: songAttributes.base_chord || "",
       lyrics_and_chords: songAttributes.lyrics_and_chords || "",
       createdAt: new Date(),
       updatedAt: new Date(),
-      tags: []
+      tags: [],
     };
-    
+
     // Add tags if they were updated
     if (tag_names !== undefined) {
       if (tag_names.length === 0) {
@@ -264,21 +264,33 @@ class SongService {
       } else {
         // Get the tags that were just created/found
         const tags = await this.findOrCreateTagsByNames(tag_names);
-        result.tags = tags.map(tag => ({
+        result.tags = tags.map((tag) => ({
           id: tag.id,
           name: tag.name,
-          description: tag.description
+          description: tag.description,
         }));
       }
     }
-    
+
     return result;
   }
 
   static async deleteSong(songId) {
-    const song = await this.getSongById(songId);
-    await song.destroy();
-    return { message: "Song deleted successfully", deletedId: songId };
+    // Use Sequelize's destroy method instead of raw SQL
+    const affectedRows = await Song.destroy({
+      where: { id: songId },
+    });
+
+    if (affectedRows === 0) {
+      const error = new Error("Song not found");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    return {
+      message: "Song deleted successfully",
+      deletedId: parseInt(songId),
+    };
   }
 
   static async getSongsByBaseChord(baseChord, options = {}) {
