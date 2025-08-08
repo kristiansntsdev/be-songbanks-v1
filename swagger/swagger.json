@@ -240,6 +240,19 @@
           }
         ]
       },
+      "GetOrCreateTagRequest": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "rock",
+            "description": "Name of the tag to get or create"
+          }
+        }
+      },
       "LoginRequest": {
         "type": "object",
         "required": [
@@ -333,6 +346,33 @@
                 "example": true,
                 "description": "Whether user is admin"
               }
+            }
+          }
+        }
+      },
+      "TagResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Tag created successfully"
+          },
+          "data": {
+            "$ref": "#/components/schemas/Tag"
+          }
+        }
+      },
+      "TagsResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Get All Tags"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Tag"
             }
           }
         }
@@ -735,33 +775,6 @@
             "type": "string",
             "example": "Rock music genre",
             "description": "Optional description of the tag"
-          }
-        }
-      },
-      "TagsResponse": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "example": "Get All Tags"
-          },
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Tag"
-            }
-          }
-        }
-      },
-      "TagResponse": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "example": "Tag created successfully"
-          },
-          "data": {
-            "$ref": "#/components/schemas/Tag"
           }
         }
       },
@@ -2684,57 +2697,29 @@
     },
     "/tags": {
       "get": {
-        "summary": "Get tag by ID",
-        "description": "Retrieve a specific tag by its ID",
+        "summary": "Get all tags",
+        "description": "Retrieve all available tags with search support",
         "tags": [
           "Tag"
         ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TagResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerError"
-                }
-              }
-            }
+        "parameters": [
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search term for tag names"
           }
-        }
-      },
-      "post": {
-        "summary": "Create new tag (Admin Only)",
-        "description": "Create a new tag with name and description",
-        "tags": [
-          "Tag"
         ],
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "Tags retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TagResponse"
+                  "$ref": "#/components/schemas/TagsResponse"
                 }
               }
             }
@@ -2762,87 +2747,30 @@
         }
       }
     },
-    "/tags/{id}": {
-      "put": {
-        "summary": "Update tag (Admin Only)",
-        "description": "Update an existing tag by ID",
+    "/tags/get-or-create": {
+      "post": {
+        "summary": "Get or create tag",
+        "description": "Gets existing tag by name or creates a new one if it doesn't exist",
         "tags": [
           "Tag"
         ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The id parameter"
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetOrCreateTagRequest"
+              }
+            }
           }
-        ],
+        },
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "Tag retrieved or created successfully",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TagResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "summary": "Delete tag (Admin Only)",
-        "description": "Delete a tag by ID",
-        "tags": [
-          "Tag"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The id parameter"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Tag deleted successfully"
-                    }
-                  }
                 }
               }
             }
