@@ -89,14 +89,9 @@ router.put(
 // SongController Routes
 router.get("/songs", SongController.getAllSongs);
 router.get("/songs/:id", SongController.getSongById);
-router.post("/admin/songs", SongController.createSong);
-router.put("/admin/songs/:id", SongController.updateSong);
-router.delete("/admin/songs/:id", SongController.deleteSong);
-router.post("/admin/songs/:song_id/tags/:tag_id", SongController.addTagToSong);
-router.delete(
-  "/admin/songs/:song_id/tags/:tag_id",
-  SongController.removeTagFromSong
-);
+router.post("/admin/songs", authenticateToken, SongController.createSong);
+router.put("/admin/songs/:id", authenticateToken, SongController.updateSong);
+router.delete("/admin/songs/:id", authenticateToken, SongController.deleteSong);
 
 // TagController Routes
 router.get("/tags", TagController.GetTags);

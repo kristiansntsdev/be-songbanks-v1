@@ -46,10 +46,10 @@ class ModelFactory {
     // Base schema that all models get
     const baseSchema = {
       id: {
-        type: DataTypes.STRING(26),
+        type: DataTypes.INTEGER,
         primaryKey: true,
+        autoIncrement: true,
         allowNull: false,
-        defaultValue: () => ulid(),
       },
     };
 
@@ -101,7 +101,7 @@ class ModelFactory {
       Note: {
         ...baseSchema,
         user_id: {
-          type: DataTypes.STRING(26),
+          type: DataTypes.INTEGER,
           allowNull: false,
           references: {
             model: "users",
@@ -109,7 +109,7 @@ class ModelFactory {
           },
         },
         song_id: {
-          type: DataTypes.STRING(26),
+          type: DataTypes.INTEGER,
           allowNull: false,
           references: {
             model: "songs",

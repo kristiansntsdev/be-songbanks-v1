@@ -34,6 +34,21 @@ class TagService {
     });
     return { tag, created };
   }
+
+  static async findOrCreateTagsByNames(tag_names) {
+    if (!tag_names || tag_names.length === 0) {
+      return [];
+    }
+
+    const tags = [];
+
+    for (const tagName of tag_names) {
+      const result = await this.getOrCreateTag({ name: tagName.trim() });
+      tags.push(result.tag);
+    }
+
+    return tags;
+  }
 }
 
 export default TagService;
