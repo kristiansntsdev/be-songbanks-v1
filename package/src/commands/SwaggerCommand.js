@@ -802,9 +802,12 @@ const router = express.Router();
     const middlewares = [];
     if (method.annotations && method.annotations.auth) {
       middlewares.push("authenticateToken");
-      
+
       // Add role-based middleware for specific auth endpoints
-      if (methodName === 'apiGetCurrentUser' || methodName === 'apiCheckPermission') {
+      if (
+        methodName === "apiGetCurrentUser" ||
+        methodName === "apiCheckPermission"
+      ) {
         middlewares.push("requireRole(null)");
       }
     }

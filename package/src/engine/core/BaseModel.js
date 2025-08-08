@@ -37,13 +37,13 @@ class BaseModel extends Model {
    * The "type" of the primary key ID.
    * @type {string}
    */
-  keyType = "string";
+  keyType = "integer";
 
   /**
    * Indicates if the IDs are auto-incrementing.
    * @type {boolean}
    */
-  incrementing = false;
+  incrementing = true;
 
   /**
    * The relations to eager load on every query.

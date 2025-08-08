@@ -240,6 +240,60 @@
           }
         ]
       },
+      "CreateSongRequest": {
+        "type": "object",
+        "required": [
+          "title",
+          "artist"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Amazing Grace",
+            "description": "Title of the song"
+          },
+          "artist": {
+            "type": "string",
+            "example": "John Newton",
+            "description": "Artist or composer of the song"
+          },
+          "base_chord": {
+            "type": "string",
+            "example": "G",
+            "description": "Base chord of the song"
+          },
+          "lyrics_and_chords": {
+            "type": "string",
+            "example": "Amazing grace how sweet the sound...",
+            "description": "Lyrics with chord progressions"
+          },
+          "tag_names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "Gospel",
+              "Worship",
+              "Contemporary"
+            ],
+            "description": "Array of tag names. If a tag doesn't exist, it will be created automatically"
+          }
+        }
+      },
+      "GetOrCreateTagRequest": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "rock",
+            "description": "Name of the tag to get or create"
+          }
+        }
+      },
       "LoginRequest": {
         "type": "object",
         "required": [
@@ -256,6 +310,42 @@
             "type": "string",
             "example": "password123",
             "description": "User's password"
+          }
+        }
+      },
+      "UpdateSongRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Amazing Grace (Updated)",
+            "description": "Updated title of the song"
+          },
+          "artist": {
+            "type": "string",
+            "example": "John Newton",
+            "description": "Updated artist or composer of the song"
+          },
+          "base_chord": {
+            "type": "string",
+            "example": "C",
+            "description": "Updated base chord of the song"
+          },
+          "lyrics_and_chords": {
+            "type": "string",
+            "example": "Amazing grace how sweet the sound...",
+            "description": "Updated lyrics with chord progressions"
+          },
+          "tag_names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "Gospel",
+              "Contemporary"
+            ],
+            "description": "Updated array of tag names. If a tag doesn't exist, it will be created automatically"
           }
         }
       },
@@ -333,6 +423,221 @@
                 "example": true,
                 "description": "Whether user is admin"
               }
+            }
+          }
+        }
+      },
+      "SongResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "Song retrieved successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "01HPQR2ST3UV4WXY5Z6789ABCD",
+                "description": "Unique identifier for the song"
+              },
+              "title": {
+                "type": "string",
+                "example": "Amazing Grace",
+                "description": "Title of the song"
+              },
+              "artist": {
+                "type": "string",
+                "example": "John Newton",
+                "description": "Artist or composer of the song"
+              },
+              "base_chord": {
+                "type": "string",
+                "example": "G",
+                "description": "Base chord of the song"
+              },
+              "lyrics_and_chords": {
+                "type": "string",
+                "example": "Amazing grace how sweet the sound...",
+                "description": "Lyrics with chord progressions"
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "01HPQR2ST3UV4WXY5Z6789ABCE"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Gospel"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Traditional gospel music"
+                    }
+                  }
+                },
+                "description": "Tags associated with the song"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-01-15T10:30:00.000Z"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-01-15T10:30:00.000Z"
+              }
+            }
+          }
+        }
+      },
+      "SongsResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "Songs retrieved successfully"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "example": "01HPQR2ST3UV4WXY5Z6789ABCD",
+                  "description": "Unique identifier for the song"
+                },
+                "title": {
+                  "type": "string",
+                  "example": "Amazing Grace",
+                  "description": "Title of the song"
+                },
+                "artist": {
+                  "type": "string",
+                  "example": "John Newton",
+                  "description": "Artist or composer of the song"
+                },
+                "base_chord": {
+                  "type": "string",
+                  "example": "G",
+                  "description": "Base chord of the song"
+                },
+                "lyrics_and_chords": {
+                  "type": "string",
+                  "example": "Amazing grace how sweet the sound...",
+                  "description": "Lyrics with chord progressions"
+                },
+                "tags": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "example": "01HPQR2ST3UV4WXY5Z6789ABCE"
+                      },
+                      "name": {
+                        "type": "string",
+                        "example": "Gospel"
+                      },
+                      "description": {
+                        "type": "string",
+                        "example": "Traditional gospel music"
+                      }
+                    }
+                  },
+                  "description": "Tags associated with the song"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "example": "2024-01-15T10:30:00.000Z"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "example": "2024-01-15T10:30:00.000Z"
+                }
+              }
+            },
+            "description": "Array of songs"
+          },
+          "pagination": {
+            "type": "object",
+            "properties": {
+              "currentPage": {
+                "type": "integer",
+                "example": 1,
+                "description": "Current page number"
+              },
+              "totalPages": {
+                "type": "integer",
+                "example": 5,
+                "description": "Total number of pages"
+              },
+              "totalItems": {
+                "type": "integer",
+                "example": 42,
+                "description": "Total number of songs"
+              },
+              "itemsPerPage": {
+                "type": "integer",
+                "example": 10,
+                "description": "Number of items per page"
+              },
+              "hasNextPage": {
+                "type": "boolean",
+                "example": true,
+                "description": "Whether there is a next page"
+              },
+              "hasPrevPage": {
+                "type": "boolean",
+                "example": false,
+                "description": "Whether there is a previous page"
+              }
+            },
+            "description": "Pagination information"
+          }
+        }
+      },
+      "TagResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Tag created successfully"
+          },
+          "data": {
+            "$ref": "#/components/schemas/Tag"
+          }
+        }
+      },
+      "TagsResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Get All Tags"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Tag"
             }
           }
         }
@@ -735,33 +1040,6 @@
             "type": "string",
             "example": "Rock music genre",
             "description": "Optional description of the tag"
-          }
-        }
-      },
-      "TagsResponse": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "example": "Get All Tags"
-          },
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Tag"
-            }
-          }
-        }
-      },
-      "TagResponse": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string",
-            "example": "Tag created successfully"
-          },
-          "data": {
-            "$ref": "#/components/schemas/Tag"
           }
         }
       },
@@ -2398,57 +2676,87 @@
     },
     "/songs": {
       "get": {
-        "summary": "Get song by ID",
-        "description": "Auto-generated endpoint for SongController.getSongById",
+        "summary": "Get all songs with pagination, search, and filters",
+        "description": "Retrieve all songs with support for pagination, full-text search across title/artist/lyrics, filtering by base chord and tags, and custom sorting",
         "tags": [
           "Song"
         ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponseWithData"
-                }
-              }
-            }
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Page number for pagination"
           },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestError"
-                }
-              }
-            }
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Number of items per page"
           },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerError"
-                }
-              }
-            }
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search term for title, artist, or lyrics"
+          },
+          {
+            "in": "query",
+            "name": "base_chord",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter songs by base chord"
+          },
+          {
+            "in": "query",
+            "name": "tag_ids",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by tag IDs (comma-separated)"
+          },
+          {
+            "in": "query",
+            "name": "sortBy",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Sort field"
+          },
+          {
+            "in": "query",
+            "name": "sortOrder",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ASC",
+                "DESC"
+              ]
+            },
+            "description": "Sort order"
           }
-        }
-      },
-      "post": {
-        "summary": "Create new song (Admin Only)",
-        "description": "Auto-generated endpoint for SongController.createSong",
-        "tags": [
-          "Song"
         ],
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "Songs retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseResponseWithData"
+                  "$ref": "#/components/schemas/SongsResponse"
                 }
               }
             }
@@ -2477,9 +2785,9 @@
       }
     },
     "/songs/{id}": {
-      "put": {
-        "summary": "Update song (Admin Only)",
-        "description": "Auto-generated endpoint for SongController.updateSong",
+      "get": {
+        "summary": "Get song by ID",
+        "description": "Retrieve a single song with all associated tags by its ID",
         "tags": [
           "Song"
         ],
@@ -2491,16 +2799,16 @@
             "schema": {
               "type": "string"
             },
-            "description": "The id parameter"
+            "description": "Song ID"
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "Song details retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseResponseWithData"
+                  "$ref": "#/components/schemas/SongResponse"
                 }
               }
             }
@@ -2511,6 +2819,189 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Song not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/songs": {
+      "post": {
+        "summary": "Create new song",
+        "description": "Create a new song with associated tags. Tags will be found by name or created automatically if they don't exist (Admin only)",
+        "tags": [
+          "Song"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSongRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Song created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SongResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin access required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/songs/{id}": {
+      "put": {
+        "summary": "Update song",
+        "description": "Update an existing song and/or its associated tags. Tags will be found by name or created automatically if they don't exist. Include tag_names array to update tags, or omit to keep existing tags (Admin only)",
+        "tags": [
+          "Song"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Song ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSongRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Song updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SongResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin access required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Song not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
                 }
               }
             }
@@ -2528,8 +3019,8 @@
         }
       },
       "delete": {
-        "summary": "Delete song (Admin Only)",
-        "description": "Auto-generated endpoint for SongController.deleteSong",
+        "summary": "Delete song",
+        "description": "Delete a song and all its associations (Admin only)",
         "tags": [
           "Song"
         ],
@@ -2541,12 +3032,17 @@
             "schema": {
               "type": "string"
             },
-            "description": "The id parameter"
+            "description": "Song ID"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "Song deleted successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -2565,106 +3061,32 @@
               }
             }
           },
-          "500": {
-            "description": "Internal server error",
+          "401": {
+            "description": "Authentication required",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InternalServerError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/songs/{id}/tags": {
-      "post": {
-        "summary": "Add tag to song (Admin Only)",
-        "description": "Auto-generated endpoint for SongController.addTagToSong",
-        "tags": [
-          "Song"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The id parameter"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponseWithData"
+                  "$ref": "#/components/schemas/UnauthorizedError"
                 }
               }
             }
           },
-          "400": {
-            "description": "Bad request",
+          "403": {
+            "description": "Admin access required",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BadRequestError"
+                  "$ref": "#/components/schemas/ForbiddenError"
                 }
               }
             }
           },
-          "500": {
-            "description": "Internal server error",
+          "404": {
+            "description": "Song not found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InternalServerError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/songs/{id}/tags/{tag_id}": {
-      "delete": {
-        "summary": "Remove tag from song (Admin Only)",
-        "description": "Auto-generated endpoint for SongController.removeTagFromSong",
-        "tags": [
-          "Song"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The id parameter"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponseWithData"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestError"
+                  "$ref": "#/components/schemas/NotFoundError"
                 }
               }
             }
@@ -2684,57 +3106,29 @@
     },
     "/tags": {
       "get": {
-        "summary": "Get tag by ID",
-        "description": "Retrieve a specific tag by its ID",
+        "summary": "Get all tags",
+        "description": "Retrieve all available tags with search support",
         "tags": [
           "Tag"
         ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TagResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerError"
-                }
-              }
-            }
+        "parameters": [
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search term for tag names"
           }
-        }
-      },
-      "post": {
-        "summary": "Create new tag (Admin Only)",
-        "description": "Create a new tag with name and description",
-        "tags": [
-          "Tag"
         ],
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "Tags retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TagResponse"
+                  "$ref": "#/components/schemas/TagsResponse"
                 }
               }
             }
@@ -2762,87 +3156,30 @@
         }
       }
     },
-    "/tags/{id}": {
-      "put": {
-        "summary": "Update tag (Admin Only)",
-        "description": "Update an existing tag by ID",
+    "/tags/get-or-create": {
+      "post": {
+        "summary": "Get or create tag",
+        "description": "Gets existing tag by name or creates a new one if it doesn't exist",
         "tags": [
           "Tag"
         ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The id parameter"
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetOrCreateTagRequest"
+              }
+            }
           }
-        ],
+        },
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "Tag retrieved or created successfully",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TagResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "summary": "Delete tag (Admin Only)",
-        "description": "Delete a tag by ID",
-        "tags": [
-          "Tag"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The id parameter"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Tag deleted successfully"
-                    }
-                  }
                 }
               }
             }

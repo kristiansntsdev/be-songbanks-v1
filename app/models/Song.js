@@ -31,4 +31,7 @@ class Song extends BaseModel {
 
 export default ModelFactory.register(Song, sequelize, {
   tableName: "songs",
+  timestamps: true,
+  createdAt: "createdAt",
+  updatedAt: "updatedAt",
 });

@@ -1,130 +1,53 @@
-import { fn, col, literal } from "sequelize";
+import { Op } from "sequelize";
 import Tag from "../models/Tag.js";
 import Song from "../models/Song.js";
 
 class TagService {
   static async getAllTags(options = {}) {
-    const {
-      page = 1,
-      limit = 10,
-      search,
-      sortBy = "name",
-      sortOrder = "ASC",
-      withSongCount = false,
-    } = options;
+    const { search, sortBy = "name", sortOrder = "ASC" } = options;
 
-    const { count, rows } = await Tag.query()
-      .when(search, (q) => q.search(search, ["name", "description"]))
-      .when(withSongCount, (q) =>
-        q
-          .with({
-            model: Song,
-            as: "songs",
-            attributes: [],
-            through: { attributes: [] },
-          })
-          .applyOptions({
-            attributes: [
-              "id",
-              "name",
-              "description",
-              "createdAt",
-              "updatedAt",
-              [fn("COUNT", col("songs.id")), "songCount"],
-            ],
-            group: ["Tag.id"],
-            subQuery: false,
-          })
-      )
-      .orderBy(sortBy, sortOrder)
-      .paginate(page, limit);
-
-    return this.paginatedResponse(rows, count, page, limit, "tags");
-  }
-
-  static async getTagById(tagId, options = {}) {
-    const { includeSongs = true, songLimit = 10 } = options;
-
-    const tag = await Tag.query()
-      .when(includeSongs, (q) =>
-        q.with({
-          model: Song,
-          as: "songs",
-          through: { attributes: [] },
-          limit: songLimit,
-          order: [["title", "ASC"]],
-        })
-      )
-      .findByPk(tagId);
-
-    if (!tag) throw new Error("Tag not found");
-    return tag;
-  }
-
-  static async createTag(tagData) {
-    await this.ensureUniqueTagName(tagData.name.trim());
-
-    return Tag.create({
-      name: tagData.name.trim(),
-      description: tagData.description?.trim() || null,
+    let query = Tag.findAll({
+      order: [[sortBy, sortOrder]],
     });
-  }
 
-  static async updateTag(tagId, updateData) {
-    const tag = await this.validateTagExists(tagId);
-
-    if (updateData.name) {
-      await this.ensureUniqueTagName(updateData.name.trim(), tagId);
+    if (search) {
+      query = Tag.findAll({
+        where: {
+          [Op.or]: [
+            { name: { [Op.iLike]: `%${search}%` } },
+            { description: { [Op.iLike]: `%${search}%` } },
+          ],
+        },
+        order: [[sortBy, sortOrder]],
+      });
     }
 
-    const updatedData = {
-      ...(updateData.name && { name: updateData.name.trim() }),
-      ...(updateData.description !== undefined && {
-        description: updateData.description?.trim() || null,
-      }),
-    };
-
-    await tag.update(updatedData);
-    return tag;
+    const tags = await query;
+    return tags;
   }
 
-  static async deleteTag(tagId) {
-    const tag = await this.validateTagExists(tagId);
-
-    // Check if tag is being used by any songs
-    const songCount = await tag.countSongs();
-    if (songCount > 0) {
-      throw new Error(
-        `Cannot delete tag: it is being used by ${songCount} song(s)`
-      );
-    }
-
-    await tag.destroy();
-    return { message: "Tag deleted successfully" };
-  }
-
-  static async getOrCreateTag(tagName) {
-    const { instance: tag, created } = await Tag.firstOrCreate(
-      { name: tagName.trim() },
-      { name: tagName.trim() }
-    );
+  static async getOrCreateTag(requestBody) {
+    const { name } = requestBody;
+    const [tag, created] = await Tag.findOrCreate({
+      where: { name: name.trim() },
+      defaults: { name: name.trim() },
+    });
     return { tag, created };
   }
 
-  static async validateTagExists(tagId) {
-    const tag = await Tag.findByPk(tagId);
-    if (!tag) throw new Error("Tag not found");
-    return tag;
-  }
-
-  static async ensureUniqueTagName(name, excludeId = null) {
-    const query = Tag.query().where("name", name);
-    if (excludeId) query.where("id", "!=", excludeId);
-
-    const existing = await query.first();
-    if (existing) {
-      throw new Error("Tag with this name already exists");
+  static async findOrCreateTagsByNames(tag_names) {
+    if (!tag_names || tag_names.length === 0) {
+      return [];
     }
+
+    const tags = [];
+
+    for (const tagName of tag_names) {
+      const result = await this.getOrCreateTag({ name: tagName.trim() });
+      tags.push(result.tag);
+    }
+
+    return tags;
   }
 }
 

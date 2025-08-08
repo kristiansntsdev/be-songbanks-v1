@@ -30,4 +30,7 @@ class Tag extends BaseModel {
 
 export default ModelFactory.register(Tag, sequelize, {
   tableName: "tags",
+  timestamps: true,
+  createdAt: "createdAt",
+  updatedAt: "updatedAt",
 });

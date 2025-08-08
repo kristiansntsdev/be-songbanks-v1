@@ -4,6 +4,8 @@ import swaggerUi from "swagger-ui-express";
 import swaggerSpecs from "./config/swagger.js";
 import cors from "cors";
 import sequelize from "./config/database.js";
+// Import models to set up associations
+import "./app/models/index.js";
 
 const app = express();
 
