@@ -1,6 +1,5 @@
 import Song from "../models/Song.js";
 import Tag from "../models/Tag.js";
-import { Op } from "sequelize";
 
 class SongService {
   static async getAllSongs(options = {}) {
@@ -15,47 +14,78 @@ class SongService {
     } = options;
 
     const offset = (page - 1) * limit;
-    const whereClause = {};
-    const includeClause = {
-      model: Tag,
-      as: "tags",
-      attributes: ["id", "name", "description"],
-    };
+    const whereConditions = [];
+    const params = [];
 
+    // Build WHERE conditions
     if (search) {
-      whereClause[Op.or] = [
-        { title: { [Op.like]: `%${search}%` } },
-        { artist: { [Op.like]: `%${search}%` } },
-        { lyrics_and_chords: { [Op.like]: `%${search}%` } },
-      ];
+      whereConditions.push("(s.title LIKE ? OR s.artist LIKE ? OR s.lyrics_and_chords LIKE ?)");
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
 
     if (base_chord) {
-      whereClause.base_chord = { [Op.like]: `%${base_chord}%` };
+      whereConditions.push("s.base_chord LIKE ?");
+      params.push(`%${base_chord}%`);
     }
 
     if (tag_ids && tag_ids.length > 0) {
-      includeClause.where = { id: { [Op.in]: tag_ids } };
-      includeClause.required = true;
+      const placeholders = tag_ids.map(() => "?").join(",");
+      whereConditions.push(`s.id IN (
+        SELECT DISTINCT st.song_id 
+        FROM song_tags st 
+        WHERE st.tag_id IN (${placeholders})
+      )`);
+      params.push(...tag_ids);
     }
 
-    const { count, rows } = await Song.findAndCountAll({
-      where: whereClause,
-      include: [includeClause],
-      limit: parseInt(limit),
-      offset: parseInt(offset),
-      order: [[sortBy, sortOrder.toUpperCase()]],
-      distinct: true,
-    });
+    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(" AND ")}` : "";
+
+    // Get total count
+    const countResult = await Song.sequelize.query(
+      `SELECT COUNT(DISTINCT s.id) as total FROM songs s ${whereClause}`,
+      {
+        replacements: params,
+        type: Song.sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    const totalCount = countResult[0].total;
+
+    // Get songs with pagination
+    const songs = await Song.sequelize.query(
+      `SELECT s.* FROM songs s 
+       ${whereClause}
+       ORDER BY s.${sortBy} ${sortOrder.toUpperCase()}
+       LIMIT ? OFFSET ?`,
+      {
+        replacements: [...params, parseInt(limit), parseInt(offset)],
+        type: Song.sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    // Get tags for each song
+    for (const song of songs) {
+      const songTags = await Song.sequelize.query(
+        `SELECT t.id, t.name, t.description
+         FROM tags t
+         JOIN song_tags st ON t.id = st.tag_id
+         WHERE st.song_id = ?`,
+        {
+          replacements: [song.id],
+          type: Song.sequelize.QueryTypes.SELECT,
+        }
+      );
+      song.tags = songTags || [];
+    }
 
     return {
-      songs: rows,
+      songs: songs,
       pagination: {
         currentPage: parseInt(page),
-        totalPages: Math.ceil(count / limit),
-        totalItems: count,
+        totalPages: Math.ceil(totalCount / limit),
+        totalItems: totalCount,
         itemsPerPage: parseInt(limit),
-        hasNextPage: page < Math.ceil(count / limit),
+        hasNextPage: page < Math.ceil(totalCount / limit),
         hasPrevPage: page > 1,
       },
     };
@@ -63,7 +93,7 @@ class SongService {
 
   static async getSongById(songId) {
     // Get the song first
-    const [songResults] = await Song.sequelize.query(
+    const songResults = await Song.sequelize.query(
       "SELECT * FROM songs WHERE id = ?",
       {
         replacements: [songId],
@@ -80,7 +110,7 @@ class SongService {
     const song = songResults[0];
 
     // Get tags separately
-    const [tagResults] = await Song.sequelize.query(
+    const tagResults = await Song.sequelize.query(
       `
       SELECT t.id, t.name, t.description
       FROM tags t
