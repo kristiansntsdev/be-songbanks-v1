@@ -14,8 +14,8 @@ class TagService {
       query = Tag.findAll({
         where: {
           [Op.or]: [
-            { name: { [Op.iLike]: `%${search}%` } },
-            { description: { [Op.iLike]: `%${search}%` } },
+            { name: { [Op.like]: `%${search}%` } },
+            { description: { [Op.like]: `%${search}%` } },
           ],
         },
         order: [[sortBy, sortOrder]],
