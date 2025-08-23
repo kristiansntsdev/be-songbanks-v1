@@ -19,7 +19,9 @@ class SongService {
 
     // Build WHERE conditions
     if (search) {
-      whereConditions.push("(s.title LIKE ? OR s.artist LIKE ? OR s.lyrics_and_chords LIKE ?)");
+      whereConditions.push(
+        "(s.title LIKE ? OR s.artist LIKE ? OR s.lyrics_and_chords LIKE ?)"
+      );
       params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
 
@@ -38,7 +40,10 @@ class SongService {
       params.push(...tag_ids);
     }
 
-    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(" AND ")}` : "";
+    const whereClause =
+      whereConditions.length > 0
+        ? `WHERE ${whereConditions.join(" AND ")}`
+        : "";
 
     // Get total count
     const countResult = await Song.sequelize.query(
@@ -351,6 +356,17 @@ class SongService {
       page,
       limit,
     });
+  }
+
+  static async getAllArtists() {
+    const artists = await Song.sequelize.query(
+      `SELECT DISTINCT artist FROM songs WHERE artist IS NOT NULL AND artist != '' ORDER BY artist ASC`,
+      {
+        type: Song.sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    return artists.map((row) => row.artist);
   }
 }
 

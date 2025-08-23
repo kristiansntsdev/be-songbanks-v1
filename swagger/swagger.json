@@ -349,6 +349,28 @@
           }
         }
       },
+      "ArtistsResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "Artists retrieved successfully"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "example": "JPCC Worship",
+              "description": "Artist name"
+            },
+            "description": "Array of unique artist names"
+          }
+        }
+      },
       "LoginResponse": {
         "allOf": [
           {
@@ -1141,6 +1163,47 @@
     }
   },
   "paths": {
+    "/artists": {
+      "get": {
+        "summary": "Get all artists",
+        "description": "Retrieve all unique artists from songs table",
+        "tags": [
+          "Artist"
+        ],
+        "responses": {
+          "200": {
+            "description": "Artists retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtistsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/auth/login": {
       "post": {
         "summary": "User login",

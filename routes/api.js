@@ -1,5 +1,6 @@
 import express from "express";
 const router = express.Router();
+import ArtistController from "../app/controllers/ArtistController.js";
 import AuthController from "../app/controllers/AuthController.js";
 import NoteController from "../app/controllers/NoteController.js";
 import PlaylistController from "../app/controllers/PlaylistController.js";
@@ -8,6 +9,9 @@ import SongController from "../app/controllers/SongController.js";
 import TagController from "../app/controllers/TagController.js";
 import UserController from "../app/controllers/UserController.js";
 import { authenticateToken, requireRole } from "../app/middlewares/auth.js";
+
+// ArtistController Routes
+router.get("/artists", ArtistController.getAllArtists);
 
 // AuthController Routes
 router.post("/auth/login", AuthController.apiLogin);
