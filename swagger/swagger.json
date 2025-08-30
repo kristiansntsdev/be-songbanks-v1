@@ -432,6 +432,75 @@
           }
         }
       },
+      "JoinPlaylistResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 201
+          },
+          "message": {
+            "type": "string",
+            "example": "Successfully joined playlist team as member"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "playlist_team_id": {
+                "type": "integer",
+                "description": "ID of the created playlist team",
+                "example": 456
+              },
+              "playlist_id": {
+                "type": "integer",
+                "description": "ID of the playlist that was joined",
+                "example": 123
+              },
+              "playlist_name": {
+                "type": "string",
+                "description": "Name of the playlist",
+                "example": "My Awesome Playlist"
+              },
+              "lead_id": {
+                "type": "integer",
+                "description": "User ID of the team leader (playlist creator)",
+                "example": 789
+              },
+              "joiner_id": {
+                "type": "integer",
+                "description": "User ID of the person who joined via sharelink",
+                "example": 456
+              },
+              "message": {
+                "type": "string",
+                "description": "Success message",
+                "example": "Successfully joined playlist team as member"
+              },
+              "members": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "description": "Array of user IDs who are members of the team",
+                "example": [
+                  123,
+                  456,
+                  789
+                ]
+              }
+            },
+            "required": [
+              "playlist_team_id",
+              "playlist_id",
+              "playlist_name",
+              "lead_id",
+              "joiner_id",
+              "message",
+              "members"
+            ]
+          }
+        }
+      },
       "LoginResponse": {
         "allOf": [
           {
@@ -663,6 +732,62 @@
               }
             },
             "description": "Pagination information"
+          }
+        }
+      },
+      "SharelinkResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 201
+          },
+          "message": {
+            "type": "string",
+            "example": "Sharelink generated successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Playlist ID",
+                "example": "123"
+              },
+              "playlist_name": {
+                "type": "string",
+                "description": "Name of the playlist",
+                "example": "My Awesome Playlist"
+              },
+              "sharable_link": {
+                "type": "string",
+                "description": "Shareable link URL for joining the playlist team",
+                "example": "http://localhost:3000/playlist/join/abc123token"
+              },
+              "share_token": {
+                "type": "string",
+                "description": "Unique share token for the playlist",
+                "example": "abc123token"
+              },
+              "is_shared": {
+                "type": "boolean",
+                "description": "Whether the playlist is shared",
+                "example": true
+              },
+              "playlist_team_id": {
+                "type": "integer",
+                "description": "ID of the created playlist team",
+                "example": 456
+              }
+            },
+            "required": [
+              "id",
+              "playlist_name",
+              "sharable_link",
+              "share_token",
+              "is_shared",
+              "playlist_team_id"
+            ]
           }
         }
       },
@@ -2241,6 +2366,180 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/playlists/{id}/sharelink": {
+      "post": {
+        "summary": "Generate playlist sharelink",
+        "description": "Generate a shareable link for a playlist that can be used to create a playlist team",
+        "tags": [
+          "Playlist"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Playlist ID"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Sharelink generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharelinkResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Playlist not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/playlists/join/{shareToken}": {
+      "post": {
+        "summary": "Join playlist via sharelink",
+        "description": "Join a playlist team using a share token, with the playlist creator as team leader",
+        "tags": [
+          "Playlist"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "shareToken",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Share token from the playlist sharelink"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successfully joined playlist team",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JoinPlaylistResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Invalid or expired share link",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Playlist already has a team",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictError"
                 }
               }
             }

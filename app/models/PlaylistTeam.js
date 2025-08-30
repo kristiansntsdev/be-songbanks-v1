@@ -1,9 +1,43 @@
-import { BaseModel, ModelFactory } from "../../package/src/engine/index.js";
+import { DataTypes } from "sequelize";
 import sequelize from "../../config/database.js";
 
-class PlaylistTeam extends BaseModel {
+class PlaylistTeam {
+  static get schema() {
+    return {
+      id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      playlist_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      lead_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      is_hidden: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
+      members: {
+        type: DataTypes.JSON,
+        defaultValue: [],
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        field: "createdAt",
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        field: "updatedAt",
+      },
+    };
+  }
+
   static get fillable() {
-    return ["playlist_id", "lead_id", "is_hidden"];
+    return ["playlist_id", "lead_id", "is_hidden", "members"];
   }
 
   static get hidden() {
@@ -13,6 +47,7 @@ class PlaylistTeam extends BaseModel {
   static get casts() {
     return {
       is_hidden: "boolean",
+      members: "json",
     };
   }
 
@@ -26,17 +61,16 @@ class PlaylistTeam extends BaseModel {
       foreignKey: "lead_id",
       as: "leader",
     });
-
-    this.belongsToMany(models.User, {
-      through: "playlist_team_members",
-      foreignKey: "playlist_team_id",
-      otherKey: "user_id",
-      as: "members",
-      withPivot: ["role"],
-    });
   }
 }
 
-export default ModelFactory.register(PlaylistTeam, sequelize, {
-  tableName: "playlist_teams",
-});
+const PlaylistTeamModel = sequelize.define(
+  "PlaylistTeam",
+  PlaylistTeam.schema,
+  {
+    tableName: "playlist_teams",
+    timestamps: true,
+  }
+);
+
+export default PlaylistTeamModel;

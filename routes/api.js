@@ -49,6 +49,16 @@ router.delete(
   authenticateToken,
   PlaylistController.deletePlaylist
 );
+router.post(
+  "/playlists/:id/sharelink",
+  authenticateToken,
+  PlaylistController.generateSharelink
+);
+router.post(
+  "/playlists/join/:shareToken",
+  authenticateToken,
+  PlaylistController.joinPlaylistViaSharelink
+);
 
 // PlaylistTeamController Routes
 router.get("/playlist-teams", PlaylistTeamController.getAllPlaylistTeams);
