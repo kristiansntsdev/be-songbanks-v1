@@ -21,9 +21,31 @@ module.exports = {
         allowNull: true,
         unique: true,
       },
+      share_token: {
+        type: Sequelize.STRING(100),
+        allowNull: true,
+      },
+      user_id: {
+        type: Sequelize.STRING(26),
+        allowNull: false,
+        references: {
+          model: "users",
+          key: "id",
+        },
+      },
       playlist_team_id: {
         type: Sequelize.STRING(26),
         allowNull: true,
+      },
+      is_shared: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      is_locked: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
       },
       createdAt: {
         allowNull: false,

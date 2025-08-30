@@ -240,6 +240,29 @@
           }
         ]
       },
+      "CreatePlaylistRequest": {
+        "type": "object",
+        "required": [
+          "playlist_name"
+        ],
+        "properties": {
+          "playlist_name": {
+            "type": "string",
+            "example": "My Favorite Songs",
+            "description": "Name of the playlist"
+          },
+          "songs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "01HPQR2ST3UV4WXY5Z6789ABCD"
+            ],
+            "description": "Array of song IDs to include in the playlist"
+          }
+        }
+      },
       "CreateSongRequest": {
         "type": "object",
         "required": [
@@ -313,6 +336,27 @@
           }
         }
       },
+      "UpdatePlaylistRequest": {
+        "type": "object",
+        "properties": {
+          "playlist_name": {
+            "type": "string",
+            "example": "Updated Playlist Name",
+            "description": "Updated name of the playlist"
+          },
+          "songs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "01HPQR2ST3UV4WXY5Z6789ABCD",
+              "01HPQR2ST3UV4WXY5Z6789ABCE"
+            ],
+            "description": "Updated array of song IDs for the playlist"
+          }
+        }
+      },
       "UpdateSongRequest": {
         "type": "object",
         "properties": {
@@ -368,6 +412,23 @@
               "description": "Artist name"
             },
             "description": "Array of unique artist names"
+          }
+        }
+      },
+      "ConflictError": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 409
+          },
+          "message": {
+            "type": "string",
+            "example": "A playlist with this name already exists"
+          },
+          "error": {
+            "type": "string",
+            "example": "Conflict"
           }
         }
       },
@@ -446,6 +507,162 @@
                 "description": "Whether user is admin"
               }
             }
+          }
+        }
+      },
+      "PlaylistResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "Playlist retrieved successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "01HPQR2ST3UV4WXY5Z6789ABCD",
+                "description": "Unique identifier for the playlist"
+              },
+              "playlist_name": {
+                "type": "string",
+                "example": "My Favorite Songs",
+                "description": "Name of the playlist"
+              },
+              "user_id": {
+                "type": "string",
+                "example": "user123",
+                "description": "ID of the user who owns the playlist"
+              },
+              "songs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "01HPQR2ST3UV4WXY5Z6789ABCD"
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "Amazing Grace"
+                    },
+                    "artist": {
+                      "type": "string",
+                      "example": "John Newton"
+                    },
+                    "base_chord": {
+                      "type": "string",
+                      "example": "G"
+                    }
+                  }
+                },
+                "description": "Array of songs in the playlist"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-01-15T10:30:00.000Z"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-01-15T10:30:00.000Z"
+              }
+            }
+          }
+        }
+      },
+      "PlaylistsResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "Playlists retrieved successfully"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "example": "01HPQR2ST3UV4WXY5Z6789ABCD",
+                  "description": "Unique identifier for the playlist"
+                },
+                "playlist_name": {
+                  "type": "string",
+                  "example": "My Favorite Songs",
+                  "description": "Name of the playlist"
+                },
+                "user_id": {
+                  "type": "string",
+                  "example": "user123",
+                  "description": "ID of the user who owns the playlist"
+                },
+                "songs_count": {
+                  "type": "integer",
+                  "example": 5,
+                  "description": "Number of songs in the playlist"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "example": "2024-01-15T10:30:00.000Z"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "example": "2024-01-15T10:30:00.000Z"
+                }
+              }
+            },
+            "description": "Array of playlists"
+          },
+          "pagination": {
+            "type": "object",
+            "properties": {
+              "currentPage": {
+                "type": "integer",
+                "example": 1,
+                "description": "Current page number"
+              },
+              "totalPages": {
+                "type": "integer",
+                "example": 3,
+                "description": "Total number of pages"
+              },
+              "totalItems": {
+                "type": "integer",
+                "example": 25,
+                "description": "Total number of playlists"
+              },
+              "itemsPerPage": {
+                "type": "integer",
+                "example": 10,
+                "description": "Number of items per page"
+              },
+              "hasNextPage": {
+                "type": "boolean",
+                "example": true,
+                "description": "Whether there is a next page"
+              },
+              "hasPrevPage": {
+                "type": "boolean",
+                "example": false,
+                "description": "Whether there is a previous page"
+              }
+            },
+            "description": "Pagination information"
           }
         }
       },
@@ -1700,19 +1917,34 @@
       }
     },
     "/playlists": {
-      "get": {
-        "summary": "Get playlist by ID",
-        "description": "Auto-generated endpoint for PlaylistController.getPlaylistById",
+      "post": {
+        "summary": "Create new playlist",
+        "description": "Create a playlist for the authenticated user with optional songs",
         "tags": [
           "Playlist"
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePlaylistRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
-          "200": {
-            "description": "Successful response",
+          "201": {
+            "description": "Playlist created successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseResponseWithData"
+                  "$ref": "#/components/schemas/PlaylistResponse"
                 }
               }
             }
@@ -1723,6 +1955,26 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Playlist name already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictError"
                 }
               }
             }
@@ -1739,19 +1991,44 @@
           }
         }
       },
-      "post": {
-        "summary": "Create new playlist",
-        "description": "Auto-generated endpoint for PlaylistController.createPlaylist",
+      "get": {
+        "summary": "Get all playlists",
+        "description": "Retrieve all playlists for the authenticated user with pagination",
         "tags": [
           "Playlist"
         ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Page number for pagination"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Number of items per page"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "List of playlists retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseResponseWithData"
+                  "$ref": "#/components/schemas/PlaylistsResponse"
                 }
               }
             }
@@ -1762,6 +2039,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
                 }
               }
             }
@@ -1782,7 +2069,7 @@
     "/playlists/{id}": {
       "put": {
         "summary": "Update playlist",
-        "description": "Auto-generated endpoint for PlaylistController.updatePlaylist",
+        "description": "Update playlist name and songs array for the authenticated user",
         "tags": [
           "Playlist"
         ],
@@ -1794,16 +2081,31 @@
             "schema": {
               "type": "string"
             },
-            "description": "The id parameter"
+            "description": "Playlist ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePlaylistRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "Playlist updated successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseResponseWithData"
+                  "$ref": "#/components/schemas/PlaylistResponse"
                 }
               }
             }
@@ -1814,6 +2116,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Playlist not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Playlist name already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictError"
                 }
               }
             }
@@ -1832,7 +2174,7 @@
       },
       "delete": {
         "summary": "Delete playlist",
-        "description": "Auto-generated endpoint for PlaylistController.deletePlaylist",
+        "description": "Delete a playlist by ID for the authenticated user",
         "tags": [
           "Playlist"
         ],
@@ -1844,64 +2186,17 @@
             "schema": {
               "type": "string"
             },
-            "description": "The id parameter"
+            "description": "Playlist ID"
           }
         ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponseWithData"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/users/{user_id}/playlists": {
-      "get": {
-        "summary": "Get user playlists",
-        "description": "Auto-generated endpoint for PlaylistController.getUserPlaylists",
-        "tags": [
-          "Playlist"
-        ],
-        "parameters": [
+        "security": [
           {
-            "in": "path",
-            "name": "user_id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The user ID"
+            "bearerAuth": []
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "Playlist deleted successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -1920,312 +2215,32 @@
               }
             }
           },
-          "500": {
-            "description": "Internal server error",
+          "401": {
+            "description": "Authentication required",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InternalServerError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/playlists/{id}/songs/{song_id}": {
-      "post": {
-        "summary": "Add song to playlist",
-        "description": "Auto-generated endpoint for PlaylistController.addSongToPlaylist",
-        "tags": [
-          "Playlist"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The id parameter"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponseWithData"
+                  "$ref": "#/components/schemas/UnauthorizedError"
                 }
               }
             }
           },
-          "400": {
-            "description": "Bad request",
+          "403": {
+            "description": "Access denied",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BadRequestError"
+                  "$ref": "#/components/schemas/ForbiddenError"
                 }
               }
             }
           },
-          "500": {
-            "description": "Internal server error",
+          "404": {
+            "description": "Playlist not found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InternalServerError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "summary": "Remove song from playlist",
-        "description": "Auto-generated endpoint for PlaylistController.removeSongFromPlaylist",
-        "tags": [
-          "Playlist"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The id parameter"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponseWithData"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/playlists/{id}/reorder": {
-      "put": {
-        "summary": "Reorder playlist songs",
-        "description": "Auto-generated endpoint for PlaylistController.reorderPlaylistSongs",
-        "tags": [
-          "Playlist"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The id parameter"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponseWithData"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/playlists/{id}/share": {
-      "post": {
-        "summary": "Generate shareable link for playlist",
-        "description": "Auto-generated endpoint for PlaylistController.generateShareableLink",
-        "tags": [
-          "Playlist"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The id parameter"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponseWithData"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/playlists/join/{share_token}": {
-      "post": {
-        "summary": "Join playlist via shareable link",
-        "description": "Auto-generated endpoint for PlaylistController.joinPlaylistViaLink",
-        "tags": [
-          "Playlist"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "share_token",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The share_token parameter"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponseWithData"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/playlists/shared/{share_token}": {
-      "get": {
-        "summary": "Get shared playlist details (public access)",
-        "description": "Auto-generated endpoint for PlaylistController.getSharedPlaylistDetails",
-        "tags": [
-          "Playlist"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "share_token",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The share_token parameter"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponseWithData"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestError"
+                  "$ref": "#/components/schemas/NotFoundError"
                 }
               }
             }
