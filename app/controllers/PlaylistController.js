@@ -52,6 +52,32 @@ class PlaylistController {
   });
 
   /**
+   * @Summary Get playlist by ID
+   * @Description Retrieve a specific playlist by ID. Accessible by playlist owner and team members.
+   * @Tags Playlist
+   * @Produce application/json
+   * @Param id path string true "Playlist ID"
+   * @Success 200 {object} PlaylistResponse "Playlist retrieved successfully"
+   * @Failure 401 {object} UnauthorizedError "Authentication required"
+   * @Failure 404 {object} NotFoundError "Playlist not found or access denied"
+   * @Failure 500 {object} InternalServerError "Internal server error"
+   * @Router /playlists/{id} [get]
+   * @auth
+   */
+  static getPlaylistById = ErrorHandler.asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.userId;
+
+    const result = await PlaylistService.getPlaylistById(userId, id);
+
+    res.json({
+      code: 200,
+      message: "Playlist retrieved successfully",
+      data: result,
+    });
+  });
+
+  /**
    * @Summary Update playlist
    * @Description Update playlist name and songs array for the authenticated user
    * @Tags Playlist
@@ -106,6 +132,65 @@ class PlaylistController {
       },
     });
   });
+
+  /**
+   * @Summary Generate playlist sharelink
+   * @Description Generate a shareable link for a playlist that can be used to create a playlist team
+   * @Tags Playlist
+   * @Produce application/json
+   * @Param id path string true "Playlist ID"
+   * @Success 201 {object} SharelinkResponse "Sharelink generated successfully"
+   * @Failure 401 {object} UnauthorizedError "Authentication required"
+   * @Failure 403 {object} ForbiddenError "Access denied"
+   * @Failure 404 {object} NotFoundError "Playlist not found"
+   * @Failure 500 {object} InternalServerError "Internal server error"
+   * @Router /playlists/{id}/sharelink [post]
+   * @auth
+   */
+  static generateSharelink = ErrorHandler.asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.userId;
+
+    const result = await PlaylistService.generateSharelink(userId, id);
+
+    res.status(201).json({
+      code: 201,
+      message: "Sharelink generated successfully",
+      data: result,
+    });
+  });
+
+  /**
+   * @Summary Join playlist via sharelink
+   * @Description Join a playlist team using a share token, with the playlist creator as team leader
+   * @Tags Playlist
+   * @Produce application/json
+   * @Param shareToken path string true "Share token from the playlist sharelink"
+   * @Success 201 {object} JoinPlaylistResponse "Successfully joined playlist team"
+   * @Failure 401 {object} UnauthorizedError "Authentication required"
+   * @Failure 404 {object} NotFoundError "Invalid or expired share link"
+   * @Failure 409 {object} ConflictError "Playlist already has a team"
+   * @Failure 500 {object} InternalServerError "Internal server error"
+   * @Router /playlists/join/{shareToken} [post]
+   * @auth
+   */
+  static joinPlaylistViaSharelink = ErrorHandler.asyncHandler(
+    async (req, res) => {
+      const { shareToken } = req.params;
+      const userId = req.user.userId;
+
+      const result = await PlaylistService.joinPlaylistViaSharelink(
+        shareToken,
+        userId
+      );
+
+      res.status(201).json({
+        code: 201,
+        message: result.message,
+        data: result,
+      });
+    }
+  );
 }
 
 export default PlaylistController;

@@ -432,6 +432,126 @@
           }
         }
       },
+      "DeleteTeamResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "Playlist team deleted successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "1",
+                "description": "ID of the deleted playlist team"
+              }
+            }
+          }
+        }
+      },
+      "JoinPlaylistResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 201
+          },
+          "message": {
+            "type": "string",
+            "example": "Successfully joined playlist team as member"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "playlist_team_id": {
+                "type": "integer",
+                "description": "ID of the created playlist team",
+                "example": 456
+              },
+              "playlist_id": {
+                "type": "integer",
+                "description": "ID of the playlist that was joined",
+                "example": 123
+              },
+              "playlist_name": {
+                "type": "string",
+                "description": "Name of the playlist",
+                "example": "My Awesome Playlist"
+              },
+              "lead_id": {
+                "type": "integer",
+                "description": "User ID of the team leader (playlist creator)",
+                "example": 789
+              },
+              "joiner_id": {
+                "type": "integer",
+                "description": "User ID of the person who joined via sharelink",
+                "example": 456
+              },
+              "message": {
+                "type": "string",
+                "description": "Success message",
+                "example": "Successfully joined playlist team as member"
+              },
+              "members": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "description": "Array of user IDs who are members of the team",
+                "example": [
+                  123,
+                  456,
+                  789
+                ]
+              }
+            },
+            "required": [
+              "playlist_team_id",
+              "playlist_id",
+              "playlist_name",
+              "lead_id",
+              "joiner_id",
+              "message",
+              "members"
+            ]
+          }
+        }
+      },
+      "LeaveTeamResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "Successfully left the team"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "team_id": {
+                "type": "string",
+                "example": "1",
+                "description": "ID of the playlist team"
+              },
+              "user_id": {
+                "type": "string",
+                "example": "123",
+                "description": "ID of the user who left the team"
+              }
+            }
+          }
+        }
+      },
       "LoginResponse": {
         "allOf": [
           {
@@ -578,6 +698,172 @@
           }
         }
       },
+      "PlaylistTeamResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "Playlist team details retrieved successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 1,
+                "description": "Unique identifier for the playlist team"
+              },
+              "playlist_id": {
+                "type": "integer",
+                "example": 34,
+                "description": "ID of the associated playlist"
+              },
+              "lead_id": {
+                "type": "integer",
+                "example": 544,
+                "description": "ID of the team leader"
+              },
+              "is_hidden": {
+                "type": "integer",
+                "example": 0,
+                "description": "Team visibility flag (0=visible, 1=hidden)"
+              },
+              "members": {
+                "type": "string",
+                "example": "[1,2,3]",
+                "description": "JSON array string of member user IDs"
+              },
+              "playlist": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "example": 34
+                  },
+                  "playlist_name": {
+                    "type": "string",
+                    "example": "Team Playlist"
+                  }
+                },
+                "description": "Associated playlist details"
+              },
+              "leader": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "example": 544
+                  },
+                  "email": {
+                    "type": "string",
+                    "example": "leader@example.com"
+                  }
+                },
+                "description": "Team leader details"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2025-08-30T07:13:03.000Z"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2025-08-30T07:28:55.000Z"
+              }
+            }
+          }
+        }
+      },
+      "PlaylistTeamsResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "Playlist teams retrieved successfully"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Unique identifier for the playlist team"
+                },
+                "playlist_id": {
+                  "type": "integer",
+                  "example": 34,
+                  "description": "ID of the associated playlist"
+                },
+                "lead_id": {
+                  "type": "integer",
+                  "example": 544,
+                  "description": "ID of the team leader"
+                },
+                "is_hidden": {
+                  "type": "integer",
+                  "example": 0,
+                  "description": "Team visibility flag (0=visible, 1=hidden)"
+                },
+                "members": {
+                  "type": "string",
+                  "example": "[1,2,3]",
+                  "description": "JSON array string of member user IDs"
+                },
+                "playlist": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 34
+                    },
+                    "playlist_name": {
+                      "type": "string",
+                      "example": "Team Playlist"
+                    }
+                  },
+                  "description": "Associated playlist details"
+                },
+                "leader": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 544
+                    },
+                    "email": {
+                      "type": "string",
+                      "example": "leader@example.com"
+                    }
+                  },
+                  "description": "Team leader details"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "example": "2025-08-30T07:13:03.000Z"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "example": "2025-08-30T07:28:55.000Z"
+                }
+              }
+            },
+            "description": "Array of playlist teams where the user is the leader"
+          }
+        }
+      },
       "PlaylistsResponse": {
         "type": "object",
         "properties": {
@@ -663,6 +949,90 @@
               }
             },
             "description": "Pagination information"
+          }
+        }
+      },
+      "RemoveMemberResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "Member removed from team successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "team_id": {
+                "type": "string",
+                "example": "1",
+                "description": "ID of the playlist team"
+              },
+              "user_id": {
+                "type": "string",
+                "example": "123",
+                "description": "ID of the removed user"
+              }
+            }
+          }
+        }
+      },
+      "SharelinkResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 201
+          },
+          "message": {
+            "type": "string",
+            "example": "Sharelink generated successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Playlist ID",
+                "example": "123"
+              },
+              "playlist_name": {
+                "type": "string",
+                "description": "Name of the playlist",
+                "example": "My Awesome Playlist"
+              },
+              "sharable_link": {
+                "type": "string",
+                "description": "Shareable link URL for joining the playlist team",
+                "example": "http://localhost:3000/playlist/join/abc123token"
+              },
+              "share_token": {
+                "type": "string",
+                "description": "Unique share token for the playlist",
+                "example": "abc123token"
+              },
+              "is_shared": {
+                "type": "boolean",
+                "description": "Whether the playlist is shared",
+                "example": true
+              },
+              "playlist_team_id": {
+                "type": "integer",
+                "description": "ID of the created playlist team",
+                "example": 456
+              }
+            },
+            "required": [
+              "id",
+              "playlist_name",
+              "sharable_link",
+              "share_token",
+              "is_shared",
+              "playlist_team_id"
+            ]
           }
         }
       },
@@ -2067,6 +2437,81 @@
       }
     },
     "/playlists/{id}": {
+      "get": {
+        "summary": "Get playlist by ID",
+        "description": "Retrieve a specific playlist by ID. Accessible by playlist owner and team members.",
+        "tags": [
+          "Playlist"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Playlist ID"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Playlist retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaylistResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Playlist not found or access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      },
       "put": {
         "summary": "Update playlist",
         "description": "Update playlist name and songs array for the authenticated user",
@@ -2258,59 +2703,36 @@
         }
       }
     },
-    "/playlistteams": {
-      "get": {
-        "summary": "Get playlist team by ID",
-        "description": "Auto-generated endpoint for PlaylistTeamController.getPlaylistTeamById",
-        "tags": [
-          "PlaylistTeam"
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponseWithData"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerError"
-                }
-              }
-            }
-          }
-        }
-      },
+    "/playlists/{id}/sharelink": {
       "post": {
-        "summary": "Create new playlist team",
-        "description": "Auto-generated endpoint for PlaylistTeamController.createPlaylistTeam",
+        "summary": "Generate playlist sharelink",
+        "description": "Generate a shareable link for a playlist that can be used to create a playlist team",
         "tags": [
-          "PlaylistTeam"
+          "Playlist"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Playlist ID"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
         ],
         "responses": {
-          "200": {
-            "description": "Successful response",
+          "201": {
+            "description": "Sharelink generated successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseResponseWithData"
+                  "$ref": "#/components/schemas/SharelinkResponse"
                 }
               }
             }
@@ -2321,6 +2743,36 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Playlist not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
                 }
               }
             }
@@ -2338,10 +2790,153 @@
         }
       }
     },
-    "/playlistteams/{id}": {
-      "put": {
-        "summary": "Update playlist team",
-        "description": "Auto-generated endpoint for PlaylistTeamController.updatePlaylistTeam",
+    "/playlists/join/{shareToken}": {
+      "post": {
+        "summary": "Join playlist via sharelink",
+        "description": "Join a playlist team using a share token, with the playlist creator as team leader",
+        "tags": [
+          "Playlist"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "shareToken",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Share token from the playlist sharelink"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successfully joined playlist team",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JoinPlaylistResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Invalid or expired share link",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Playlist already has a team",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/playlist-teams": {
+      "get": {
+        "summary": "Get all playlist teams by user ID",
+        "description": "Retrieve all playlist teams where the authenticated user is the team leader",
+        "tags": [
+          "PlaylistTeam"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Playlist teams retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaylistTeamsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/playlist-teams/{id}": {
+      "get": {
+        "summary": "Get playlist team by ID",
+        "description": "Retrieve playlist team details including members and playlist information",
         "tags": [
           "PlaylistTeam"
         ],
@@ -2353,16 +2948,21 @@
             "schema": {
               "type": "string"
             },
-            "description": "The id parameter"
+            "description": "Playlist Team ID"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "Playlist team details retrieved successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseResponseWithData"
+                  "$ref": "#/components/schemas/PlaylistTeamResponse"
                 }
               }
             }
@@ -2373,6 +2973,26 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Playlist team not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
                 }
               }
             }
@@ -2391,7 +3011,7 @@
       },
       "delete": {
         "summary": "Delete playlist team",
-        "description": "Auto-generated endpoint for PlaylistTeamController.deletePlaylistTeam",
+        "description": "Delete the entire playlist team (leader only)",
         "tags": [
           "PlaylistTeam"
         ],
@@ -2403,16 +3023,21 @@
             "schema": {
               "type": "string"
             },
-            "description": "The id parameter"
+            "description": "Playlist Team ID"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "Playlist team deleted successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseResponseWithData"
+                  "$ref": "#/components/schemas/DeleteTeamResponse"
                 }
               }
             }
@@ -2423,6 +3048,36 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied. Only team leader can delete the team",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Playlist team not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
                 }
               }
             }
@@ -2440,62 +3095,10 @@
         }
       }
     },
-    "/playlistteams/{id}/members": {
-      "post": {
-        "summary": "Add member to playlist team",
-        "description": "Auto-generated endpoint for PlaylistTeamController.addMemberToTeam",
-        "tags": [
-          "PlaylistTeam"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The id parameter"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponseWithData"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/playlistteams/{id}/members/{member_id}": {
+    "/playlist-teams/{id}/members/{user_id}": {
       "delete": {
         "summary": "Remove member from playlist team",
-        "description": "Auto-generated endpoint for PlaylistTeamController.removeMemberFromTeam",
+        "description": "Remove a specific member from the playlist team (leader only)",
         "tags": [
           "PlaylistTeam"
         ],
@@ -2507,103 +3110,8 @@
             "schema": {
               "type": "string"
             },
-            "description": "The id parameter"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponseWithData"
-                }
-              }
-            }
+            "description": "Playlist Team ID"
           },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/playlistteams/{id}/members/{member_id}/role": {
-      "put": {
-        "summary": "Update member role in playlist team",
-        "description": "Auto-generated endpoint for PlaylistTeamController.updateMemberRole",
-        "tags": [
-          "PlaylistTeam"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The id parameter"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponseWithData"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InternalServerError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/users/{user_id}/teams": {
-      "get": {
-        "summary": "Get user teams",
-        "description": "Auto-generated endpoint for PlaylistTeamController.getUserTeams",
-        "tags": [
-          "PlaylistTeam"
-        ],
-        "parameters": [
           {
             "in": "path",
             "name": "user_id",
@@ -2611,16 +3119,21 @@
             "schema": {
               "type": "string"
             },
-            "description": "The user ID"
+            "description": "Member User ID to remove"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "Member removed from team successfully",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseResponseWithData"
+                  "$ref": "#/components/schemas/RemoveMemberResponse"
                 }
               }
             }
@@ -2631,6 +3144,36 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access denied. Only team leader can remove members",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Playlist team or user not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
                 }
               }
             }
@@ -2648,10 +3191,10 @@
         }
       }
     },
-    "/playlistteams/{id}/invite": {
+    "/playlist-teams/{id}/leave": {
       "post": {
-        "summary": "Invite member to playlist team",
-        "description": "Auto-generated endpoint for PlaylistTeamController.inviteMemberToTeam",
+        "summary": "Leave playlist team",
+        "description": "Leave a playlist team as a member (cannot be used by team leader)",
         "tags": [
           "PlaylistTeam"
         ],
@@ -2663,16 +3206,21 @@
             "schema": {
               "type": "string"
             },
-            "description": "The id parameter"
+            "description": "Playlist Team ID"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "Successfully left the team",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BaseResponseWithData"
+                  "$ref": "#/components/schemas/LeaveTeamResponse"
                 }
               }
             }
@@ -2687,54 +3235,32 @@
               }
             }
           },
-          "500": {
-            "description": "Internal server error",
+          "401": {
+            "description": "Authentication required",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InternalServerError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/playlistteams/{id}/visibility": {
-      "put": {
-        "summary": "Update team visibility",
-        "description": "Auto-generated endpoint for PlaylistTeamController.updateTeamVisibility",
-        "tags": [
-          "PlaylistTeam"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The id parameter"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponseWithData"
+                  "$ref": "#/components/schemas/UnauthorizedError"
                 }
               }
             }
           },
-          "400": {
-            "description": "Bad request",
+          "403": {
+            "description": "Team leader cannot leave the team",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BadRequestError"
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Playlist team not found or user not a member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
                 }
               }
             }
