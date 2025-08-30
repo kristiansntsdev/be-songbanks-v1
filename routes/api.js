@@ -39,6 +39,11 @@ router.delete("/notes/:user_id/:id", NoteController.deleteNote);
 // PlaylistController Routes
 router.post("/playlists", authenticateToken, PlaylistController.createPlaylist);
 router.get("/playlists", authenticateToken, PlaylistController.getAllPlaylists);
+router.get(
+  "/playlists/:id",
+  authenticateToken,
+  PlaylistController.getPlaylistById
+);
 router.put(
   "/playlists/:id",
   authenticateToken,
@@ -61,31 +66,30 @@ router.post(
 );
 
 // PlaylistTeamController Routes
-router.get("/playlist-teams", PlaylistTeamController.getAllPlaylistTeams);
-router.get("/playlist-teams/:id", PlaylistTeamController.getPlaylistTeamById);
-router.post("/playlist-teams", PlaylistTeamController.createPlaylistTeam);
-router.put("/playlist-teams/:id", PlaylistTeamController.updatePlaylistTeam);
-router.delete("/playlist-teams/:id", PlaylistTeamController.deletePlaylistTeam);
-router.post(
-  "/playlist-teams/:id/members/:user_id",
-  PlaylistTeamController.addMemberToTeam
+router.get(
+  "/playlist-teams",
+  authenticateToken,
+  PlaylistTeamController.getAllPlaylistTeamsByUserId
+);
+router.get(
+  "/playlist-teams/:id",
+  authenticateToken,
+  PlaylistTeamController.getPlaylistTeamById
 );
 router.delete(
   "/playlist-teams/:id/members/:user_id",
+  authenticateToken,
   PlaylistTeamController.removeMemberFromTeam
 );
-router.put(
-  "/playlist-teams/:id/members/:user_id/role",
-  PlaylistTeamController.updateMemberRole
+router.delete(
+  "/playlist-teams/:id",
+  authenticateToken,
+  PlaylistTeamController.deletePlaylistTeam
 );
-router.get("/users/:user_id/teams", PlaylistTeamController.getUserTeams);
 router.post(
-  "/playlist-teams/:id/invite",
-  PlaylistTeamController.inviteMemberToTeam
-);
-router.put(
-  "/playlist-teams/:id/visibility",
-  PlaylistTeamController.updateTeamVisibility
+  "/playlist-teams/:id/leave",
+  authenticateToken,
+  PlaylistTeamController.leavePlaylistTeam
 );
 
 // SongController Routes

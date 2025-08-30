@@ -40,6 +40,89 @@ class PlaylistService {
     };
   }
 
+  static async getPlaylistById(userId, playlistId) {
+    const numericPlaylistId = parseInt(playlistId);
+
+    // First, check if user owns the playlist
+    let playlist = await Playlist.findOne({
+      where: { id: numericPlaylistId, user_id: userId },
+    });
+
+    if (playlist) {
+      // User owns the playlist - grant full access
+      return {
+        id: playlist.id,
+        playlist_name: playlist.playlist_name,
+        user_id: playlist.user_id,
+        songs: playlist.songs ? JSON.parse(playlist.songs) : [],
+        createdAt: playlist.createdAt,
+        updatedAt: playlist.updatedAt,
+        access_type: "owner",
+      };
+    }
+
+    // If not owner, check if user is a member of the playlist team
+    const teamResult = await sequelize.query(
+      "SELECT pt.*, p.* FROM playlist_teams pt JOIN playlists p ON pt.playlist_id = p.id WHERE p.id = ?",
+      {
+        replacements: [numericPlaylistId],
+        type: sequelize.QueryTypes.SELECT,
+        raw: true,
+      }
+    );
+
+    if (teamResult.length === 0) {
+      // No playlist team exists for this playlist, and user doesn't own it
+      const error = new Error("Playlist not found or access denied");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const team = teamResult[0];
+
+    // Parse members array to check if user is a member
+    let members = [];
+    if (team.members) {
+      if (typeof team.members === "string") {
+        try {
+          members = JSON.parse(team.members);
+        } catch (e) {
+          members = [];
+        }
+      } else {
+        members = team.members;
+      }
+    }
+
+    // Ensure members is an array of numbers
+    if (!Array.isArray(members)) {
+      members = [];
+    }
+    members = members.map((id) => parseInt(id)).filter((id) => !isNaN(id));
+
+    const userIdNum = parseInt(userId);
+    const isMember = members.some((id) => id === userIdNum);
+    const isLeader = parseInt(team.lead_id) === userIdNum;
+
+    if (!isMember && !isLeader) {
+      const error = new Error("Playlist not found or access denied");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // User is a team member or leader - grant access
+    return {
+      id: team.playlist_id, // Use playlist_id, not team id
+      playlist_name: team.playlist_name,
+      user_id: team.user_id,
+      songs: team.songs ? JSON.parse(team.songs) : [],
+      createdAt: team.createdAt,
+      updatedAt: team.updatedAt,
+      access_type: isLeader ? "leader" : "member",
+      team_id: team.playlist_team_id || team.id, // Include team ID for reference
+    };
+  }
+
   static async getAllPlaylists(userId, page = 1, limit = 10) {
     const offset = (page - 1) * limit;
 

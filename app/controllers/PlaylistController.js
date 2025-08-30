@@ -52,6 +52,32 @@ class PlaylistController {
   });
 
   /**
+   * @Summary Get playlist by ID
+   * @Description Retrieve a specific playlist by ID. Accessible by playlist owner and team members.
+   * @Tags Playlist
+   * @Produce application/json
+   * @Param id path string true "Playlist ID"
+   * @Success 200 {object} PlaylistResponse "Playlist retrieved successfully"
+   * @Failure 401 {object} UnauthorizedError "Authentication required"
+   * @Failure 404 {object} NotFoundError "Playlist not found or access denied"
+   * @Failure 500 {object} InternalServerError "Internal server error"
+   * @Router /playlists/{id} [get]
+   * @auth
+   */
+  static getPlaylistById = ErrorHandler.asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.userId;
+
+    const result = await PlaylistService.getPlaylistById(userId, id);
+
+    res.json({
+      code: 200,
+      message: "Playlist retrieved successfully",
+      data: result,
+    });
+  });
+
+  /**
    * @Summary Update playlist
    * @Description Update playlist name and songs array for the authenticated user
    * @Tags Playlist
