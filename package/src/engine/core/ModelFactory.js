@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import { ulid } from "ulid";
+import SchemaDetector from "../utils/SchemaDetector.js";
 
 /**
  * ModelFactory - Automatic model initialization
@@ -8,6 +9,7 @@ import { ulid } from "ulid";
  * detecting and setting up models based on migrations and conventions.
  */
 class ModelFactory {
+  static schemaDetector = new SchemaDetector();
   /**
    * Register a model with automatic schema detection
    * @param {Function} ModelClass - The model class
@@ -38,105 +40,42 @@ class ModelFactory {
   }
 
   /**
-   * Auto-detect schema based on model name and conventions
+   * Auto-detect schema based on model name using dynamic detection
    * @param {string} modelName - Name of the model
    * @returns {Object} Schema definition
    */
   static autoDetectSchema(modelName) {
-    // Base schema that all models get
-    const baseSchema = {
-      id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-        allowNull: false,
-      },
-    };
+    try {
+      const dynamicSchema = this.schemaDetector.buildSchemaForModel(modelName);
 
-    // Model-specific schemas based on conventions
-    const schemas = {
-      User: {
-        ...baseSchema,
-        email: {
-          type: DataTypes.STRING,
-          allowNull: false,
-          unique: true,
-        },
-        password: {
-          type: DataTypes.STRING,
-          allowNull: false,
-        },
-        role: {
-          type: DataTypes.ENUM("admin", "member", "guest"),
-          allowNull: false,
-          defaultValue: "guest",
-        },
-        status: {
-          type: DataTypes.ENUM("active", "pending", "request", "suspend"),
-          allowNull: false,
-          defaultValue: "pending",
-        },
-      },
+      // If dynamic detection found a schema, use it
+      if (Object.keys(dynamicSchema).length > 0) {
+        return dynamicSchema;
+      }
 
-      Song: {
-        ...baseSchema,
-        title: {
-          type: DataTypes.STRING,
-          allowNull: false,
-        },
-        artist: {
-          type: DataTypes.STRING,
-          allowNull: false,
-        },
-        base_chord: {
-          type: DataTypes.STRING,
-          allowNull: true,
-        },
-        lyrics_and_chords: {
-          type: DataTypes.TEXT,
-          allowNull: true,
-        },
-      },
-
-      Note: {
-        ...baseSchema,
-        user_id: {
+      // Fallback to base schema if no dynamic schema found
+      console.warn(`Using fallback base schema for model: ${modelName}`);
+      return {
+        id: {
           type: DataTypes.INTEGER,
+          primaryKey: true,
+          autoIncrement: true,
           allowNull: false,
-          references: {
-            model: "users",
-            key: "id",
-          },
         },
-        song_id: {
+      };
+    } catch (error) {
+      console.error(`Error detecting schema for ${modelName}:`, error.message);
+
+      // Fallback to base schema on error
+      return {
+        id: {
           type: DataTypes.INTEGER,
+          primaryKey: true,
+          autoIncrement: true,
           allowNull: false,
-          references: {
-            model: "songs",
-            key: "id",
-          },
         },
-        notes: {
-          type: DataTypes.TEXT,
-          allowNull: true,
-        },
-      },
-
-      Tag: {
-        ...baseSchema,
-        name: {
-          type: DataTypes.STRING,
-          allowNull: false,
-          unique: true,
-        },
-        description: {
-          type: DataTypes.TEXT,
-          allowNull: true,
-        },
-      },
-    };
-
-    return schemas[modelName] || baseSchema;
+      };
+    }
   }
 
   /**

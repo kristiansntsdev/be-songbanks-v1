@@ -1,5 +1,24 @@
 # Claude Development Rules
 
+## Development Standards
+
+**ALL CODE MUST FOLLOW** the established best practices documented in `docs/best-practice/development-guidelines.md`
+
+This includes:
+- **Development Flow**: Model → Service → Controller → Schema → Build process
+- **Service Layer**: Static methods, transactions, error handling with statusCode
+- **Controller Layer**: ErrorHandler.asyncHandler, comprehensive JSDoc with Swagger annotations
+- **Schema Layer**: OpenAPI format in `/schemas/requests/` and `/schemas/responses/`
+- **Build Process**: Run `npm run build` or `npm run vercel-build` before deployment
+
+## Fix Implementation Rules
+
+**EVERY FIX MUST CHECK DEVELOPMENT FLOW** - Don't act outside the development flow:
+- Always follow: Model → Service → Controller → Schema → Build process
+- If development flow doesn't work for current implementation, suggest alternative methods
+- Never bypass or skip steps in the established flow
+- Maintain consistency with existing codebase patterns
+
 ## Database Rules
 
 **NEVER RUN DATABASE MIGRATIONS OR SEEDS** - This project uses an external/production database.

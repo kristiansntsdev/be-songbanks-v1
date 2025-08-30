@@ -37,29 +37,17 @@ router.put("/notes/:user_id/:id", NoteController.updateNote);
 router.delete("/notes/:user_id/:id", NoteController.deleteNote);
 
 // PlaylistController Routes
-router.get("/playlists", PlaylistController.getAllPlaylists);
-router.get("/playlists/:id", PlaylistController.getPlaylistById);
-router.post("/playlists", PlaylistController.createPlaylist);
-router.put("/playlists/:id", PlaylistController.updatePlaylist);
-router.delete("/playlists/:id", PlaylistController.deletePlaylist);
-router.get("/users/:user_id/playlists", PlaylistController.getUserPlaylists);
-router.post(
-  "/playlists/:id/songs/:song_id",
-  PlaylistController.addSongToPlaylist
+router.post("/playlists", authenticateToken, PlaylistController.createPlaylist);
+router.get("/playlists", authenticateToken, PlaylistController.getAllPlaylists);
+router.put(
+  "/playlists/:id",
+  authenticateToken,
+  PlaylistController.updatePlaylist
 );
 router.delete(
-  "/playlists/:id/songs/:song_id",
-  PlaylistController.removeSongFromPlaylist
-);
-router.put("/playlists/:id/reorder", PlaylistController.reorderPlaylistSongs);
-router.post("/playlists/:id/share", PlaylistController.generateShareableLink);
-router.post(
-  "/playlists/join/:share_token",
-  PlaylistController.joinPlaylistViaLink
-);
-router.get(
-  "/playlists/shared/:share_token",
-  PlaylistController.getSharedPlaylistDetails
+  "/playlists/:id",
+  authenticateToken,
+  PlaylistController.deletePlaylist
 );
 
 // PlaylistTeamController Routes
