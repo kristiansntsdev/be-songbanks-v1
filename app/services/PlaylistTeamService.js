@@ -139,7 +139,7 @@ class PlaylistTeamService {
   static async leavePlaylistTeam(teamId, userId) {
     // Get the raw team data directly, not from getPlaylistTeamById which adds extra processing
     const team = await PlaylistTeam.findByPk(teamId);
-    
+
     if (!team) {
       const error = new Error("Playlist team not found");
       error.statusCode = 404;
