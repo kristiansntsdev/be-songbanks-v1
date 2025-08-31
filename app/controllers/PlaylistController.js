@@ -218,6 +218,36 @@ class PlaylistController {
 
     res.json(result);
   });
+
+  /**
+   * @Summary Remove song from playlist
+   * @Description Remove a specific song from a playlist by song ID
+   * @Tags Playlist
+   * @Produce application/json
+   * @Param id path string true "Playlist ID"
+   * @Param songId path string true "Song ID to remove from playlist"
+   * @Success 200 {object} RemoveSongFromPlaylistResponse "Song removed from playlist successfully"
+   * @Failure 400 {object} BadRequestError "Invalid song ID provided"
+   * @Failure 401 {object} UnauthorizedError "Authentication required"
+   * @Failure 404 {object} NotFoundError "Playlist not found or song not found in playlist"
+   * @Failure 500 {object} InternalServerError "Internal server error"
+   * @Router /playlists/{id}/song/{songId} [delete]
+   * @auth
+   */
+  static removeSongFromPlaylist = ErrorHandler.asyncHandler(
+    async (req, res) => {
+      const { id, songId } = req.params;
+      const userId = req.user.userId;
+
+      const result = await PlaylistService.removeSongFromPlaylist(
+        userId,
+        id,
+        songId
+      );
+
+      res.json(result);
+    }
+  );
 }
 
 export default PlaylistController;

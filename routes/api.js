@@ -69,6 +69,11 @@ router.post(
   authenticateToken,
   PlaylistController.addSongToPlaylist
 );
+router.delete(
+  "/playlists/:id/song/:songId",
+  authenticateToken,
+  PlaylistController.removeSongFromPlaylist
+);
 
 // PlaylistTeamController Routes
 router.get(

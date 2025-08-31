@@ -259,8 +259,10 @@ class PlaylistService {
 
   static async getAllPlaylists(userId, page = 1, limit = 10) {
     const offset = (page - 1) * limit;
+    const userIdNum = parseInt(userId);
 
-    const { count, rows } = await Playlist.findAndCountAll({
+    // Get playlists owned by the user
+    const ownedPlaylists = await Playlist.findAll({
       where: { user_id: userId },
       attributes: [
         "id",
@@ -270,15 +272,60 @@ class PlaylistService {
         "createdAt",
         "updatedAt",
       ],
-      limit: parseInt(limit),
-      offset: offset,
       order: [["createdAt", "DESC"]],
     });
+
+    // Get playlists where user is a team member
+    const memberPlaylists = await sequelize.query(
+      `SELECT p.id, p.playlist_name, p.user_id, p.songs, p.createdAt, p.updatedAt,
+              pt.lead_id, pt.members
+       FROM playlists p 
+       JOIN playlist_teams pt ON p.id = pt.playlist_id 
+       WHERE (JSON_CONTAINS(pt.members, ?) OR pt.lead_id = ?) AND p.user_id != ?`,
+      {
+        replacements: [JSON.stringify(userIdNum), userIdNum, userId],
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    // Combine and format all playlists
+    const allPlaylists = [
+      ...ownedPlaylists.map((playlist) => ({
+        ...playlist.dataValues,
+        access_type: "owner",
+      })),
+      ...memberPlaylists.map((playlist) => {
+        // Parse members array to determine if user is leader or member
+        let members = [];
+        if (playlist.members) {
+          try {
+            members = JSON.parse(playlist.members);
+          } catch (e) {
+            members = [];
+          }
+        }
+        
+        const isLeader = parseInt(playlist.lead_id) === userIdNum;
+        const access_type = isLeader ? "leader" : "member";
+        
+        return {
+          ...playlist,
+          access_type,
+        };
+      }),
+    ];
+
+    // Sort by creation date
+    allPlaylists.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    // Apply pagination
+    const totalItems = allPlaylists.length;
+    const paginatedPlaylists = allPlaylists.slice(offset, offset + parseInt(limit));
 
     return {
       code: 200,
       message: "Playlists retrieved successfully",
-      data: rows.map((playlist) => {
+      data: paginatedPlaylists.map((playlist) => {
         const parsedSongs = this.parseSongsField(playlist.songs);
         return {
           id: playlist.id.toString(),
@@ -286,16 +333,17 @@ class PlaylistService {
           user_id: playlist.user_id,
           songs: parsedSongs,
           songs_count: parsedSongs.length,
+          access_type: playlist.access_type,
           createdAt: playlist.createdAt,
           updatedAt: playlist.updatedAt,
         };
       }),
       pagination: {
         currentPage: parseInt(page),
-        totalPages: Math.ceil(count / limit),
-        totalItems: count,
+        totalPages: Math.ceil(totalItems / limit),
+        totalItems: totalItems,
         itemsPerPage: parseInt(limit),
-        hasNextPage: page < Math.ceil(count / limit),
+        hasNextPage: page < Math.ceil(totalItems / limit),
         hasPrevPage: page > 1,
       },
     };
@@ -468,8 +516,8 @@ class PlaylistService {
     });
 
     if (!playlist) {
-      const error = new Error("Playlist not found or access denied");
-      error.statusCode = 404;
+      const error = new Error("Only playlist owner can delete playlist");
+      error.statusCode = 403;
       throw error;
     }
 
@@ -551,6 +599,66 @@ class PlaylistService {
       await transaction.rollback();
       throw error;
     }
+  }
+
+  static async removeSongFromPlaylist(userId, playlistId, songId) {
+    const numericPlaylistId = parseInt(playlistId);
+    const numericSongId = parseInt(songId);
+
+    if (isNaN(numericSongId) || numericSongId <= 0) {
+      const error = new Error("Invalid song ID provided");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // Find playlist
+    const playlist = await Playlist.findOne({
+      where: { id: numericPlaylistId, user_id: userId },
+    });
+
+    if (!playlist) {
+      const error = new Error(
+        "Only playlist owner can remove song from playlist"
+      );
+      error.statusCode = 403;
+      throw error;
+    }
+
+    // Get current songs using the helper method
+    let currentSongs = this.parseSongsField(playlist.songs);
+
+    // Check if song exists in playlist
+    if (!currentSongs.includes(numericSongId)) {
+      const error = new Error("Song not found in playlist");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Remove song from playlist
+    const updatedSongs = currentSongs.filter((id) => id !== numericSongId);
+
+    // Update playlist with new songs array
+    const rawQuery = `UPDATE playlists SET songs = ?, updatedAt = NOW() WHERE id = ? AND user_id = ?`;
+    await sequelize.query(rawQuery, {
+      replacements: [JSON.stringify(updatedSongs), numericPlaylistId, userId],
+    });
+
+    await playlist.reload();
+
+    return {
+      code: 200,
+      message: "Song removed from playlist successfully",
+      data: {
+        id: playlist.id.toString(),
+        playlist_name: playlist.playlist_name,
+        user_id: playlist.user_id,
+        songs: this.parseSongsField(playlist.songs),
+        songs_count: this.parseSongsField(playlist.songs).length,
+        removed_song_id: numericSongId,
+        createdAt: playlist.createdAt,
+        updatedAt: playlist.updatedAt,
+      },
+    };
   }
 
   static async joinPlaylistViaSharelink(shareToken, userId) {
