@@ -1,18 +1,32 @@
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     UpdatePlaylistRequest:
+ *       type: object
+ *       required:
+ *         - playlist_name
+ *       properties:
+ *         playlist_name:
+ *           type: string
+ *           minLength: 1
+ *           example: "Updated Playlist Name"
+ *           description: "Updated name of the playlist"
+ *       additionalProperties: false
+ *       example:
+ *         playlist_name: "My Updated Playlist"
+ */
+
 export default {
   type: "object",
+  required: ["playlist_name"],
   properties: {
     playlist_name: {
       type: "string",
+      minLength: 1,
       example: "Updated Playlist Name",
       description: "Updated name of the playlist",
     },
-    songs: {
-      type: "array",
-      items: {
-        type: "string",
-      },
-      example: ["01HPQR2ST3UV4WXY5Z6789ABCD", "01HPQR2ST3UV4WXY5Z6789ABCE"],
-      description: "Updated array of song IDs for the playlist",
-    },
   },
+  additionalProperties: false,
 };

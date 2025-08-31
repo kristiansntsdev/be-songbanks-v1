@@ -78,15 +78,15 @@ class PlaylistController {
   });
 
   /**
-   * @Summary Update playlist
-   * @Description Update playlist name and songs array for the authenticated user
+   * @Summary Update playlist name
+   * @Description Update playlist name only for the authenticated user
    * @Tags Playlist
    * @Accept application/json
    * @Produce application/json
    * @Param id path string true "Playlist ID"
-   * @Body {object} UpdatePlaylistRequest "Updated playlist data with songs array"
+   * @Body {object} UpdatePlaylistRequest "Updated playlist name"
    * @Success 200 {object} PlaylistResponse "Playlist updated successfully"
-   * @Failure 400 {object} BadRequestError "Invalid request body"
+   * @Failure 400 {object} BadRequestError "playlist_name is required"
    * @Failure 401 {object} UnauthorizedError "Authentication required"
    * @Failure 403 {object} ForbiddenError "Access denied"
    * @Failure 404 {object} NotFoundError "Playlist not found"
@@ -189,6 +189,63 @@ class PlaylistController {
         message: result.message,
         data: result,
       });
+    }
+  );
+
+  /**
+   * @Summary Add song(s) to playlist
+   * @Description Add single song or multiple songs to a playlist. Validates song existence and prevents duplicates.
+   * @Tags Playlist
+   * @Accept application/json
+   * @Produce application/json
+   * @Param id path string true "Playlist ID"
+   * @Body {object} AddSongToPlaylistRequest "Song ID(s) to add to playlist"
+   * @Success 200 {object} AddSongToPlaylistResponse "Song(s) added to playlist successfully"
+   * @Failure 400 {object} BadRequestError "Invalid song ID(s) provided"
+   * @Failure 401 {object} UnauthorizedError "Authentication required"
+   * @Failure 404 {object} NotFoundError "Playlist not found or song(s) not found"
+   * @Failure 409 {object} ConflictError "All songs are already in the playlist"
+   * @Failure 500 {object} InternalServerError "Internal server error"
+   * @Router /playlists/{id}/songs [post]
+   * @auth
+   */
+  static addSongToPlaylist = ErrorHandler.asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.userId;
+    const { songIds } = req.body;
+
+    const result = await PlaylistService.addSongToPlaylist(userId, id, songIds);
+
+    res.json(result);
+  });
+
+  /**
+   * @Summary Remove song from playlist
+   * @Description Remove a specific song from a playlist by song ID
+   * @Tags Playlist
+   * @Produce application/json
+   * @Param id path string true "Playlist ID"
+   * @Param songId path string true "Song ID to remove from playlist"
+   * @Success 200 {object} RemoveSongFromPlaylistResponse "Song removed from playlist successfully"
+   * @Failure 400 {object} BadRequestError "Invalid song ID provided"
+   * @Failure 401 {object} UnauthorizedError "Authentication required"
+   * @Failure 404 {object} NotFoundError "Playlist not found or song not found in playlist"
+   * @Failure 500 {object} InternalServerError "Internal server error"
+   * @Router /playlists/{id}/song/{songId} [delete]
+   * @auth
+   */
+  static removeSongFromPlaylist = ErrorHandler.asyncHandler(
+    async (req, res) => {
+      const { id, songId } = req.params;
+      const userId = req.user.userId;
+
+      const result = await PlaylistService.removeSongFromPlaylist(
+        userId,
+        id,
+        songId
+      );
+
+      res.json(result);
     }
   );
 }

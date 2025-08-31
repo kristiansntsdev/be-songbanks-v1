@@ -64,6 +64,16 @@ router.post(
   authenticateToken,
   PlaylistController.joinPlaylistViaSharelink
 );
+router.post(
+  "/playlists/:id/songs",
+  authenticateToken,
+  PlaylistController.addSongToPlaylist
+);
+router.delete(
+  "/playlists/:id/song/:songId",
+  authenticateToken,
+  PlaylistController.removeSongFromPlaylist
+);
 
 // PlaylistTeamController Routes
 router.get(

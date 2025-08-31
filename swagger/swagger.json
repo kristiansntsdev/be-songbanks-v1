@@ -240,6 +240,34 @@
           }
         ]
       },
+      "AddSongToPlaylistRequest": {
+        "type": "object",
+        "required": [
+          "songIds"
+        ],
+        "properties": {
+          "songIds": {
+            "oneOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Single song ID to add to playlist"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "minItems": 1,
+                "description": "Array of song IDs to add to playlist"
+              }
+            ],
+            "description": "Either a single song ID (integer) or an array of song IDs to add to the playlist"
+          }
+        },
+        "additionalProperties": false
+      },
       "CreatePlaylistRequest": {
         "type": "object",
         "required": [
@@ -338,24 +366,18 @@
       },
       "UpdatePlaylistRequest": {
         "type": "object",
+        "required": [
+          "playlist_name"
+        ],
         "properties": {
           "playlist_name": {
             "type": "string",
+            "minLength": 1,
             "example": "Updated Playlist Name",
             "description": "Updated name of the playlist"
-          },
-          "songs": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "example": [
-              "01HPQR2ST3UV4WXY5Z6789ABCD",
-              "01HPQR2ST3UV4WXY5Z6789ABCE"
-            ],
-            "description": "Updated array of song IDs for the playlist"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "UpdateSongRequest": {
         "type": "object",
@@ -392,6 +414,108 @@
             "description": "Updated array of tag names. If a tag doesn't exist, it will be created automatically"
           }
         }
+      },
+      "AddSongToPlaylistResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "Song added to playlist successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "34"
+              },
+              "playlist_name": {
+                "type": "string",
+                "example": "My Favorite Songs"
+              },
+              "user_id": {
+                "type": "integer",
+                "example": 544
+              },
+              "songs": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "example": [
+                  21,
+                  45,
+                  67
+                ]
+              },
+              "songs_count": {
+                "type": "integer",
+                "example": 3
+              },
+              "added_song_ids": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "example": [
+                  67
+                ]
+              },
+              "duplicate_song_ids": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "example": [
+                  21
+                ]
+              },
+              "added_song_id": {
+                "type": "integer",
+                "example": 67
+              },
+              "total_requested": {
+                "type": "integer",
+                "example": 2
+              },
+              "successfully_added": {
+                "type": "integer",
+                "example": 1
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2025-08-30T07:12:48.000Z"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2025-08-30T10:30:15.000Z"
+              }
+            },
+            "required": [
+              "id",
+              "playlist_name",
+              "user_id",
+              "songs",
+              "songs_count",
+              "added_song_ids",
+              "total_requested",
+              "successfully_added",
+              "createdAt",
+              "updatedAt"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "data"
+        ]
       },
       "ArtistsResponse": {
         "type": "object",
@@ -979,6 +1103,79 @@
             }
           }
         }
+      },
+      "RemoveSongFromPlaylistResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "Song removed from playlist successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "34"
+              },
+              "playlist_name": {
+                "type": "string",
+                "example": "My Favorite Songs"
+              },
+              "user_id": {
+                "type": "integer",
+                "example": 544
+              },
+              "songs": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "example": [
+                  21,
+                  45
+                ]
+              },
+              "songs_count": {
+                "type": "integer",
+                "example": 2
+              },
+              "removed_song_id": {
+                "type": "integer",
+                "example": 67
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2025-08-30T07:12:48.000Z"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2025-08-30T10:30:15.000Z"
+              }
+            },
+            "required": [
+              "id",
+              "playlist_name",
+              "user_id",
+              "songs",
+              "songs_count",
+              "removed_song_id",
+              "createdAt",
+              "updatedAt"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "data"
+        ]
       },
       "SharelinkResponse": {
         "type": "object",
@@ -2513,8 +2710,8 @@
         }
       },
       "put": {
-        "summary": "Update playlist",
-        "description": "Update playlist name and songs array for the authenticated user",
+        "summary": "Update playlist name",
+        "description": "Update playlist name only for the authenticated user",
         "tags": [
           "Playlist"
         ],
@@ -2860,6 +3057,189 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ConflictError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/playlists/{id}/songs": {
+      "post": {
+        "summary": "Add song(s) to playlist",
+        "description": "Add single song or multiple songs to a playlist. Validates song existence and prevents duplicates.",
+        "tags": [
+          "Playlist"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Playlist ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddSongToPlaylistRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Song(s) added to playlist successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddSongToPlaylistResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Playlist not found or song(s) not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "All songs are already in the playlist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/playlists/{id}/song/{songId}": {
+      "delete": {
+        "summary": "Remove song from playlist",
+        "description": "Remove a specific song from a playlist by song ID",
+        "tags": [
+          "Playlist"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Playlist ID"
+          },
+          {
+            "in": "path",
+            "name": "songId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Song ID to remove from playlist"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Song removed from playlist successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveSongFromPlaylistResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Playlist not found or song not found in playlist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
                 }
               }
             }
