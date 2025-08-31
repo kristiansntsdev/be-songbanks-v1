@@ -6,6 +6,68 @@ import sequelize from "../../config/database.js";
 import crypto from "crypto";
 
 class PlaylistService {
+  /**
+   * Helper method to consistently parse songs field from database
+   * Handles both JSON strings and already parsed arrays
+   * @param {string|Array} songsData - The songs data from database
+   * @returns {Array} Array of song IDs as integers
+   */
+  static parseSongsField(songsData) {
+    if (!songsData) return [];
+
+    // If it's already an array, return it
+    if (Array.isArray(songsData)) {
+      return songsData
+        .map((id) => parseInt(id))
+        .filter((id) => !isNaN(id) && id > 0);
+    }
+
+    // If it's a string, try to parse it
+    if (typeof songsData === "string") {
+      try {
+        const parsed = JSON.parse(songsData);
+        if (Array.isArray(parsed)) {
+          return parsed
+            .map((id) => parseInt(id))
+            .filter((id) => !isNaN(id) && id > 0);
+        }
+      } catch (e) {
+        // If JSON parsing fails, return empty array
+        console.warn("Failed to parse songs field:", songsData);
+      }
+    }
+
+    return [];
+  }
+
+  /**
+   * Helper method to fetch full song details from array of song IDs
+   * @param {Array} songIds - Array of song IDs as integers
+   * @returns {Array} Array of song objects with full details
+   */
+  static async fetchSongDetails(songIds) {
+    if (!songIds || songIds.length === 0) return [];
+
+    const songs = await Song.findAll({
+      where: { id: { [Op.in]: songIds } },
+      attributes: [
+        "id",
+        "title",
+        "artist",
+        "base_chord",
+        "lyrics_and_chords",
+        "createdAt",
+        "updatedAt",
+      ],
+    });
+
+    // Return songs in the same order as the songIds array
+    const songMap = new Map(songs.map((song) => [song.id, song]));
+    return songIds
+      .map((id) => songMap.get(id))
+      .filter((song) => song !== undefined);
+  }
+
   static async createPlaylist(userId, playlistData) {
     // Check for case-insensitive duplicate playlist names for this user
     const existingPlaylist = await Playlist.findOne({
@@ -53,11 +115,19 @@ class PlaylistService {
 
     const playlist = await Playlist.create(createData);
 
+    // Update playlist with raw SQL like addSongToPlaylist does
+    const rawQuery = `UPDATE playlists SET songs = ?, updatedAt = NOW() WHERE id = ? AND user_id = ?`;
+    await sequelize.query(rawQuery, {
+      replacements: [JSON.stringify(songsArray), playlist.id, userId],
+    });
+
+    await playlist.reload();
+
     return {
       id: playlist.id,
       playlist_name: playlist.playlist_name,
       user_id: playlist.user_id,
-      songs: playlist.songs ? JSON.parse(playlist.songs) : [],
+      songs: this.parseSongsField(playlist.songs),
       createdAt: playlist.createdAt,
       updatedAt: playlist.updatedAt,
     };
@@ -69,19 +139,46 @@ class PlaylistService {
     // First, check if user owns the playlist
     let playlist = await Playlist.findOne({
       where: { id: numericPlaylistId, user_id: userId },
+      attributes: [
+        "id",
+        "playlist_name",
+        "user_id",
+        "songs",
+        "sharable_link",
+        "share_token",
+        "playlist_team_id",
+        "is_shared",
+        "is_locked",
+        "createdAt",
+        "updatedAt",
+      ],
     });
 
     if (playlist) {
       // User owns the playlist - grant full access
-      return {
+      const songIds = this.parseSongsField(playlist.songs);
+      const songDetails = await this.fetchSongDetails(songIds);
+
+      const response = {
         id: playlist.id,
         playlist_name: playlist.playlist_name,
         user_id: playlist.user_id,
-        songs: playlist.songs ? JSON.parse(playlist.songs) : [],
+        songs: songDetails,
         createdAt: playlist.createdAt,
         updatedAt: playlist.updatedAt,
         access_type: "owner",
       };
+
+      // Include share link fields if playlist is shared
+      if (playlist.is_shared) {
+        response.sharable_link = playlist.sharable_link;
+        response.share_token = playlist.share_token;
+        response.playlist_team_id = playlist.playlist_team_id;
+        response.is_shared = playlist.is_shared;
+        response.is_locked = playlist.is_locked;
+      }
+
+      return response;
     }
 
     // If not owner, check if user is a member of the playlist team
@@ -134,16 +231,30 @@ class PlaylistService {
     }
 
     // User is a team member or leader - grant access
-    return {
+    const songIds = this.parseSongsField(team.songs);
+    const songDetails = await this.fetchSongDetails(songIds);
+
+    const response = {
       id: team.playlist_id, // Use playlist_id, not team id
       playlist_name: team.playlist_name,
       user_id: team.user_id,
-      songs: team.songs ? JSON.parse(team.songs) : [],
+      songs: songDetails,
       createdAt: team.createdAt,
       updatedAt: team.updatedAt,
       access_type: isLeader ? "leader" : "member",
       team_id: team.playlist_team_id || team.id, // Include team ID for reference
     };
+
+    // Include share link fields if playlist is shared
+    if (team.is_shared) {
+      response.sharable_link = team.sharable_link;
+      response.share_token = team.share_token;
+      response.playlist_team_id = team.playlist_team_id;
+      response.is_shared = team.is_shared;
+      response.is_locked = team.is_locked;
+    }
+
+    return response;
   }
 
   static async getAllPlaylists(userId, page = 1, limit = 10) {
@@ -167,15 +278,18 @@ class PlaylistService {
     return {
       code: 200,
       message: "Playlists retrieved successfully",
-      data: rows.map((playlist) => ({
-        id: playlist.id.toString(),
-        playlist_name: playlist.playlist_name,
-        user_id: playlist.user_id,
-        songs: playlist.songs ? JSON.parse(playlist.songs) : [],
-        songs_count: playlist.songs ? JSON.parse(playlist.songs).length : 0,
-        createdAt: playlist.createdAt,
-        updatedAt: playlist.updatedAt,
-      })),
+      data: rows.map((playlist) => {
+        const parsedSongs = this.parseSongsField(playlist.songs);
+        return {
+          id: playlist.id.toString(),
+          playlist_name: playlist.playlist_name,
+          user_id: playlist.user_id,
+          songs: parsedSongs,
+          songs_count: parsedSongs.length,
+          createdAt: playlist.createdAt,
+          updatedAt: playlist.updatedAt,
+        };
+      }),
       pagination: {
         currentPage: parseInt(page),
         totalPages: Math.ceil(count / limit),
@@ -239,7 +353,7 @@ class PlaylistService {
         id: playlist.id.toString(),
         playlist_name: playlist.playlist_name,
         user_id: playlist.user_id,
-        songs: playlist.songs ? JSON.parse(playlist.songs) : [],
+        songs: this.parseSongsField(playlist.songs),
         createdAt: playlist.createdAt,
         updatedAt: playlist.updatedAt,
       },
@@ -291,23 +405,8 @@ class PlaylistService {
       throw error;
     }
 
-    // Get current songs
-    let currentSongs = [];
-    if (playlist.songs) {
-      try {
-        currentSongs = JSON.parse(playlist.songs);
-      } catch {
-        currentSongs = [];
-      }
-    }
-
-    // Ensure it's an array of integers
-    if (!Array.isArray(currentSongs)) {
-      currentSongs = [];
-    }
-    currentSongs = currentSongs
-      .map((id) => parseInt(id))
-      .filter((id) => !isNaN(id) && id > 0);
+    // Get current songs using the helper method
+    let currentSongs = this.parseSongsField(playlist.songs);
 
     // Filter out songs that are already in playlist
     const newSongs = numericSongIds.filter((id) => !currentSongs.includes(id));
@@ -345,8 +444,8 @@ class PlaylistService {
         id: playlist.id.toString(),
         playlist_name: playlist.playlist_name,
         user_id: playlist.user_id,
-        songs: JSON.parse(playlist.songs),
-        songs_count: JSON.parse(playlist.songs).length,
+        songs: this.parseSongsField(playlist.songs),
+        songs_count: this.parseSongsField(playlist.songs).length,
         added_song_ids: newSongs,
         ...(duplicateSongs.length > 0 && {
           duplicate_song_ids: duplicateSongs,
