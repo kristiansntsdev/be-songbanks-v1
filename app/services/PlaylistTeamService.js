@@ -29,14 +29,18 @@ class PlaylistTeamService {
 
     // Get leader details from peserta table
     const leaderResult = await sequelize.query(
-      "SELECT id_peserta as id, email FROM peserta WHERE id_peserta = ?",
+      "SELECT id_peserta as id, nama, email FROM peserta WHERE id_peserta = ?",
       {
         replacements: [team.lead_id],
         type: sequelize.QueryTypes.SELECT,
         raw: true,
       }
     );
-    const leader = leaderResult[0] || null;
+    const leader = leaderResult[0] || {
+      id: team.lead_id,
+      nama: "Unknown User",
+      email: null,
+    };
 
     // Parse members JSON and get member details from peserta table
     const memberIds = team.members
@@ -44,17 +48,30 @@ class PlaylistTeamService {
         ? JSON.parse(team.members)
         : team.members
       : [];
-    const members =
-      memberIds.length > 0
-        ? await sequelize.query(
-            "SELECT id_peserta as id, email FROM peserta WHERE id_peserta IN (?)",
-            {
-              replacements: [memberIds],
-              type: sequelize.QueryTypes.SELECT,
-              raw: true,
-            }
-          )
-        : [];
+
+    let members = [];
+    if (memberIds.length > 0) {
+      const memberResults = await sequelize.query(
+        "SELECT id_peserta as id, nama, email FROM peserta WHERE id_peserta IN (?)",
+        {
+          replacements: [memberIds],
+          type: sequelize.QueryTypes.SELECT,
+          raw: true,
+        }
+      );
+
+      // Create members array with fallback for missing users
+      members = memberIds.map((id) => {
+        const found = memberResults.find((member) => member.id === id);
+        return (
+          found || {
+            id,
+            nama: "Unknown User",
+            email: null,
+          }
+        );
+      });
+    }
 
     // Return team with related data
     return {
@@ -104,7 +121,7 @@ class PlaylistTeamService {
       if (typeof team.members === "string") {
         try {
           currentMembers = JSON.parse(team.members);
-        } catch (e) {
+        } catch {
           currentMembers = [];
         }
       } else {
@@ -161,7 +178,7 @@ class PlaylistTeamService {
       if (typeof team.members === "string") {
         try {
           currentMembers = JSON.parse(team.members);
-        } catch (e) {
+        } catch {
           currentMembers = [];
         }
       } else {

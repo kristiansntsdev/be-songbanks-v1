@@ -42,6 +42,10 @@ class Playlist extends BaseModel {
         type: DataTypes.JSON,
         defaultValue: [],
       },
+      playlist_notes: {
+        type: DataTypes.JSON,
+        defaultValue: null,
+      },
       createdAt: {
         type: DataTypes.DATE,
         field: "createdAt",
@@ -62,6 +66,7 @@ class Playlist extends BaseModel {
       "is_shared",
       "is_locked",
       "songs",
+      "playlist_notes",
     ];
   }
 

@@ -41,6 +41,35 @@ class PlaylistService {
   }
 
   /**
+   * Helper method to consistently parse playlist_notes field from database
+   * Handles both JSON strings and already parsed arrays
+   * @param {string|Array} notesData - The playlist_notes data from database
+   * @returns {Array} Array of note objects with song_id and base_chord
+   */
+  static parsePlaylistNotesField(notesData) {
+    if (!notesData) return [];
+
+    // If it's already an array, return it
+    if (Array.isArray(notesData)) {
+      return notesData;
+    }
+
+    // If it's a string, try to parse it
+    if (typeof notesData === "string") {
+      try {
+        const parsed = JSON.parse(notesData);
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+      } catch (e) {
+        console.warn("Failed to parse playlist_notes field:", notesData);
+      }
+    }
+
+    return [];
+  }
+
+  /**
    * Helper method to fetch full song details from array of song IDs
    * @param {Array} songIds - Array of song IDs as integers
    * @returns {Array} Array of song objects with full details
@@ -149,6 +178,7 @@ class PlaylistService {
         "playlist_team_id",
         "is_shared",
         "is_locked",
+        "playlist_notes",
         "createdAt",
         "updatedAt",
       ],
@@ -164,6 +194,7 @@ class PlaylistService {
         playlist_name: playlist.playlist_name,
         user_id: playlist.user_id,
         songs: songDetails,
+        playlist_notes: this.parsePlaylistNotesField(playlist.playlist_notes),
         createdAt: playlist.createdAt,
         updatedAt: playlist.updatedAt,
         access_type: "owner",
@@ -239,6 +270,7 @@ class PlaylistService {
       playlist_name: team.playlist_name,
       user_id: team.user_id,
       songs: songDetails,
+      playlist_notes: this.parsePlaylistNotesField(team.playlist_notes),
       createdAt: team.createdAt,
       updatedAt: team.updatedAt,
       access_type: isLeader ? "leader" : "member",
@@ -269,6 +301,7 @@ class PlaylistService {
         "playlist_name",
         "user_id",
         "songs",
+        "playlist_notes",
         "createdAt",
         "updatedAt",
       ],
@@ -277,7 +310,7 @@ class PlaylistService {
 
     // Get playlists where user is a team member
     const memberPlaylists = await sequelize.query(
-      `SELECT p.id, p.playlist_name, p.user_id, p.songs, p.createdAt, p.updatedAt,
+      `SELECT p.id, p.playlist_name, p.user_id, p.songs, p.playlist_notes, p.createdAt, p.updatedAt,
               pt.lead_id, pt.members
        FROM playlists p 
        JOIN playlist_teams pt ON p.id = pt.playlist_id 
@@ -304,10 +337,10 @@ class PlaylistService {
             members = [];
           }
         }
-        
+
         const isLeader = parseInt(playlist.lead_id) === userIdNum;
         const access_type = isLeader ? "leader" : "member";
-        
+
         return {
           ...playlist,
           access_type,
@@ -320,7 +353,10 @@ class PlaylistService {
 
     // Apply pagination
     const totalItems = allPlaylists.length;
-    const paginatedPlaylists = allPlaylists.slice(offset, offset + parseInt(limit));
+    const paginatedPlaylists = allPlaylists.slice(
+      offset,
+      offset + parseInt(limit)
+    );
 
     return {
       code: 200,
@@ -332,6 +368,7 @@ class PlaylistService {
           playlist_name: playlist.playlist_name,
           user_id: playlist.user_id,
           songs: parsedSongs,
+          playlist_notes: this.parsePlaylistNotesField(playlist.playlist_notes),
           songs_count: parsedSongs.length,
           access_type: playlist.access_type,
           createdAt: playlist.createdAt,
@@ -402,6 +439,7 @@ class PlaylistService {
         playlist_name: playlist.playlist_name,
         user_id: playlist.user_id,
         songs: this.parseSongsField(playlist.songs),
+        playlist_notes: this.parsePlaylistNotesField(playlist.playlist_notes),
         createdAt: playlist.createdAt,
         updatedAt: playlist.updatedAt,
       },
@@ -501,6 +539,110 @@ class PlaylistService {
         ...(isSingle && { added_song_id: newSongs[0] }), // Keep backward compatibility
         total_requested: numericSongIds.length,
         successfully_added: newSongs.length,
+        createdAt: playlist.createdAt,
+        updatedAt: playlist.updatedAt,
+      },
+    };
+  }
+
+  static async addSongToPlaylistWithBaseChord(
+    userId,
+    playlistId,
+    songId,
+    baseChord
+  ) {
+    const numericPlaylistId = parseInt(playlistId);
+    const numericSongId = parseInt(songId);
+
+    if (isNaN(numericSongId) || numericSongId <= 0) {
+      const error = new Error("Invalid song ID provided");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    if (
+      !baseChord ||
+      typeof baseChord !== "string" ||
+      baseChord.trim() === ""
+    ) {
+      const error = new Error("Base chord is required");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // Check if song exists
+    const existingSong = await Song.findByPk(numericSongId);
+    if (!existingSong) {
+      const error = new Error("Song not found");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Find playlist
+    const playlist = await Playlist.findOne({
+      where: { id: numericPlaylistId, user_id: userId },
+    });
+
+    if (!playlist) {
+      const error = new Error("Playlist not found or access denied");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Get current songs and playlist notes
+    let currentSongs = this.parseSongsField(playlist.songs);
+    let currentNotes = this.parsePlaylistNotesField(playlist.playlist_notes);
+
+    // Check if song is already in playlist
+    if (currentSongs.includes(numericSongId)) {
+      const error = new Error("Song is already in the playlist");
+      error.statusCode = 409;
+      throw error;
+    }
+
+    // Add song to playlist
+    const updatedSongs = [...currentSongs, numericSongId];
+
+    // Add or update base chord note
+    const noteIndex = currentNotes.findIndex(
+      (note) => note.song_id === numericSongId
+    );
+    if (noteIndex >= 0) {
+      // Update existing note
+      currentNotes[noteIndex].base_chord = baseChord.trim();
+    } else {
+      // Add new note
+      currentNotes.push({
+        song_id: numericSongId,
+        base_chord: baseChord.trim(),
+      });
+    }
+
+    // Update playlist with new songs array and notes
+    const rawQuery = `UPDATE playlists SET songs = ?, playlist_notes = ?, updatedAt = NOW() WHERE id = ? AND user_id = ?`;
+    await sequelize.query(rawQuery, {
+      replacements: [
+        JSON.stringify(updatedSongs),
+        JSON.stringify(currentNotes),
+        numericPlaylistId,
+        userId,
+      ],
+    });
+
+    await playlist.reload();
+
+    return {
+      code: 200,
+      message: "Song added to playlist with base chord successfully",
+      data: {
+        id: playlist.id.toString(),
+        playlist_name: playlist.playlist_name,
+        user_id: playlist.user_id,
+        songs: this.parseSongsField(playlist.songs),
+        playlist_notes: this.parsePlaylistNotesField(playlist.playlist_notes),
+        songs_count: this.parseSongsField(playlist.songs).length,
+        added_song_id: numericSongId,
+        base_chord: baseChord.trim(),
         createdAt: playlist.createdAt,
         updatedAt: playlist.updatedAt,
       },

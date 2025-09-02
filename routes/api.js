@@ -69,6 +69,11 @@ router.post(
   authenticateToken,
   PlaylistController.addSongToPlaylist
 );
+router.post(
+  "/playlists/:id/songs/:songId",
+  authenticateToken,
+  PlaylistController.addSongToPlaylistWithBaseChord
+);
 router.delete(
   "/playlists/:id/song/:songId",
   authenticateToken,

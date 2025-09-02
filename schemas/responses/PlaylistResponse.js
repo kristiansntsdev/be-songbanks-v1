@@ -52,6 +52,28 @@ export default {
           },
           description: "Array of songs in the playlist",
         },
+        playlist_notes: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              song_id: {
+                type: "integer",
+                example: 1,
+              },
+              base_chord: {
+                type: "string",
+                example: "E",
+              },
+            },
+            required: ["song_id", "base_chord"],
+          },
+          example: [
+            { song_id: 1, base_chord: "E" },
+            { song_id: 2, base_chord: "Am" },
+          ],
+          description: "Notes containing base chord selections for songs",
+        },
         createdAt: {
           type: "string",
           format: "date-time",
