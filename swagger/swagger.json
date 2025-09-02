@@ -268,6 +268,22 @@
         },
         "additionalProperties": false
       },
+      "AddSongWithBaseChordRequest": {
+        "type": "object",
+        "required": [
+          "base_chord"
+        ],
+        "properties": {
+          "base_chord": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10,
+            "description": "The base chord chosen by the user for this song",
+            "example": "E"
+          }
+        },
+        "additionalProperties": false
+      },
       "CreatePlaylistRequest": {
         "type": "object",
         "required": [
@@ -506,6 +522,116 @@
               "added_song_ids",
               "total_requested",
               "successfully_added",
+              "createdAt",
+              "updatedAt"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "data"
+        ]
+      },
+      "AddSongWithBaseChordResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "example": 200
+          },
+          "message": {
+            "type": "string",
+            "example": "Song added to playlist with base chord successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "1"
+              },
+              "playlist_name": {
+                "type": "string",
+                "example": "My Favorite Songs"
+              },
+              "user_id": {
+                "type": "integer",
+                "example": 1
+              },
+              "songs": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "example": [
+                  1,
+                  2,
+                  3
+                ]
+              },
+              "playlist_notes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "song_id": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "base_chord": {
+                      "type": "string",
+                      "example": "E"
+                    }
+                  },
+                  "required": [
+                    "song_id",
+                    "base_chord"
+                  ]
+                },
+                "example": [
+                  {
+                    "song_id": 1,
+                    "base_chord": "E"
+                  },
+                  {
+                    "song_id": 2,
+                    "base_chord": "Am"
+                  }
+                ]
+              },
+              "songs_count": {
+                "type": "integer",
+                "example": 3
+              },
+              "added_song_id": {
+                "type": "integer",
+                "example": 1
+              },
+              "base_chord": {
+                "type": "string",
+                "example": "E"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-01-15T10:30:00.000Z"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-01-15T14:22:00.000Z"
+              }
+            },
+            "required": [
+              "id",
+              "playlist_name",
+              "user_id",
+              "songs",
+              "playlist_notes",
+              "songs_count",
+              "added_song_id",
+              "base_chord",
               "createdAt",
               "updatedAt"
             ]
@@ -808,6 +934,37 @@
                 },
                 "description": "Array of songs in the playlist"
               },
+              "playlist_notes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "song_id": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "base_chord": {
+                      "type": "string",
+                      "example": "E"
+                    }
+                  },
+                  "required": [
+                    "song_id",
+                    "base_chord"
+                  ]
+                },
+                "example": [
+                  {
+                    "song_id": 1,
+                    "base_chord": "E"
+                  },
+                  {
+                    "song_id": 2,
+                    "base_chord": "Am"
+                  }
+                ],
+                "description": "Notes containing base chord selections for songs"
+              },
               "createdAt": {
                 "type": "string",
                 "format": "date-time",
@@ -856,11 +1013,6 @@
                 "example": 0,
                 "description": "Team visibility flag (0=visible, 1=hidden)"
               },
-              "members": {
-                "type": "string",
-                "example": "[1,2,3]",
-                "description": "JSON array string of member user IDs"
-              },
               "playlist": {
                 "type": "object",
                 "properties": {
@@ -882,12 +1034,37 @@
                     "type": "integer",
                     "example": 544
                   },
+                  "nama": {
+                    "type": "string",
+                    "example": "John Doe"
+                  },
                   "email": {
                     "type": "string",
                     "example": "leader@example.com"
                   }
                 },
                 "description": "Team leader details"
+              },
+              "members": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 123
+                    },
+                    "nama": {
+                      "type": "string",
+                      "example": "Jane Smith"
+                    },
+                    "email": {
+                      "type": "string",
+                      "example": "member@example.com"
+                    }
+                  }
+                },
+                "description": "Array of team members with their details"
               },
               "createdAt": {
                 "type": "string",
@@ -3150,6 +3327,112 @@
           },
           "409": {
             "description": "All songs are already in the playlist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/playlists/{id}/songs/{songId}": {
+      "post": {
+        "summary": "Add song to playlist with base chord",
+        "description": "Add a song to playlist with a chosen base chord. The base chord selection will be stored in playlist_notes.",
+        "tags": [
+          "Playlist"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Playlist ID"
+          },
+          {
+            "in": "path",
+            "name": "songId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Song ID to add to playlist"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddSongWithBaseChordRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Song added to playlist with base chord successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddSongWithBaseChordResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Playlist not found or song not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Song is already in the playlist",
             "content": {
               "application/json": {
                 "schema": {

@@ -220,6 +220,41 @@ class PlaylistController {
   });
 
   /**
+   * @Summary Add song to playlist with base chord
+   * @Description Add a song to playlist with a chosen base chord. The base chord selection will be stored in playlist_notes.
+   * @Tags Playlist
+   * @Accept application/json
+   * @Produce application/json
+   * @Param id path string true "Playlist ID"
+   * @Param songId path string true "Song ID to add to playlist"
+   * @Body {object} AddSongWithBaseChordRequest "Base chord selection for the song"
+   * @Success 200 {object} AddSongWithBaseChordResponse "Song added to playlist with base chord successfully"
+   * @Failure 400 {object} BadRequestError "Invalid song ID or base chord not provided"
+   * @Failure 401 {object} UnauthorizedError "Authentication required"
+   * @Failure 404 {object} NotFoundError "Playlist not found or song not found"
+   * @Failure 409 {object} ConflictError "Song is already in the playlist"
+   * @Failure 500 {object} InternalServerError "Internal server error"
+   * @Router /playlists/{id}/songs/{songId} [post]
+   * @auth
+   */
+  static addSongToPlaylistWithBaseChord = ErrorHandler.asyncHandler(
+    async (req, res) => {
+      const { id, songId } = req.params;
+      const { base_chord } = req.body;
+      const userId = req.user.userId;
+
+      const result = await PlaylistService.addSongToPlaylistWithBaseChord(
+        userId,
+        id,
+        songId,
+        base_chord
+      );
+
+      res.json(result);
+    }
+  );
+
+  /**
    * @Summary Remove song from playlist
    * @Description Remove a specific song from a playlist by song ID
    * @Tags Playlist

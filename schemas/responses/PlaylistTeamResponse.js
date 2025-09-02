@@ -32,11 +32,6 @@ export default {
           example: 0,
           description: "Team visibility flag (0=visible, 1=hidden)",
         },
-        members: {
-          type: "string",
-          example: "[1,2,3]",
-          description: "JSON array string of member user IDs",
-        },
         playlist: {
           type: "object",
           properties: {
@@ -58,12 +53,37 @@ export default {
               type: "integer",
               example: 544,
             },
+            nama: {
+              type: "string",
+              example: "John Doe",
+            },
             email: {
               type: "string",
               example: "leader@example.com",
             },
           },
           description: "Team leader details",
+        },
+        members: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              id: {
+                type: "integer",
+                example: 123,
+              },
+              nama: {
+                type: "string",
+                example: "Jane Smith",
+              },
+              email: {
+                type: "string",
+                example: "member@example.com",
+              },
+            },
+          },
+          description: "Array of team members with their details",
         },
         createdAt: {
           type: "string",
