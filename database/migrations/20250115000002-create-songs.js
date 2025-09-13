@@ -17,7 +17,7 @@ module.exports = {
         allowNull: false,
       },
       artist: {
-        type: Sequelize.STRING,
+        type: Sequelize.JSON,
         allowNull: false,
       },
       base_chord: {
@@ -43,9 +43,10 @@ module.exports = {
       name: "idx_songs_title",
     });
 
-    await queryInterface.addIndex("songs", ["artist"], {
-      name: "idx_songs_artist",
-    });
+    // Add JSON index for artist searches (MySQL/MariaDB specific)
+    await queryInterface.sequelize.query(`
+      ALTER TABLE songs ADD INDEX idx_artist_json ((CAST(artist AS CHAR(255)) COLLATE utf8mb4_bin))
+    `);
 
     await queryInterface.addIndex("songs", ["base_chord"], {
       name: "idx_songs_base_chord",

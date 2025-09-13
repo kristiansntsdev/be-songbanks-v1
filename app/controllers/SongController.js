@@ -4,12 +4,12 @@ import ErrorHandler from "../middlewares/ErrorHandler.js";
 class SongController {
   /**
    * @Summary Get all songs with pagination, search, and filters
-   * @Description Retrieve all songs with support for pagination, full-text search across title/artist/lyrics, filtering by base chord and tags, and custom sorting
+   * @Description Retrieve all songs with support for pagination, full-text search across title/artists/lyrics, filtering by base chord and tags, and custom sorting
    * @Tags Song
    * @Produce application/json
    * @Param page query integer false "Page number for pagination" default(1)
    * @Param limit query integer false "Number of items per page" default(10)
-   * @Param search query string false "Search term for title, artist, or lyrics"
+   * @Param search query string false "Search term for title, artists, or lyrics"
    * @Param base_chord query string false "Filter songs by base chord"
    * @Param tag_ids query string false "Filter by tag IDs (comma-separated)"
    * @Param sortBy query string false "Sort field" default(createdAt)
@@ -66,7 +66,7 @@ class SongController {
 
   /**
    * @Summary Create new song
-   * @Description Create a new song with associated tags. Tags will be found by name or created automatically if they don't exist (Admin only)
+   * @Description Create a new song with multiple artists and associated tags. Tags will be found by name or created automatically if they don't exist (Admin only)
    * @Tags Song
    * @Accept application/json
    * @Produce application/json

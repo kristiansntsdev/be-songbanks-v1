@@ -4,7 +4,7 @@ import ErrorHandler from "../middlewares/ErrorHandler.js";
 class ArtistController {
   /**
    * @Summary Get all artists
-   * @Description Retrieve all unique artists from songs table
+   * @Description Retrieve all unique artists from songs table (supports multiple artists per song)
    * @Tags Artist
    * @Produce application/json
    * @Success 200 {object} ArtistsResponse "Artists retrieved successfully"

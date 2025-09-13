@@ -7,9 +7,12 @@ export default {
       description: "Updated title of the song",
     },
     artist: {
-      type: "string",
-      example: "John Newton",
-      description: "Updated artist or composer of the song",
+      type: "array",
+      items: {
+        type: "string",
+      },
+      example: ["John Newton", "Chris Tomlin"],
+      description: "Updated array of artists or composers of the song",
     },
     base_chord: {
       type: "string",
