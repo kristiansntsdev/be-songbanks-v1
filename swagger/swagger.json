@@ -320,9 +320,15 @@
             "description": "Title of the song"
           },
           "artist": {
-            "type": "string",
-            "example": "John Newton",
-            "description": "Artist or composer of the song"
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "John Newton",
+              "Chris Tomlin"
+            ],
+            "description": "Array of artists or composers of the song"
           },
           "base_chord": {
             "type": "string",
@@ -404,9 +410,15 @@
             "description": "Updated title of the song"
           },
           "artist": {
-            "type": "string",
-            "example": "John Newton",
-            "description": "Updated artist or composer of the song"
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "John Newton",
+              "Chris Tomlin"
+            ],
+            "description": "Updated array of artists or composers of the song"
           },
           "base_chord": {
             "type": "string",
@@ -1435,9 +1447,15 @@
                 "description": "Title of the song"
               },
               "artist": {
-                "type": "string",
-                "example": "John Newton",
-                "description": "Artist or composer of the song"
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "John Newton",
+                  "Chris Tomlin"
+                ],
+                "description": "Array of artists or composers of the song"
               },
               "base_chord": {
                 "type": "string",
@@ -1511,9 +1529,15 @@
                   "description": "Title of the song"
                 },
                 "artist": {
-                  "type": "string",
-                  "example": "John Newton",
-                  "description": "Artist or composer of the song"
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "example": [
+                    "John Newton",
+                    "Chris Tomlin"
+                  ],
+                  "description": "Array of artists or composers of the song"
                 },
                 "base_chord": {
                   "type": "string",
@@ -2127,7 +2151,7 @@
     "/artists": {
       "get": {
         "summary": "Get all artists",
-        "description": "Retrieve all unique artists from songs table",
+        "description": "Retrieve all unique artists from songs table (supports multiple artists per song)",
         "tags": [
           "Artist"
         ],
@@ -3944,7 +3968,7 @@
     "/songs": {
       "get": {
         "summary": "Get all songs with pagination, search, and filters",
-        "description": "Retrieve all songs with support for pagination, full-text search across title/artist/lyrics, filtering by base chord and tags, and custom sorting",
+        "description": "Retrieve all songs with support for pagination, full-text search across title/artists/lyrics, filtering by base chord and tags, and custom sorting",
         "tags": [
           "Song"
         ],
@@ -3974,7 +3998,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Search term for title, artist, or lyrics"
+            "description": "Search term for title, artists, or lyrics"
           },
           {
             "in": "query",
@@ -4116,7 +4140,7 @@
     "/admin/songs": {
       "post": {
         "summary": "Create new song",
-        "description": "Create a new song with associated tags. Tags will be found by name or created automatically if they don't exist (Admin only)",
+        "description": "Create a new song with multiple artists and associated tags. Tags will be found by name or created automatically if they don't exist (Admin only)",
         "tags": [
           "Song"
         ],

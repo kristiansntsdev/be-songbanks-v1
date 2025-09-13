@@ -20,7 +20,7 @@ class SongService {
     // Build WHERE conditions
     if (search) {
       whereConditions.push(
-        "(s.title LIKE ? OR s.artist LIKE ? OR s.lyrics_and_chords LIKE ?)"
+        "(s.title LIKE ? OR JSON_SEARCH(s.artist, 'one', ?) IS NOT NULL OR s.lyrics_and_chords LIKE ?)"
       );
       params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
@@ -165,6 +165,11 @@ class SongService {
       throw new Error("Title and artist are required");
     }
 
+    // Ensure artist is an array
+    if (songAttributes.artist && !Array.isArray(songAttributes.artist)) {
+      songAttributes.artist = [songAttributes.artist];
+    }
+
     // Use transaction to ensure atomicity
     const transaction = await Song.sequelize.transaction();
 
@@ -241,6 +246,11 @@ class SongService {
 
   static async updateSong(songId, updateData) {
     const { tag_names, ...songAttributes } = updateData;
+
+    // Ensure artist is an array if provided
+    if (songAttributes.artist && !Array.isArray(songAttributes.artist)) {
+      songAttributes.artist = [songAttributes.artist];
+    }
 
     // Update song attributes if provided
     if (Object.keys(songAttributes).length > 0) {
@@ -359,14 +369,44 @@ class SongService {
   }
 
   static async getAllArtists() {
-    const artists = await Song.sequelize.query(
-      `SELECT DISTINCT artist FROM songs WHERE artist IS NOT NULL AND artist != '' ORDER BY artist ASC`,
+    const songs = await Song.sequelize.query(
+      `SELECT DISTINCT artist FROM songs WHERE artist IS NOT NULL AND artist != ''`,
       {
         type: Song.sequelize.QueryTypes.SELECT,
       }
     );
 
-    return artists.map((row) => row.artist);
+    // Extract all unique artists from the JSON arrays
+    const allArtists = new Set();
+
+    for (const song of songs) {
+      try {
+        const artistArray =
+          typeof song.artist === "string"
+            ? JSON.parse(song.artist)
+            : song.artist;
+
+        if (Array.isArray(artistArray)) {
+          artistArray.forEach((artist) => {
+            if (artist && artist.trim()) {
+              allArtists.add(artist.trim());
+            }
+          });
+        } else if (typeof artistArray === "string") {
+          // Handle legacy single artist entries
+          if (artistArray.trim()) {
+            allArtists.add(artistArray.trim());
+          }
+        }
+      } catch {
+        // Handle legacy single artist entries that aren't JSON
+        if (typeof song.artist === "string" && song.artist.trim()) {
+          allArtists.add(song.artist.trim());
+        }
+      }
+    }
+
+    return Array.from(allArtists).sort();
   }
 }
 

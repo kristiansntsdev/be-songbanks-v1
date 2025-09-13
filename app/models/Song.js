@@ -11,7 +11,9 @@ class Song extends BaseModel {
   }
 
   static get casts() {
-    return {};
+    return {
+      artist: "json",
+    };
   }
 
   static associate(models) {
