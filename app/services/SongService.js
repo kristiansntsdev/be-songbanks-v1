@@ -1,5 +1,6 @@
 import Song from "../models/Song.js";
 import Tag from "../models/Tag.js";
+import RedisService from "./RedisService.js";
 
 class SongService {
   static async getAllSongs(options = {}) {
@@ -12,6 +13,21 @@ class SongService {
       sortBy = "createdAt",
       sortOrder = "DESC",
     } = options;
+
+    // Generate cache key based on all query parameters
+    const cacheKey = RedisService.generateCacheKey("songs:all", options);
+
+    // Try to get from cache first
+    try {
+      const cachedResult = await RedisService.get(cacheKey);
+      if (cachedResult) {
+        console.log("Cache hit for getAllSongs");
+        return cachedResult;
+      }
+      console.log("Cache miss for getAllSongs");
+    } catch (error) {
+      console.error("Cache read error, falling back to database:", error);
+    }
 
     const offset = (page - 1) * limit;
     const whereConditions = [];
@@ -83,7 +99,7 @@ class SongService {
       song.tags = songTags || [];
     }
 
-    return {
+    const result = {
       songs: songs,
       pagination: {
         currentPage: parseInt(page),
@@ -94,6 +110,16 @@ class SongService {
         hasPrevPage: page > 1,
       },
     };
+
+    // Cache the result (no TTL since songs change rarely)
+    try {
+      await RedisService.set(cacheKey, result);
+      console.log("Cached getAllSongs result");
+    } catch (error) {
+      console.error("Cache write error:", error);
+    }
+
+    return result;
   }
 
   static async getSongById(songId) {
@@ -205,6 +231,14 @@ class SongService {
 
       await transaction.commit();
 
+      // Invalidate all song caches after successful creation
+      try {
+        await RedisService.deletePattern("songs:all:*");
+        console.log("Invalidated song caches after creation");
+      } catch (error) {
+        console.error("Cache invalidation error:", error);
+      }
+
       // Return the created song data directly with tags
       const result = {
         id: song.id,
@@ -290,6 +324,14 @@ class SongService {
       }
     }
 
+    // Invalidate all song caches after successful update
+    try {
+      await RedisService.deletePattern("songs:all:*");
+      console.log("Invalidated song caches after update");
+    } catch (error) {
+      console.error("Cache invalidation error:", error);
+    }
+
     // Construct response from known data - same approach that fixed POST
     const result = {
       id: parseInt(songId),
@@ -330,6 +372,14 @@ class SongService {
       const error = new Error("Song not found");
       error.statusCode = 404;
       throw error;
+    }
+
+    // Invalidate all song caches after successful deletion
+    try {
+      await RedisService.deletePattern("songs:all:*");
+      console.log("Invalidated song caches after deletion");
+    } catch (error) {
+      console.error("Cache invalidation error:", error);
     }
 
     return {
