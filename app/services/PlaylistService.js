@@ -4,6 +4,7 @@ import Song from "../models/Song.js";
 import { Op } from "sequelize";
 import sequelize from "../../config/database.js";
 import crypto from "crypto";
+import RedisService from "./RedisService.js";
 
 class PlaylistService {
   /**
@@ -152,6 +153,15 @@ class PlaylistService {
 
     await playlist.reload();
 
+    // Invalidate playlist caches after successful creation
+    try {
+      await RedisService.deletePattern("playlists:all:*");
+      await RedisService.deletePattern("playlist:detail:*");
+      console.log("Invalidated playlist caches after creation");
+    } catch (error) {
+      console.error("Cache invalidation error:", error);
+    }
+
     return {
       id: playlist.id,
       playlist_name: playlist.playlist_name,
@@ -164,6 +174,24 @@ class PlaylistService {
 
   static async getPlaylistById(userId, playlistId) {
     const numericPlaylistId = parseInt(playlistId);
+
+    // Generate cache key based on user ID and playlist ID
+    const cacheKey = RedisService.generateCacheKey("playlist:detail", {
+      userId,
+      playlistId: numericPlaylistId,
+    });
+
+    // Try to get from cache first
+    try {
+      const cachedResult = await RedisService.get(cacheKey);
+      if (cachedResult) {
+        console.log("Cache hit for getPlaylistById");
+        return cachedResult;
+      }
+      console.log("Cache miss for getPlaylistById");
+    } catch (error) {
+      console.error("Cache read error, falling back to database:", error);
+    }
 
     // First, check if user owns the playlist
     let playlist = await Playlist.findOne({
@@ -207,6 +235,14 @@ class PlaylistService {
         response.playlist_team_id = playlist.playlist_team_id;
         response.is_shared = playlist.is_shared;
         response.is_locked = playlist.is_locked;
+      }
+
+      // Cache the result (no TTL since playlists change rarely)
+      try {
+        await RedisService.set(cacheKey, response);
+        console.log("Cached getPlaylistById result (owner)");
+      } catch (error) {
+        console.error("Cache write error:", error);
       }
 
       return response;
@@ -286,12 +322,39 @@ class PlaylistService {
       response.is_locked = team.is_locked;
     }
 
+    // Cache the result (no TTL since playlists change rarely)
+    try {
+      await RedisService.set(cacheKey, response);
+      console.log("Cached getPlaylistById result (team member)");
+    } catch (error) {
+      console.error("Cache write error:", error);
+    }
+
     return response;
   }
 
   static async getAllPlaylists(userId, page = 1, limit = 10) {
     const offset = (page - 1) * limit;
     const userIdNum = parseInt(userId);
+
+    // Generate cache key based on user ID and pagination parameters
+    const cacheKey = RedisService.generateCacheKey("playlists:all", {
+      userId,
+      page,
+      limit,
+    });
+
+    // Try to get from cache first
+    try {
+      const cachedResult = await RedisService.get(cacheKey);
+      if (cachedResult) {
+        console.log("Cache hit for getAllPlaylists");
+        return cachedResult;
+      }
+      console.log("Cache miss for getAllPlaylists");
+    } catch (error) {
+      console.error("Cache read error, falling back to database:", error);
+    }
 
     // Get playlists owned by the user
     const ownedPlaylists = await Playlist.findAll({
@@ -358,7 +421,7 @@ class PlaylistService {
       offset + parseInt(limit)
     );
 
-    return {
+    const result = {
       code: 200,
       message: "Playlists retrieved successfully",
       data: paginatedPlaylists.map((playlist) => {
@@ -384,6 +447,16 @@ class PlaylistService {
         hasPrevPage: page > 1,
       },
     };
+
+    // Cache the result (no TTL since playlists change rarely)
+    try {
+      await RedisService.set(cacheKey, result);
+      console.log("Cached getAllPlaylists result");
+    } catch (error) {
+      console.error("Cache write error:", error);
+    }
+
+    return result;
   }
 
   static async updatePlaylist(userId, playlistId, updateData) {
@@ -430,6 +503,15 @@ class PlaylistService {
     });
 
     await playlist.reload();
+
+    // Invalidate playlist caches after successful update
+    try {
+      await RedisService.deletePattern("playlists:all:*");
+      await RedisService.deletePattern("playlist:detail:*");
+      console.log("Invalidated playlist caches after update");
+    } catch (error) {
+      console.error("Cache invalidation error:", error);
+    }
 
     return {
       code: 200,
@@ -516,6 +598,15 @@ class PlaylistService {
     });
 
     await playlist.reload();
+
+    // Invalidate playlist caches after adding songs
+    try {
+      await RedisService.deletePattern("playlists:all:*");
+      await RedisService.deletePattern("playlist:detail:*");
+      console.log("Invalidated playlist caches after adding songs");
+    } catch (error) {
+      console.error("Cache invalidation error:", error);
+    }
 
     // Return appropriate message based on single or multiple songs
     const isSingle = !Array.isArray(songIds);
@@ -664,6 +755,16 @@ class PlaylistService {
     }
 
     await playlist.destroy();
+
+    // Invalidate playlist caches after successful deletion
+    try {
+      await RedisService.deletePattern("playlists:all:*");
+      await RedisService.deletePattern("playlist:detail:*");
+      console.log("Invalidated playlist caches after deletion");
+    } catch (error) {
+      console.error("Cache invalidation error:", error);
+    }
+
     return {
       code: 200,
       message: "Playlist deleted successfully",
@@ -786,6 +887,15 @@ class PlaylistService {
     });
 
     await playlist.reload();
+
+    // Invalidate playlist caches after removing song
+    try {
+      await RedisService.deletePattern("playlists:all:*");
+      await RedisService.deletePattern("playlist:detail:*");
+      console.log("Invalidated playlist caches after removing song");
+    } catch (error) {
+      console.error("Cache invalidation error:", error);
+    }
 
     return {
       code: 200,
