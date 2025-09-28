@@ -1,4 +1,5 @@
 import sequelize from "../../config/database.js";
+import RedisService from "./RedisService.js";
 
 class UserService {
   /**
@@ -9,6 +10,25 @@ class UserService {
    * @returns {Promise<Object>} Paginated user list
    */
   static async getUsers(page, limit, search = null) {
+    // Generate cache key based on query parameters
+    const cacheKey = RedisService.generateCacheKey("users:list", {
+      page,
+      limit,
+      search,
+    });
+
+    // Try to get from cache first
+    try {
+      const cachedResult = await RedisService.get(cacheKey);
+      if (cachedResult) {
+        console.log("Cache hit for getUsers");
+        return cachedResult;
+      }
+      console.log("Cache miss for getUsers");
+    } catch (error) {
+      console.error("Cache read error, falling back to database:", error);
+    }
+
     const offset = (page - 1) * limit;
 
     // Build the base query
@@ -55,7 +75,7 @@ class UserService {
       raw: true,
     });
 
-    return {
+    const result = {
       data: users,
       pagination: {
         currentPage: page,
@@ -65,6 +85,30 @@ class UserService {
       },
       search: search || null,
     };
+
+    // Cache the result with 5 minute TTL
+    try {
+      await RedisService.set(cacheKey, result, 300);
+    } catch (error) {
+      console.error("Cache write error:", error);
+    }
+
+    return result;
+  }
+
+  /**
+   * Clear users cache
+   * @returns {Promise<boolean>} Success status
+   */
+  static async clearUsersCache() {
+    try {
+      await RedisService.deletePattern("users:*");
+      console.log("Users cache cleared successfully");
+      return true;
+    } catch (error) {
+      console.error("Error clearing users cache:", error);
+      return false;
+    }
   }
 }
 
