@@ -722,6 +722,17 @@ class PlaylistService {
 
     await playlist.reload();
 
+    // Invalidate playlist caches after adding song with base chord
+    try {
+      await RedisService.deletePattern("playlists:all:*");
+      await RedisService.deletePattern("playlist:detail:*");
+      console.log(
+        "Invalidated playlist caches after adding song with base chord"
+      );
+    } catch (error) {
+      console.error("Cache invalidation error:", error);
+    }
+
     return {
       code: 200,
       message: "Song added to playlist with base chord successfully",
