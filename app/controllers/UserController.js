@@ -20,10 +20,13 @@ class UserController {
    * @Router /api/admin/user/ [get]
    */
   static getUsers = ErrorHandler.asyncHandler(async (req, res) => {
-    // Check if requesting user has admin privileges (userlevel > 2)
-    if (!req.user || req.user.userlevel <= 2) {
+    // Check if requesting user has admin privileges
+    const isAdmin = req.user.isAdmin || req.user.userType === "pengurus";
+    const isPesertaWithHighLevel = req.user.userType === "peserta" && req.user.userlevel > 2;
+    
+    if (!isAdmin && !isPesertaWithHighLevel) {
       throw new ForbiddenException(
-        "Access denied. Admin privileges required (user level > 2)."
+        "Access denied. Admin privileges required."
       );
     }
 

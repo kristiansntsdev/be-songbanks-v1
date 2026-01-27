@@ -45,25 +45,28 @@ const requireRole = (requiredRole) => {
         throw new UnauthorizedException("User not found");
       }
 
-      // Validate user access (same as AuthService)
-      if (currentUser.userType === "pengurus") {
-        if (parseInt(currentUser.leveladmin) <= 1) {
-          throw new ForbiddenException("Insufficient admin level access");
+      // Only validate user access if a specific role is required
+      if (requiredRole) {
+        // Validate user access (same as AuthService)
+        if (currentUser.userType === "pengurus") {
+          if (parseInt(currentUser.leveladmin) <= 1) {
+            throw new ForbiddenException("Insufficient admin level access");
+          }
+        } else if (currentUser.userType === "peserta") {
+          if (parseInt(currentUser.userlevel) <= 2) {
+            throw new ForbiddenException("Insufficient user level access");
+          }
+          if (currentUser.verifikasi !== "1") {
+            throw new ForbiddenException("Account not verified");
+          }
         }
-      } else if (currentUser.userType === "peserta") {
-        if (parseInt(currentUser.userlevel) <= 2) {
-          throw new ForbiddenException("Insufficient user level access");
-        }
-        if (currentUser.verifikasi !== "1") {
-          throw new ForbiddenException("Account not verified");
-        }
-      }
 
-      // Check if user has required role
-      if (requiredRole && currentUser.userType !== requiredRole) {
-        throw new ForbiddenException(
-          `Access denied. Required role: ${requiredRole}`
-        );
+        // Check if user has required role
+        if (currentUser.userType !== requiredRole) {
+          throw new ForbiddenException(
+            `Access denied. Required role: ${requiredRole}`
+          );
+        }
       }
 
       // Attach fresh user data to request
