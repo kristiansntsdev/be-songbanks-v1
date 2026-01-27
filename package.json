@@ -39,17 +39,18 @@
   "author": "Mangesh Ghadigaonkar",
   "license": "ISC",
   "devDependencies": {
+    "@faker-js/faker": "^9.9.0",
     "@vitest/ui": "^3.2.4",
     "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.3",
     "nodemon": "^3.1.7",
     "prettier": "^3.6.2",
+    "sqlite3": "^5.1.7",
     "supertest": "^7.1.4",
     "vitest": "^3.2.4"
   },
   "dependencies": {
-    "@faker-js/faker": "^9.9.0",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "connect-session-sequelize": "^7.1.7",
@@ -67,7 +68,6 @@
     "redis": "^5.8.2",
     "sequelize": "^6.37.5",
     "sequelize-cli": "^6.6.3",
-    "sqlite3": "^5.1.7",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "ulid": "^3.0.1",
