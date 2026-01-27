@@ -5,8 +5,42 @@
       "src": "api/index.js",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["**"],
-        "excludeFiles": ["node_modules/@types/**"]
+        "includeFiles": [
+          "api/**",
+          "app/**",
+          "config/**",
+          "routes/**",
+          "schemas/**",
+          "swagger/**",
+          "package.json"
+        ],
+        "excludeFiles": [
+          "node_modules/@types/**",
+          "node_modules/**/@types/**",
+          "node_modules/**/test/**",
+          "node_modules/**/tests/**",
+          "node_modules/**/*.test.js",
+          "node_modules/**/*.spec.js",
+          "node_modules/**/example/**",
+          "node_modules/**/examples/**",
+          "node_modules/**/docs/**",
+          "node_modules/**/*.md",
+          "node_modules/**/README*",
+          "node_modules/**/CHANGELOG*",
+          "node_modules/**/LICENSE*",
+          "node_modules/**/.github/**",
+          "node_modules/swagger-ui-dist/**",
+          "node_modules/@esbuild/**",
+          "node_modules/vite-node/**",
+          "node_modules/rollup/**",
+          "node_modules/@rollup/**",
+          "node_modules/node-gyp/**",
+          "database/migrations/**",
+          "database/seeders/**",
+          "test/**",
+          "docs/**",
+          "examples/**"
+        ]
       }
     }
   ],

@@ -56,3 +56,28 @@ When encountering database column errors:
 2. Provide SQL to add missing columns if needed
 3. Never assume migrations have been run
 4. Always provide manual SQL commands for database changes
+
+## Database Schema Reference
+
+**ALWAYS CHECK** `db.schema.json` for database schema information before asking to connect to the database.
+
+The `db.schema.json` file contains the complete database schema including:
+- All table names and schemas
+- Column names and data types
+- Maximum length constraints
+- Nullable/Not-nullable properties
+
+Use this file to:
+- Verify column names exist before writing queries
+- Check data types and constraints
+- Understand table structure without connecting to the database
+- Validate model definitions against actual schema
+
+Example usage:
+```bash
+# Search for a specific table schema
+cat db.schema.json | grep -A 10 '"TABLE_NAME": "users"'
+
+# Check if a column exists
+cat db.schema.json | grep '"COLUMN_NAME": "email"'
+```

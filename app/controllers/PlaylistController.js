@@ -12,6 +12,7 @@ class PlaylistController {
    * @Success 201 {object} PlaylistResponse "Playlist created successfully"
    * @Failure 400 {object} BadRequestError "Invalid request body"
    * @Failure 401 {object} UnauthorizedError "Authentication required"
+   * @Failure 403 {object} ForbiddenError "Playlist limit reached for your plan"
    * @Failure 409 {object} ConflictError "Playlist name already exists"
    * @Failure 500 {object} InternalServerError "Internal server error"
    * @Router /playlists [post]
@@ -19,8 +20,13 @@ class PlaylistController {
    */
   static createPlaylist = ErrorHandler.asyncHandler(async (req, res) => {
     const userId = req.user.userId;
+    const userLevel = req.user.userlevel;
 
-    const result = await PlaylistService.createPlaylist(userId, req.body);
+    const result = await PlaylistService.createPlaylist(
+      userId,
+      req.body,
+      userLevel
+    );
 
     res.status(201).json({
       code: 201,
@@ -45,8 +51,14 @@ class PlaylistController {
   static getAllPlaylists = ErrorHandler.asyncHandler(async (req, res) => {
     const { page = 1, limit = 10 } = req.query;
     const userId = req.user.userId;
+    const userLevel = req.user.userlevel;
 
-    const result = await PlaylistService.getAllPlaylists(userId, page, limit);
+    const result = await PlaylistService.getAllPlaylists(
+      userId,
+      page,
+      limit,
+      userLevel
+    );
 
     res.json(result);
   });
@@ -168,6 +180,7 @@ class PlaylistController {
    * @Param shareToken path string true "Share token from the playlist sharelink"
    * @Success 201 {object} JoinPlaylistResponse "Successfully joined playlist team"
    * @Failure 401 {object} UnauthorizedError "Authentication required"
+   * @Failure 403 {object} ForbiddenError "Playlist limit reached for your plan"
    * @Failure 404 {object} NotFoundError "Invalid or expired share link"
    * @Failure 409 {object} ConflictError "Playlist already has a team"
    * @Failure 500 {object} InternalServerError "Internal server error"
@@ -178,10 +191,12 @@ class PlaylistController {
     async (req, res) => {
       const { shareToken } = req.params;
       const userId = req.user.userId;
+      const userLevel = req.user.userlevel;
 
       const result = await PlaylistService.joinPlaylistViaSharelink(
         shareToken,
-        userId
+        userId,
+        userLevel
       );
 
       res.status(201).json({
@@ -203,6 +218,7 @@ class PlaylistController {
    * @Success 200 {object} AddSongToPlaylistResponse "Song(s) added to playlist successfully"
    * @Failure 400 {object} BadRequestError "Invalid song ID(s) provided"
    * @Failure 401 {object} UnauthorizedError "Authentication required"
+   * @Failure 403 {object} ForbiddenError "Song limit reached for your plan"
    * @Failure 404 {object} NotFoundError "Playlist not found or song(s) not found"
    * @Failure 409 {object} ConflictError "All songs are already in the playlist"
    * @Failure 500 {object} InternalServerError "Internal server error"
@@ -212,9 +228,10 @@ class PlaylistController {
   static addSongToPlaylist = ErrorHandler.asyncHandler(async (req, res) => {
     const { id } = req.params;
     const userId = req.user.userId;
+    const userLevel = req.user.userlevel;
     const { songIds } = req.body;
 
-    const result = await PlaylistService.addSongToPlaylist(userId, id, songIds);
+    const result = await PlaylistService.addSongToPlaylist(userId, id, songIds, userLevel);
 
     res.json(result);
   });
@@ -231,6 +248,7 @@ class PlaylistController {
    * @Success 200 {object} AddSongWithBaseChordResponse "Song added to playlist with base chord successfully"
    * @Failure 400 {object} BadRequestError "Invalid song ID or base chord not provided"
    * @Failure 401 {object} UnauthorizedError "Authentication required"
+   * @Failure 403 {object} ForbiddenError "Song limit reached for your plan"
    * @Failure 404 {object} NotFoundError "Playlist not found or song not found"
    * @Failure 409 {object} ConflictError "Song is already in the playlist"
    * @Failure 500 {object} InternalServerError "Internal server error"
@@ -242,12 +260,14 @@ class PlaylistController {
       const { id, songId } = req.params;
       const { base_chord } = req.body;
       const userId = req.user.userId;
+      const userLevel = req.user.userlevel;
 
       const result = await PlaylistService.addSongToPlaylistWithBaseChord(
         userId,
         id,
         songId,
-        base_chord
+        base_chord,
+        userLevel
       );
 
       res.json(result);
