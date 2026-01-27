@@ -12,7 +12,6 @@
     "dev": "nodemon index.js",
     "build": "npm run swagpress:generate-api generate all && npm run lint:fix",
     "vercel-build": "npm run build",
-    "postinstall": "npm list pg || (echo 'Installing PostgreSQL driver...' && npm install pg@latest)",
     "migrate": "sequelize-cli db:migrate",
     "migrate:undo": "sequelize-cli db:migrate:undo",
     "migrate:fresh": "sequelize-cli db:migrate:undo:all && sequelize-cli db:migrate",
