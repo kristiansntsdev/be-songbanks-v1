@@ -2192,7 +2192,7 @@
     "/auth/login": {
       "post": {
         "summary": "User login",
-        "description": "Authenticate admin (pengurus) with username/password or user (peserta) with email/password",
+        "description": "Authenticate admin (pengurus) with username/password or user (peserta) with email/password. All user levels can login.",
         "tags": [
           "Auth"
         ],
@@ -2228,7 +2228,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized - invalid credentials or insufficient access level",
+            "description": "Unauthorized - invalid credentials or account not verified",
             "content": {
               "application/json": {
                 "schema": {
@@ -2737,6 +2737,16 @@
               }
             }
           },
+          "403": {
+            "description": "Playlist limit reached for your plan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
+          },
           "409": {
             "description": "Playlist name already exists",
             "content": {
@@ -3238,6 +3248,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Playlist limit reached for your plan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
                 }
               }
             }

@@ -5,14 +5,14 @@ class AuthController {
   /**
    * POST /api/auth/login
    * @Summary User login
-   * @Description Authenticate admin (pengurus) with username/password or user (peserta) with email/password
+   * @Description Authenticate admin (pengurus) with username/password or user (peserta) with email/password. All user levels can login.
    * @Tags Auth
    * @Accept application/json
    * @Produce application/json
    * @Body {object} LoginRequest "User login credentials (username for admin, email for user)"
    * @Success 200 {object} LoginResponse "Login successful"
    * @Failure 400 {object} BadRequestError "Bad request - invalid credentials"
-   * @Failure 401 {object} UnauthorizedError "Unauthorized - invalid credentials or insufficient access level"
+   * @Failure 401 {object} UnauthorizedError "Unauthorized - invalid credentials or account not verified"
    * @Router /api/auth/login [post]
    */
   static apiLogin = ErrorHandler.asyncHandler(async (req, res) => {

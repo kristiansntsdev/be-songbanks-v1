@@ -44,6 +44,7 @@ class AuthService {
       userType: user.userType,
       nama: user.nama,
       isAdmin: user.userType === "pengurus",
+      userlevel: user.userlevel,
       iat: Math.floor(Date.now() / 1000),
     };
 
@@ -75,11 +76,6 @@ class AuthService {
         );
       }
     } else if (user.userType === "peserta") {
-      if (parseInt(user.userlevel) <= 2) {
-        throw new AccountAccessDeniedException(
-          "Insufficient user level access"
-        );
-      }
       if (user.verifikasi !== "1") {
         throw new AccountAccessDeniedException("Account not verified");
       }
