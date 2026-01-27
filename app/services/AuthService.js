@@ -44,9 +44,12 @@ class AuthService {
       userType: user.userType,
       nama: user.nama,
       isAdmin: user.userType === "pengurus",
-      userlevel: user.userlevel,
       iat: Math.floor(Date.now() / 1000),
     };
+
+    if (user.userType === "peserta") {
+      payload.userlevel = user.userlevel;
+    }
 
     return jwt.sign(payload, process.env.SESSION_SECRET, {
       expiresIn: "24h",
