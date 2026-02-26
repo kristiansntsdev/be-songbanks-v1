@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"log"
 	"sort"
 	"strings"
 
@@ -49,8 +50,12 @@ func (s *SongService) List(page, limit int, search, baseChord, sortBy, sortOrder
 			Pagination map[string]any   `json:"pagination"`
 		}
 		if s.cache.Get(cacheKey, &cached) {
+			log.Printf("[songs-cache] hit key=%s", cacheKey)
 			return cached.Data, cached.Pagination, nil
 		}
+		log.Printf("[songs-cache] miss key=%s", cacheKey)
+	} else {
+		log.Printf("[songs-cache] disabled key=%s", cacheKey)
 	}
 
 	sortMap := map[string]string{"createdAt": "s.createdAt", "updatedAt": "s.updatedAt", "title": "s.title"}
@@ -97,6 +102,7 @@ func (s *SongService) List(page, limit int, search, baseChord, sortBy, sortOrder
 
 	if s.cache != nil && s.cache.Enabled() {
 		s.cache.Set(cacheKey, map[string]any{"data": data, "pagination": pagination})
+		log.Printf("[songs-cache] set key=%s", cacheKey)
 	}
 	return data, pagination, nil
 }
@@ -137,6 +143,7 @@ func (s *SongService) Create(title string, artist any, baseChord, lyrics *string
 	}
 	if s.cache != nil {
 		s.cache.InvalidateSongsList()
+		log.Printf("[songs-cache] invalidate reason=create song_id=%d", songID)
 	}
 	return map[string]any{"id": songID, "title": title}, nil
 }
@@ -182,6 +189,7 @@ func (s *SongService) Update(songID int, title *string, artist any, baseChord, l
 
 	if s.cache != nil {
 		s.cache.InvalidateSongsList()
+		log.Printf("[songs-cache] invalidate reason=update song_id=%d", songID)
 	}
 	return true, nil
 }
@@ -193,6 +201,7 @@ func (s *SongService) Delete(songID int) (bool, error) {
 	}
 	if affected > 0 && s.cache != nil {
 		s.cache.InvalidateSongsList()
+		log.Printf("[songs-cache] invalidate reason=delete song_id=%d", songID)
 	}
 	return affected > 0, nil
 }
