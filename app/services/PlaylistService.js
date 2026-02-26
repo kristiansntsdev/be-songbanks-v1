@@ -97,7 +97,22 @@ class PlaylistService {
       .filter((song) => song !== undefined);
   }
 
-  static async createPlaylist(userId, playlistData) {
+  static async createPlaylist(userId, playlistData, userLevel = null) {
+    // Check plan-based playlist limit for users with level < 2
+    if (userLevel !== null && parseInt(userLevel) < 2) {
+      const playlistCount = await Playlist.count({
+        where: { user_id: userId },
+      });
+
+      if (playlistCount >= 3) {
+        const error = new Error(
+          "You have reached the maximum limit of 3 playlists for your plan. Upgrade to create more playlists."
+        );
+        error.statusCode = 403;
+        throw error;
+      }
+    }
+
     // Check for case-insensitive duplicate playlist names for this user
     const existingPlaylist = await Playlist.findOne({
       where: {
@@ -289,7 +304,7 @@ class PlaylistService {
     return response;
   }
 
-  static async getAllPlaylists(userId, page = 1, limit = 10) {
+  static async getAllPlaylists(userId, page = 1, limit = 10, userLevel = null) {
     const offset = (page - 1) * limit;
     const userIdNum = parseInt(userId);
 
@@ -351,9 +366,15 @@ class PlaylistService {
     // Sort by creation date
     allPlaylists.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
+    // Apply plan-based limit for users with level < 2
+    let limitedPlaylists = allPlaylists;
+    if (userLevel !== null && parseInt(userLevel) < 2) {
+      limitedPlaylists = allPlaylists.slice(0, 3);
+    }
+
     // Apply pagination
-    const totalItems = allPlaylists.length;
-    const paginatedPlaylists = allPlaylists.slice(
+    const totalItems = limitedPlaylists.length;
+    const paginatedPlaylists = limitedPlaylists.slice(
       offset,
       offset + parseInt(limit)
     );
@@ -448,7 +469,7 @@ class PlaylistService {
     };
   }
 
-  static async addSongToPlaylist(userId, playlistId, songIds) {
+  static async addSongToPlaylist(userId, playlistId, songIds, userLevel = null) {
     const numericPlaylistId = parseInt(playlistId);
 
     // Handle both single ID and array of IDs
@@ -495,6 +516,16 @@ class PlaylistService {
 
     // Get current songs using the helper method
     let currentSongs = this.parseSongsField(playlist.songs);
+
+    // Check plan-based song limit for users with level = 2
+    if (userLevel !== null && parseInt(userLevel) === 2) {
+      const newSongsCount = numericSongIds.filter((id) => !currentSongs.includes(id)).length;
+      if (currentSongs.length + newSongsCount > 25) {
+        const error = new Error("You have reached the maximum limit of 25 songs per playlist for your plan. Upgrade to add more songs.");
+        error.statusCode = 403;
+        throw error;
+      }
+    }
 
     // Filter out songs that are already in playlist
     const newSongs = numericSongIds.filter((id) => !currentSongs.includes(id));
@@ -551,7 +582,8 @@ class PlaylistService {
     userId,
     playlistId,
     songId,
-    baseChord
+    baseChord,
+    userLevel = null
   ) {
     const numericPlaylistId = parseInt(playlistId);
     const numericSongId = parseInt(songId);
@@ -600,6 +632,15 @@ class PlaylistService {
       const error = new Error("Song is already in the playlist");
       error.statusCode = 409;
       throw error;
+    }
+
+    // Check plan-based song limit for users with level = 2
+    if (userLevel !== null && parseInt(userLevel) === 2) {
+      if (currentSongs.length >= 25) {
+        const error = new Error("You have reached the maximum limit of 25 songs per playlist for your plan. Upgrade to add more songs.");
+        error.statusCode = 403;
+        throw error;
+      }
     }
 
     // Add song to playlist
@@ -806,7 +847,33 @@ class PlaylistService {
     };
   }
 
-  static async joinPlaylistViaSharelink(shareToken, userId) {
+  static async joinPlaylistViaSharelink(shareToken, userId, userLevel = null) {
+    // Check plan-based playlist limit for users with level < 2
+    if (userLevel !== null && parseInt(userLevel) < 2) {
+      const playlistCount = await Playlist.count({
+        where: { user_id: userId },
+      });
+
+      // Count team memberships
+      const teamMemberships = await sequelize.query(
+        `SELECT COUNT(*) as count FROM playlist_teams WHERE lead_id = ? OR JSON_CONTAINS(members, ?)`,
+        {
+          replacements: [userId, JSON.stringify(userId)],
+          type: sequelize.QueryTypes.SELECT,
+        }
+      );
+
+      const totalPlaylists = playlistCount + (teamMemberships[0]?.count || 0);
+
+      if (totalPlaylists >= 3) {
+        const error = new Error(
+          "You have reached the maximum limit of 3 playlists for your plan. Upgrade to access more playlists."
+        );
+        error.statusCode = 403;
+        throw error;
+      }
+    }
+
     const playlist = await Playlist.findOne({
       where: {
         share_token: shareToken,

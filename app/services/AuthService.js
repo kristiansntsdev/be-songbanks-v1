@@ -47,6 +47,10 @@ class AuthService {
       iat: Math.floor(Date.now() / 1000),
     };
 
+    if (user.userType === "peserta") {
+      payload.userlevel = user.userlevel;
+    }
+
     return jwt.sign(payload, process.env.SESSION_SECRET, {
       expiresIn: "24h",
     });
@@ -75,11 +79,6 @@ class AuthService {
         );
       }
     } else if (user.userType === "peserta") {
-      if (parseInt(user.userlevel) <= 2) {
-        throw new AccountAccessDeniedException(
-          "Insufficient user level access"
-        );
-      }
       if (user.verifikasi !== "1") {
         throw new AccountAccessDeniedException("Account not verified");
       }

@@ -196,106 +196,113 @@ class SongService {
       songAttributes.artist = [songAttributes.artist];
     }
 
-    // Use transaction to ensure atomicity
-    const transaction = await Song.sequelize.transaction();
+    const now = new Date();
 
-    try {
-      const song = await Song.create(songAttributes, { transaction });
+    // Use raw SQL INSERT to avoid Sequelize schema detection issues
+    const [insertResult] = await Song.sequelize.query(
+      `INSERT INTO songs (title, artist, base_chord, lyrics_and_chords, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      {
+        replacements: [
+          songAttributes.title,
+          JSON.stringify(songAttributes.artist),
+          songAttributes.base_chord || null,
+          songAttributes.lyrics_and_chords || null,
+          now,
+          now,
+        ],
+      }
+    );
 
-      if (tag_names && tag_names.length > 0) {
-        // Move tag creation inside transaction to ensure atomicity
-        const tags = [];
-        for (const tagName of tag_names) {
-          const [tag] = await Tag.findOrCreate({
-            where: { name: tagName.trim() },
-            defaults: {
-              name: tagName.trim(),
-              description: `Auto-created tag: ${tagName.trim()}`,
-            },
-            transaction,
-          });
-          tags.push(tag);
-        }
+    const newSongId = insertResult;
 
-        // Use raw SQL to insert associations to avoid model association issues
-        for (const tag of tags) {
-          await Song.sequelize.query(
-            "INSERT IGNORE INTO song_tags (song_id, tag_id) VALUES (?, ?)",
-            {
-              replacements: [song.id, tag.id],
-              transaction,
-            }
-          );
-        }
+    if (tag_names && tag_names.length > 0) {
+      const tags = [];
+      for (const tagName of tag_names) {
+        const [tag] = await Tag.findOrCreate({
+          where: { name: tagName.trim() },
+          defaults: {
+            name: tagName.trim(),
+            description: `Auto-created tag: ${tagName.trim()}`,
+          },
+        });
+        tags.push(tag);
       }
 
-      await transaction.commit();
-
-      // Invalidate all song caches after successful creation
-      try {
-        await RedisService.deletePattern("songs:all:*");
-        console.log("Invalidated song caches after creation");
-      } catch (error) {
-        console.error("Cache invalidation error:", error);
-      }
-
-      // Return the created song data directly with tags
-      const result = {
-        id: song.id,
-        title: song.title,
-        artist: song.artist,
-        base_chord: song.base_chord,
-        lyrics_and_chords: song.lyrics_and_chords,
-        createdAt: song.createdAt,
-        updatedAt: song.updatedAt,
-        tags: [],
-      };
-
-      // Get tags if they were created
-      if (tag_names && tag_names.length > 0) {
-        const [tagResults] = await Song.sequelize.query(
-          `
-          SELECT t.id, t.name, t.description
-          FROM tags t
-          JOIN song_tags st ON t.id = st.tag_id
-          WHERE st.song_id = ?
-        `,
-          {
-            replacements: [song.id],
-            type: Song.sequelize.QueryTypes.SELECT,
-          }
+      for (const tag of tags) {
+        await Song.sequelize.query(
+          "INSERT IGNORE INTO song_tags (song_id, tag_id) VALUES (?, ?)",
+          { replacements: [newSongId, tag.id] }
         );
-
-        result.tags = tagResults || [];
       }
-
-      return result;
-    } catch (error) {
-      if (!transaction.finished) {
-        await transaction.rollback();
-      }
-      throw error;
     }
+
+    // Invalidate all song caches after successful creation
+    try {
+      await RedisService.deletePattern("songs:all:*");
+      console.log("Invalidated song caches after creation");
+    } catch (error) {
+      console.error("Cache invalidation error:", error);
+    }
+
+    // Re-fetch from DB to get the actual saved values
+    return await SongService.getSongById(newSongId);
   }
 
   static async updateSong(songId, updateData) {
     const { tag_names, ...songAttributes } = updateData;
+
+    // Verify the song exists before attempting update
+    const existingRows = await Song.sequelize.query(
+      "SELECT id FROM songs WHERE id = ?",
+      {
+        replacements: [songId],
+        type: Song.sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    if (!existingRows || existingRows.length === 0) {
+      const error = new Error("Song not found");
+      error.statusCode = 404;
+      throw error;
+    }
 
     // Ensure artist is an array if provided
     if (songAttributes.artist && !Array.isArray(songAttributes.artist)) {
       songAttributes.artist = [songAttributes.artist];
     }
 
-    // Update song attributes if provided
+    // Update song attributes if provided (raw SQL to avoid Sequelize schema detection issues)
     if (Object.keys(songAttributes).length > 0) {
-      const [affectedRowCount] = await Song.update(songAttributes, {
-        where: { id: songId },
-      });
+      const setClauses = [];
+      const replacements = [];
 
-      if (affectedRowCount === 0) {
-        const error = new Error("Song not found");
-        error.statusCode = 404;
-        throw error;
+      if (songAttributes.title !== undefined) {
+        setClauses.push("title = ?");
+        replacements.push(songAttributes.title);
+      }
+      if (songAttributes.artist !== undefined) {
+        setClauses.push("artist = ?");
+        replacements.push(JSON.stringify(songAttributes.artist));
+      }
+      if (songAttributes.base_chord !== undefined) {
+        setClauses.push("base_chord = ?");
+        replacements.push(songAttributes.base_chord);
+      }
+      if (songAttributes.lyrics_and_chords !== undefined) {
+        setClauses.push("lyrics_and_chords = ?");
+        replacements.push(songAttributes.lyrics_and_chords);
+      }
+
+      if (setClauses.length > 0) {
+        setClauses.push("updatedAt = ?");
+        replacements.push(new Date());
+        replacements.push(songId);
+
+        await Song.sequelize.query(
+          `UPDATE songs SET ${setClauses.join(", ")} WHERE id = ?`,
+          { replacements }
+        );
       }
     }
 
