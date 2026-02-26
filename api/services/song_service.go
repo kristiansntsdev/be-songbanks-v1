@@ -2,8 +2,10 @@ package services
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
+	"be-songbanks-v1/api/platform"
 	"be-songbanks-v1/api/repositories"
 	"be-songbanks-v1/api/utils"
 )
@@ -11,10 +13,11 @@ import (
 type SongService struct {
 	songs *repositories.SongRepository
 	tags  *repositories.TagRepository
+	cache *platform.SongCache
 }
 
-func NewSongService(songRepo *repositories.SongRepository, tagRepo *repositories.TagRepository) *SongService {
-	return &SongService{songs: songRepo, tags: tagRepo}
+func NewSongService(songRepo *repositories.SongRepository, tagRepo *repositories.TagRepository, cache *platform.SongCache) *SongService {
+	return &SongService{songs: songRepo, tags: tagRepo, cache: cache}
 }
 
 func (s *SongService) Artists() ([]string, error) {
@@ -39,6 +42,17 @@ func (s *SongService) Artists() ([]string, error) {
 }
 
 func (s *SongService) List(page, limit int, search, baseChord, sortBy, sortOrder string, tagIDs []int) ([]map[string]any, map[string]any, error) {
+	cacheKey := buildSongsCacheKey(page, limit, search, baseChord, sortBy, sortOrder, tagIDs)
+	if s.cache != nil && s.cache.Enabled() {
+		var cached struct {
+			Data       []map[string]any `json:"data"`
+			Pagination map[string]any   `json:"pagination"`
+		}
+		if s.cache.Get(cacheKey, &cached) {
+			return cached.Data, cached.Pagination, nil
+		}
+	}
+
 	sortMap := map[string]string{"createdAt": "s.createdAt", "updatedAt": "s.updatedAt", "title": "s.title"}
 	mappedSort := sortMap[sortBy]
 	if mappedSort == "" {
@@ -80,6 +94,10 @@ func (s *SongService) List(page, limit int, search, baseChord, sortBy, sortOrder
 		"hasNextPage":  page < utils.Ceil(total, limit),
 		"hasPrevPage":  page > 1,
 	}
+
+	if s.cache != nil && s.cache.Enabled() {
+		s.cache.Set(cacheKey, map[string]any{"data": data, "pagination": pagination})
+	}
 	return data, pagination, nil
 }
 
@@ -116,6 +134,9 @@ func (s *SongService) Create(title string, artist any, baseChord, lyrics *string
 	}
 	if err := s.assignTags(songID, tagNames); err != nil {
 		return nil, err
+	}
+	if s.cache != nil {
+		s.cache.InvalidateSongsList()
 	}
 	return map[string]any{"id": songID, "title": title}, nil
 }
@@ -159,6 +180,9 @@ func (s *SongService) Update(songID int, title *string, artist any, baseChord, l
 		}
 	}
 
+	if s.cache != nil {
+		s.cache.InvalidateSongsList()
+	}
 	return true, nil
 }
 
@@ -166,6 +190,9 @@ func (s *SongService) Delete(songID int) (bool, error) {
 	affected, err := s.songs.DeleteByID(songID)
 	if err != nil {
 		return false, err
+	}
+	if affected > 0 && s.cache != nil {
+		s.cache.InvalidateSongsList()
 	}
 	return affected > 0, nil
 }
@@ -194,4 +221,18 @@ func (s *SongService) assignTags(songID int, names []string) error {
 		}
 	}
 	return nil
+}
+
+func buildSongsCacheKey(page, limit int, search, baseChord, sortBy, sortOrder string, tagIDs []int) string {
+	ids := append([]int(nil), tagIDs...)
+	sort.Ints(ids)
+	tagPart := ""
+	for i, id := range ids {
+		if i > 0 {
+			tagPart += ","
+		}
+		tagPart += fmt.Sprintf("%d", id)
+	}
+	return fmt.Sprintf("songs:list:page=%d:limit=%d:search=%s:base=%s:sortBy=%s:sortOrder=%s:tags=%s",
+		page, limit, strings.TrimSpace(search), strings.TrimSpace(baseChord), sortBy, strings.ToUpper(sortOrder), tagPart)
 }

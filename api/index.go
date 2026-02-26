@@ -45,9 +45,11 @@ func buildApp() (*fiber.App, error) {
 	teamRepo := repositories.NewTeamRepository(ctx.DB)
 	userRepo := repositories.NewUserRepository(ctx.DB)
 
+	songCache := platform.NewSongCache()
+
 	authSvc := services.NewAuthService(authRepo, ctx.JWTSecret)
 	tagSvc := services.NewTagService(tagRepo)
-	songSvc := services.NewSongService(songRepo, tagRepo)
+	songSvc := services.NewSongService(songRepo, tagRepo, songCache)
 	playlistSvc := services.NewPlaylistService(playlistRepo, teamRepo, songRepo, ctx.ClientURL)
 	teamSvc := services.NewTeamService(teamRepo, authRepo, playlistRepo)
 	userSvc := services.NewUserService(userRepo)
