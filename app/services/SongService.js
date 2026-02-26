@@ -239,37 +239,8 @@ class SongService {
         console.error("Cache invalidation error:", error);
       }
 
-      // Return the created song data directly with tags
-      const result = {
-        id: song.id,
-        title: song.title,
-        artist: song.artist,
-        base_chord: song.base_chord,
-        lyrics_and_chords: song.lyrics_and_chords,
-        createdAt: song.createdAt,
-        updatedAt: song.updatedAt,
-        tags: [],
-      };
-
-      // Get tags if they were created
-      if (tag_names && tag_names.length > 0) {
-        const [tagResults] = await Song.sequelize.query(
-          `
-          SELECT t.id, t.name, t.description
-          FROM tags t
-          JOIN song_tags st ON t.id = st.tag_id
-          WHERE st.song_id = ?
-        `,
-          {
-            replacements: [song.id],
-            type: Song.sequelize.QueryTypes.SELECT,
-          }
-        );
-
-        result.tags = tagResults || [];
-      }
-
-      return result;
+      // Re-fetch from DB to get the actual saved values (avoids Sequelize instance issues)
+      return await SongService.getSongById(song.id);
     } catch (error) {
       if (!transaction.finished) {
         await transaction.rollback();
@@ -301,11 +272,38 @@ class SongService {
       songAttributes.artist = [songAttributes.artist];
     }
 
-    // Update song attributes if provided
+    // Update song attributes if provided (raw SQL to avoid Sequelize schema detection issues)
     if (Object.keys(songAttributes).length > 0) {
-      await Song.update(songAttributes, {
-        where: { id: songId },
-      });
+      const setClauses = [];
+      const replacements = [];
+
+      if (songAttributes.title !== undefined) {
+        setClauses.push("title = ?");
+        replacements.push(songAttributes.title);
+      }
+      if (songAttributes.artist !== undefined) {
+        setClauses.push("artist = ?");
+        replacements.push(JSON.stringify(songAttributes.artist));
+      }
+      if (songAttributes.base_chord !== undefined) {
+        setClauses.push("base_chord = ?");
+        replacements.push(songAttributes.base_chord);
+      }
+      if (songAttributes.lyrics_and_chords !== undefined) {
+        setClauses.push("lyrics_and_chords = ?");
+        replacements.push(songAttributes.lyrics_and_chords);
+      }
+
+      if (setClauses.length > 0) {
+        setClauses.push("updatedAt = ?");
+        replacements.push(new Date());
+        replacements.push(songId);
+
+        await Song.sequelize.query(
+          `UPDATE songs SET ${setClauses.join(", ")} WHERE id = ?`,
+          { replacements }
+        );
+      }
     }
 
     // Handle tag updates
