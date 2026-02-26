@@ -196,57 +196,57 @@ class SongService {
       songAttributes.artist = [songAttributes.artist];
     }
 
-    // Use transaction to ensure atomicity
-    const transaction = await Song.sequelize.transaction();
+    const now = new Date();
 
-    try {
-      const song = await Song.create(songAttributes, { transaction });
+    // Use raw SQL INSERT to avoid Sequelize schema detection issues
+    const [insertResult] = await Song.sequelize.query(
+      `INSERT INTO songs (title, artist, base_chord, lyrics_and_chords, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      {
+        replacements: [
+          songAttributes.title,
+          JSON.stringify(songAttributes.artist),
+          songAttributes.base_chord || null,
+          songAttributes.lyrics_and_chords || null,
+          now,
+          now,
+        ],
+      }
+    );
 
-      if (tag_names && tag_names.length > 0) {
-        // Move tag creation inside transaction to ensure atomicity
-        const tags = [];
-        for (const tagName of tag_names) {
-          const [tag] = await Tag.findOrCreate({
-            where: { name: tagName.trim() },
-            defaults: {
-              name: tagName.trim(),
-              description: `Auto-created tag: ${tagName.trim()}`,
-            },
-            transaction,
-          });
-          tags.push(tag);
-        }
+    const newSongId = insertResult;
 
-        // Use raw SQL to insert associations to avoid model association issues
-        for (const tag of tags) {
-          await Song.sequelize.query(
-            "INSERT IGNORE INTO song_tags (song_id, tag_id) VALUES (?, ?)",
-            {
-              replacements: [song.id, tag.id],
-              transaction,
-            }
-          );
-        }
+    if (tag_names && tag_names.length > 0) {
+      const tags = [];
+      for (const tagName of tag_names) {
+        const [tag] = await Tag.findOrCreate({
+          where: { name: tagName.trim() },
+          defaults: {
+            name: tagName.trim(),
+            description: `Auto-created tag: ${tagName.trim()}`,
+          },
+        });
+        tags.push(tag);
       }
 
-      await transaction.commit();
-
-      // Invalidate all song caches after successful creation
-      try {
-        await RedisService.deletePattern("songs:all:*");
-        console.log("Invalidated song caches after creation");
-      } catch (error) {
-        console.error("Cache invalidation error:", error);
+      for (const tag of tags) {
+        await Song.sequelize.query(
+          "INSERT IGNORE INTO song_tags (song_id, tag_id) VALUES (?, ?)",
+          { replacements: [newSongId, tag.id] }
+        );
       }
-
-      // Re-fetch from DB to get the actual saved values (avoids Sequelize instance issues)
-      return await SongService.getSongById(song.id);
-    } catch (error) {
-      if (!transaction.finished) {
-        await transaction.rollback();
-      }
-      throw error;
     }
+
+    // Invalidate all song caches after successful creation
+    try {
+      await RedisService.deletePattern("songs:all:*");
+      console.log("Invalidated song caches after creation");
+    } catch (error) {
+      console.error("Cache invalidation error:", error);
+    }
+
+    // Re-fetch from DB to get the actual saved values
+    return await SongService.getSongById(newSongId);
   }
 
   static async updateSong(songId, updateData) {
