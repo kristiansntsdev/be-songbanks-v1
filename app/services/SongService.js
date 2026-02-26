@@ -281,6 +281,21 @@ class SongService {
   static async updateSong(songId, updateData) {
     const { tag_names, ...songAttributes } = updateData;
 
+    // Verify the song exists before attempting update
+    const existingRows = await Song.sequelize.query(
+      "SELECT id FROM songs WHERE id = ?",
+      {
+        replacements: [songId],
+        type: Song.sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    if (!existingRows || existingRows.length === 0) {
+      const error = new Error("Song not found");
+      error.statusCode = 404;
+      throw error;
+    }
+
     // Ensure artist is an array if provided
     if (songAttributes.artist && !Array.isArray(songAttributes.artist)) {
       songAttributes.artist = [songAttributes.artist];
@@ -288,15 +303,9 @@ class SongService {
 
     // Update song attributes if provided
     if (Object.keys(songAttributes).length > 0) {
-      const [affectedRowCount] = await Song.update(songAttributes, {
+      await Song.update(songAttributes, {
         where: { id: songId },
       });
-
-      if (affectedRowCount === 0) {
-        const error = new Error("Song not found");
-        error.statusCode = 404;
-        throw error;
-      }
     }
 
     // Handle tag updates
