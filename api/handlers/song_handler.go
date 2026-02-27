@@ -24,8 +24,8 @@ func (h *Handler) GetSongs(c *fiber.Ctx) error {
 	if limit < 1 {
 		limit = 100000
 	}
-	if limit > 100 {
-		limit = 100
+	if limit > 1000 {
+		limit = 1000
 	}
 	data, pagination, err := h.songs.List(page, limit, c.Query("search"), c.Query("base_chord"), c.Query("sortBy", "createdAt"), c.Query("sortOrder", "DESC"), utils.ParseCSVInts(c.Query("tag_ids")))
 	if err != nil {
